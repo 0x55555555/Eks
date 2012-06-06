@@ -1,0 +1,45 @@
+#ifndef VECTOR2DWIDGET_H
+#define VECTOR2DWIDGET_H
+
+#include "XGuiGlobal"
+#include "QWidget"
+#include "XVector2D"
+
+class QVBoxLayout;
+class XFloatWidget;
+
+class EKSGUI_EXPORT XVector2DWidget : public QWidget
+    {
+Q_OBJECT
+public:
+    XVector2DWidget( QWidget *parent = 0, XVector2D val=XVector2D::Zero(), QStringList labels=QStringList() );
+    XVector2DWidget( XVector2D val, XVector2D min, XVector2D max, QStringList labels=QStringList(), QWidget *parent = 0);
+
+    void setMaximum( XVector2D );
+    XVector2D maximum() const;
+    void setMinimum( XVector2D );
+    XVector2D minimum() const;
+    XVector2D range() const;
+    XVector2D value() const;
+
+    bool isReadOnly() const;
+
+signals:
+    void valueChanged( XVector2D );
+
+public slots:
+    void setValue( XVector2D );
+    void setReadOnly(bool);
+
+protected:
+    void keyPressEvent( QKeyEvent * );
+    void keyReleaseEvent( QKeyEvent * );
+
+private slots:
+    void setValues();
+private:
+    XFloatWidget *_x, *_y;
+    bool _setting;
+    };
+
+#endif // VECTORWIDGET_H

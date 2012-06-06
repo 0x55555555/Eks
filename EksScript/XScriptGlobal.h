@@ -1,0 +1,15 @@
+#ifndef XSCRIPTGLOBAL_H
+#define XSCRIPTGLOBAL_H
+
+#include "XGlobal"
+
+#ifdef EKSSCRIPT_BUILD
+# define EKSSCRIPT_EXPORT X_DECL_EXPORT
+#else
+# define EKSSCRIPT_EXPORT X_DECL_IMPORT
+#endif
+
+#define _ITERATOR_DEBUG_LEVEL 0
+
+
+#endif // XSCRIPTGLOBAL_H
