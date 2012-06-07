@@ -391,7 +391,7 @@ bool XScriptValue::isObject() const
 #ifdef X_DART
   // everything is an object!
   // probably not so useful.
-  return true;
+  return isValid();
 #else
   const XScriptValueInternal *internal = XScriptValueInternal::val(this);
   return internal->_object->IsObject();

@@ -101,6 +101,19 @@ struct XAccessorInfoInternal
   };
 xCompileTimeAssert(sizeof(XAccessorInfo) == sizeof(XAccessorInfoInternal));
 
+
+Dart_Handle& getDartHandle(const XScriptFunction &obj)
+  {
+  struct Internal
+    {
+    Dart_Handle ptr;
+    };
+  xCompileTimeAssert(sizeof(Internal) == sizeof(XScriptFunction));
+
+  return ((Internal*)(&obj))->ptr;
+  }
+
+
 XScriptFunction::XScriptFunction(Function fn)
   {
   XScriptFunctionInternal *internal = XScriptFunctionInternal::init(this);
@@ -271,6 +284,11 @@ v8::Handle<v8::Function> getV8Internal(const XScriptFunction &o)
   {
   const XScriptFunctionInternal *internal = XScriptFunctionInternal::val(&o);
   return internal->_object;
+  }
+
+Dart_Handle getDartInternal(const XScriptFunction& v)
+  {
+  return getDartHandle(v);
   }
 
 void XScriptDartArguments::setReturnValue(const XScriptValue& val)

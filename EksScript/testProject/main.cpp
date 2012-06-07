@@ -1,5 +1,3 @@
-#define _ITERATOR_DEBUG_LEVEL 0
-
 #include "XScriptEngine.h"
 #include "XInterface.h"
 #include "XAssert"
@@ -10,11 +8,11 @@ struct Nummer
 
   Nummer(float n) : num(n) {}
 
-  QString crapSalad(float newNum)
+  float crapSalad(float newNum)
   {
     num += newNum;
 
-    return QString::number(num);
+    return num;
   }
 };
 
@@ -28,7 +26,7 @@ int main(int a, char* b[])
 
   XInterface<Nummer>* nummer = XInterface<Nummer>::create("Nummer");
   nummer->addConstructor<Nummer* (float)>();
-  nummer->addMethod<QString(float), &Nummer::crapSalad>("crapSalad");
+  nummer->addMethod<float (float), &Nummer::crapSalad>("crapSalad");
   nummer->seal();
 
   eng.addInterface(nummer);
@@ -38,7 +36,7 @@ int main(int a, char* b[])
   "String main() {\n"
   "  Nummer obj = new Nummer(45.5);\n"
   "  obj.crapSalad(5.5);"
-  "  return obj.crapSalad(5.0).toStringAsFixed(5);"
+  "  return obj.crapSalad(5.0);"
   "}\n";
 
   XScriptValue val = eng.run(kScriptChars);

@@ -202,11 +202,11 @@ template <typename T, typename Sig> struct XMethodForwarderHelper : Sig
     {
     XScriptDartArgumentsWithThis args(argv);
     ThisType *self = XScriptConvert::from<ThisType>(args.calleeThis());
-    if(self)
+    if(!self)
       {
-      argv.setReturnValue(XScriptConvert::to( T::CallNative(*self, func, args) ));
+      argv.setReturnValue(TossMissingThis<T>());
       }
-    argv.setReturnValue(TossMissingThis<T>());
+    argv.setReturnValue(XScriptConvert::to( T::CallNative(*self, func, args) ));
     }
   };
 

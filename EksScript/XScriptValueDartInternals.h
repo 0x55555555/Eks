@@ -21,6 +21,8 @@ inline void printError(Dart_Handle han)
     }
   }
 
+const int kNumEventHandlerFields = 2;
+
 XScriptValue fromHandle(Dart_Handle);
 XScriptObject fromObjectHandle(Dart_Handle);
 
@@ -31,6 +33,7 @@ QString getDartUrl(const XInterfaceBase* ifc);
 Dart_Handle getDartInternal(const XScriptValue&);
 Dart_Handle *getDartInternal(const XScriptValue*);
 Dart_Handle getDartInternal(const XScriptObject &o);
+Dart_Handle getDartInternal(const XScriptFunction &o);
 Dart_Handle getDartInternal(const XInterfaceBase* b);
 
 inline Dart_Handle &getDartHandle(void *&ptr)

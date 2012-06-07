@@ -17,14 +17,17 @@
 
 #ifdef X_DART
 bool isolateCreateCallback(const char* ,
+  const char* ,
   void* ,
   char** )
 {
+  xAssertFail();
   return true;
 }
 
 bool isolateInterruptCallback()
 {
+  xAssertFail();
   return true;
 }
 
@@ -50,14 +53,13 @@ QString addDartNativeLookup(const QString &typeName, const QString &functionName
   return fullName;
 }
 
-Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc, Dart_Handle importMap)
+Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc)
 {
-  Dart_Handle lib = Dart_LoadLibrary(url, libSrc, importMap);
+  Dart_Handle lib = Dart_LoadLibrary(url, libSrc);
 
   CHECK_HANDLE(lib)
   Dart_SetNativeResolver(lib, Resolve);
 
-  const int kNumEventHandlerFields = 1;
   Dart_CreateNativeWrapperClass(lib,
     Dart_NewString(WRAPPER_NAME),
     kNumEventHandlerFields);
@@ -66,7 +68,7 @@ Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc, Dart_Handle importM
 }
 
 QMap<QString, Dart_Handle> _libs;
-Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url, Dart_Handle import_map)
+Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url)
 {
   if (!Dart_IsLibrary(library)) {
     return Dart_Error("not a library");
@@ -85,7 +87,7 @@ Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url
     QString strUrl = XScriptConvert::from<QString>(fromHandle(url));
     xAssert(_libs.find(strUrl) != _libs.end());
     Dart_Handle source = _libs[strUrl];
-    importLibrary = loadLibrary(url, source, import_map);
+    importLibrary = loadLibrary(url, source);
   }
 
   if (!Dart_IsError(importLibrary) && (tag == kImportTag))
@@ -134,7 +136,7 @@ struct StaticEngine
         Dart_Initialize(isolateCreateCallback, isolateInterruptCallback);
 
         // Start an Isolate, load a script and create a full snapshot.
-        Dart_CreateIsolate(0, 0, 0, 0);
+        Dart_CreateIsolate(0, 0, 0, 0, 0);
 
         Dart_EnterScope();
         Dart_SetLibraryTagHandler(tagHandler);
@@ -212,7 +214,7 @@ XScriptValue XScriptEngine::run(const QString &src)
   // Create a test library and Load up a test script in it.
   Dart_Handle source = getDartInternal(XScriptConvert::to(src));
   Dart_Handle url = Dart_NewString("temp");
-  Dart_Handle script = Dart_LoadScript(url, source, Dart_Null());
+  Dart_Handle script = Dart_LoadScript(url, source);
   CHECK_HANDLE(script)
 
   Dart_Handle result = Dart_Invoke(script,

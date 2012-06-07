@@ -97,7 +97,10 @@ XScriptObject::XScriptObject(const XScriptValue &other)
 XScriptObject::XScriptObject(const XScriptFunction &other)
   {
 #ifdef X_DART
-  getDartHandle(_object) = getDartInternal(other);
+  Dart_Handle& thsHndl = getDartHandle(_object);
+  Dart_Handle othHndl = getDartInternal(other);
+
+  thsHndl = getDartInternal(other);
 #else
   v8::Handle<v8::Function> otherInternal = getV8Internal(other);
   XScriptObjectInternal *internal = XScriptObjectInternal::init(this);
@@ -119,7 +122,7 @@ XScriptObject& XScriptObject::operator=(const XScriptObject &other)
 xsize XScriptObject::internalFieldCount() const
   {
 #ifdef X_DART
-  return 2;
+  return kNumEventHandlerFields;
 #else
   const XScriptObjectInternal *internal = XScriptObjectInternal::val(this);
   return internal->_object->InternalFieldCount();
@@ -130,9 +133,9 @@ void *XScriptObject::internalField(xsize idx) const
   {
 #ifdef X_DART
   intptr_t val = 0;
-  return Dart_GetNativeInstanceField(getDartInternal(*this),
-                                     idx,
-                                     &val);
+  Dart_GetNativeInstanceField(getDartInternal(*this),
+                              idx,
+                              &val);
   return (void*)val;
 #else
   const XScriptObjectInternal *internal = XScriptObjectInternal::val(this);

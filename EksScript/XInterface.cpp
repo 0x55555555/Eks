@@ -4,43 +4,6 @@
 #include "XUnorderedMap"
 #include "QUrl"
 
-#ifdef X_DART
-# if 0
-void dtor(Dart_Handle, void *peer)
-{
-  Nummer *num = (Nummer*)peer;
-  delete num;
-}
-
-void ctor(Dart_NativeArguments arguments)
-{
-  int argsC = Dart_GetNativeArgumentCount(arguments);
-  Dart_Handle ths = Dart_GetNativeArgument(arguments, 0);
-  Dart_Handle arg = Dart_GetNativeArgument(arguments, 1);
-
-  Nummer* num = new Nummer;
-  Dart_NewWeakPersistentHandle(ths, num, dtor);
-
-  Dart_DoubleValue(arg, &num->num);
-
-  Dart_SetNativeInstanceField(ths, 0, (intptr_t)num);
-}
-
-const char* lib =
-  "#library(\"NativeTest\");\n"
-  "class NativeTest extends NativeWrapper {\n"
-  "   NativeTest(Dynamic a) { _ctor(a); }"
-  "   void _ctor(Dynamic a) native 'Fields_ctor';"
-  "   Dynamic crapSalad(Dynamic) native 'Fields_crapSalad';"
-  "}\n";
-
-_lookup[std::pair<std::string, uint8_t>("Fields_ctor", 2)] = ctor;
-_lookup[std::pair<std::string, uint8_t>("Fields_crapSalad", 2)] = crapSalad;
-
-_libs["NativeTest"] = Dart_NewString(lib);
-# endif
-#endif
-
 typedef v8::Persistent<v8::FunctionTemplate> FnTempl;
 typedef v8::Persistent<v8::ObjectTemplate> ObjTempl;
 
