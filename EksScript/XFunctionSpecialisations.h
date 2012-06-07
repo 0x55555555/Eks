@@ -209,7 +209,8 @@ struct XConstMethodForwarder<T, 2,Sig, UnlockV8>
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarderVoid<T, 2,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
+struct XConstMethodForwarderVoid<T, 2,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XConstMethodForwarderVoid<T, 2,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
   {
   typedef XConstMethodSignature<T,Sig> SignatureType;
   FORWARDER_DEF
@@ -247,7 +248,8 @@ struct CtorForwarderProxy<Sig,2>
   };
 
 template <typename Sig, bool UnlockV8>
-struct FunctionForwarder<3,Sig,UnlockV8> : XFunctionSignature<Sig>
+struct FunctionForwarder<3,Sig,UnlockV8> :
+    XFunctionForwarderHelper<FunctionForwarder<3,Sig,UnlockV8>, Sig>
   {
   typedef XFunctionSignature<Sig> SignatureType;
   FORWARDER_DEF
@@ -263,7 +265,8 @@ struct FunctionForwarder<3,Sig,UnlockV8> : XFunctionSignature<Sig>
   };
 
 template <typename Sig, bool UnlockV8>
-struct FunctionForwarderVoid<3,Sig,UnlockV8> : XFunctionSignature<Sig>
+struct FunctionForwarderVoid<3,Sig,UnlockV8> :
+    XFunctionForwarderHelperVoid<FunctionForwarderVoid<3,Sig,UnlockV8>, Sig>
   {
   typedef XFunctionSignature<Sig> SignatureType;
   FORWARDER_DEF
@@ -279,7 +282,8 @@ struct FunctionForwarderVoid<3,Sig,UnlockV8> : XFunctionSignature<Sig>
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XMethodForwarder<T, 3,Sig, UnlockV8> : XMethodSignature<T,Sig>
+struct XMethodForwarder<T, 3,Sig, UnlockV8> :
+    XMethodForwarderHelper<XMethodForwarder<T, 3,Sig, UnlockV8>, XMethodSignature<T, Sig>>
   {
   typedef XMethodSignature<T,Sig> SignatureType;
   FORWARDER_DEF
@@ -295,7 +299,8 @@ struct XMethodForwarder<T, 3,Sig, UnlockV8> : XMethodSignature<T,Sig>
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XMethodForwarderVoid<T, 3,Sig, UnlockV8> : XMethodSignature<T,Sig>
+struct XMethodForwarderVoid<T, 3,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XMethodForwarderVoid<T, 3,Sig, UnlockV8>, XMethodSignature<T,Sig>>
   {
   typedef XMethodSignature<T,Sig> SignatureType;
   FORWARDER_DEF
@@ -311,7 +316,8 @@ struct XMethodForwarderVoid<T, 3,Sig, UnlockV8> : XMethodSignature<T,Sig>
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarder<T, 3,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
+struct XConstMethodForwarder<T, 3,Sig, UnlockV8> :
+    XMethodForwarderHelper<XConstMethodForwarder<T, 3,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
   {
   typedef XConstMethodSignature<T,Sig> SignatureType;
   FORWARDER_DEF
@@ -327,7 +333,8 @@ struct XConstMethodForwarder<T, 3,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarderVoid<T, 3,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
+struct XConstMethodForwarderVoid<T, 3,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XConstMethodForwarderVoid<T, 3,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
   {
   typedef XConstMethodSignature<T,Sig> SignatureType;
   FORWARDER_DEF
@@ -364,10 +371,10 @@ struct CtorForwarderProxy<Sig,3>
       }
     }
   };
-}
-namespace Detail {
+
 template <typename Sig, bool UnlockV8>
-struct FunctionForwarder<4,Sig,UnlockV8> : XFunctionSignature<Sig>
+struct FunctionForwarder<4,Sig,UnlockV8> :
+    XFunctionForwarderHelper<FunctionForwarder<4,Sig,UnlockV8>, Sig>
   {
   typedef XFunctionSignature<Sig> SignatureType;
   FORWARDER_DEF
@@ -390,7 +397,8 @@ struct FunctionForwarder<4,Sig,UnlockV8> : XFunctionSignature<Sig>
   };
 
 template <typename Sig, bool UnlockV8>
-struct FunctionForwarderVoid<4,Sig,UnlockV8> : XFunctionSignature<Sig>
+struct FunctionForwarderVoid<4,Sig,UnlockV8> :
+    XFunctionForwarderHelper<FunctionForwarderVoid<4,Sig,UnlockV8>, Sig>
   {
   typedef XFunctionSignature<Sig> SignatureType;
   FORWARDER_DEF
@@ -407,214 +415,96 @@ struct FunctionForwarderVoid<4,Sig,UnlockV8> : XFunctionSignature<Sig>
                                args.arg3());
     }
   };
-}
 
-#if 0
-namespace Detail {
 template <typename T, typename Sig, bool UnlockV8>
-struct XMethodForwarder<T, 4,Sig, UnlockV8> : XMethodSignature<T,Sig>
+struct XMethodForwarder<T, 4,Sig, UnlockV8> :
+    XMethodForwarderHelper<XMethodForwarder<T, 4,Sig, UnlockV8>, XMethodSignature<T, Sig>>
   {
   typedef XMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (4 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T  & self, FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
+    ArgumentUnpacker4<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3 );
-    }
-  static XScriptValue Call( T  & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative( self, func, argv ) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T  * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative(func, argv) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3());
     }
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XMethodForwarderVoid<T, 4,Sig, UnlockV8> : XMethodSignature<T,Sig>
+struct XMethodForwarderVoid<T, 4,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XMethodForwarderVoid<T, 4,Sig, UnlockV8>, XMethodSignature<T,Sig>>
   {
   typedef XMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (4 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T  & self, FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
+    ArgumentUnpacker4<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3 );
-    }
-  static XScriptValue Call( T  & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative( self, func, argv );
-    return v8::Undefined();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T  * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative(func, argv);
-    return v8::Undefined();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  };
-}
-namespace Detail {
-template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarder<T, 4,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
-  {
-  typedef XConstMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (4 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T const & self, FunctionType func, XScriptArguments const & argv )
-    {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-
-    Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3 );
-    }
-  static XScriptValue Call( T const & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative( self, func, argv ) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T const * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative(func, argv) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3());
     }
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarderVoid<T, 4,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
+struct XConstMethodForwarder<T, 4,Sig, UnlockV8> :
+    XMethodForwarderHelper<XConstMethodForwarder<T, 4,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
   {
   typedef XConstMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (4 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T const & self, FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
+    ArgumentUnpacker4<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3 );
-    }
-  static XScriptValue Call( T const & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative( self, func, argv );
-    return v8::Undefined();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T const * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative(func, argv);
-    return v8::Undefined();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3());
     }
   };
-}
-namespace Detail {
+
+template <typename T, typename Sig, bool UnlockV8>
+struct XConstMethodForwarderVoid<T, 4,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XConstMethodForwarderVoid<T, 4,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
+
+  {
+  typedef XConstMethodSignature<T,Sig> SignatureType;
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
+    {
+    ArgumentUnpacker4<Sig, ArgsType> args(argv);
+
+    Unlocker<UnlockV8> unlocker;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3());
+    }
+  };
+
 template <typename Sig>
 struct CtorForwarderProxy<Sig,4>
   {
   enum { Arity = 4 };
   typedef typename XSignature<Sig>::ReturnType ReturnType;
-  static ReturnType Call( XScriptArguments const & argv )
+
+  template <typename ArgsType>
+      static ReturnType Call( ArgsType const & argv )
     {
     if( argv.length() < Arity )
       {
@@ -622,317 +512,151 @@ struct CtorForwarderProxy<Sig,4>
       }
     else
       {
-      typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-      typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-      typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-      typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-
-      typedef XScriptConvert::ArgCaster<A0> AC0;
-      typedef XScriptConvert::ArgCaster<A1> AC1;
-      typedef XScriptConvert::ArgCaster<A2> AC2;
-      typedef XScriptConvert::ArgCaster<A3> AC3;
-
-      AC0 ac0; A0 arg0(ac0.toNative(argv.at(0)));
-      AC1 ac1; A1 arg1(ac1.toNative(argv.at(1)));
-      AC2 ac2; A2 arg2(ac2.toNative(argv.at(2)));
-      AC3 ac3; A3 arg3(ac3.toNative(argv.at(3)));
+      ArgumentUnpacker4<Sig, ArgsType> args(argv);
 
       typedef typename XScriptTypeInfo<ReturnType>::Type Type;
-      return new Type(  arg0, arg1, arg2, arg3 );
+      return new Type(args.arg0(),
+                      args.arg1(),
+                      args.arg2(),
+                      args.arg3());
       }
     }
   };
-}
-namespace Detail {
+
 template <typename Sig, bool UnlockV8>
-struct FunctionForwarder<5,Sig,UnlockV8> : XFunctionSignature<Sig>
+struct FunctionForwarder<5,Sig,UnlockV8> :
+    XMethodForwarderHelper<FunctionForwarder<5,Sig,UnlockV8>, Sig>
   {
   typedef XFunctionSignature<Sig> SignatureType;
-  typedef char AssertArity[ (5 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-    typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-    typedef XScriptConvert::ArgCaster<A4> AC4;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-    AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
+    ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(*func)(  arg0, arg1, arg2, arg3, arg4 );
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    return CastToJS( CallNative( func, argv ) );
+    return (ReturnType)(*func)(args.arg0(),
+                               args.arg1(),
+                               args.arg2(),
+                               args.arg3(),
+                               args.arg4());
     }
   };
 
 template <typename Sig, bool UnlockV8>
-struct FunctionForwarderVoid<5,Sig,UnlockV8> : XFunctionSignature<Sig>
+struct FunctionForwarderVoid<5,Sig,UnlockV8> :
+    XMethodForwarderHelperVoid<FunctionForwarderVoid<5,Sig,UnlockV8>, Sig>
   {
   typedef XFunctionSignature<Sig> SignatureType;
-  typedef char AssertArity[ (5 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-    typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-    typedef XScriptConvert::ArgCaster<A4> AC4;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-    AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
+    ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(*func)(  arg0, arg1, arg2, arg3, arg4 );
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    CallNative( func, argv );
-    return v8::Undefined();
+    return (ReturnType)(*func)(args.arg0(),
+                               args.arg1(),
+                               args.arg2(),
+                               args.arg3(),
+                               args.arg4());
     }
   };
-}
-namespace Detail {
+
 template <typename T, typename Sig, bool UnlockV8>
-struct XMethodForwarder<T, 5,Sig, UnlockV8>
-    : XMethodSignature<T,Sig>
+struct XMethodForwarder<T, 5,Sig, UnlockV8> :
+    XMethodForwarderHelper<XMethodForwarder<T, 5,Sig, UnlockV8>, XMethodSignature<T,Sig>>
   {
   typedef XMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (5 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T  & self, FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-    typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-    typedef XScriptConvert::ArgCaster<A4> AC4;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-    AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
+    ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3, arg4 );
-    }
-  static XScriptValue Call( T  & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative( self, func, argv ) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T  * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative(func, argv) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3(),
+                                    args.arg4());
     }
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XMethodForwarderVoid<T, 5,Sig, UnlockV8> : XMethodSignature<T,Sig>
+struct XMethodForwarderVoid<T, 5,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XMethodForwarderVoid<T, 5,Sig, UnlockV8>, XMethodSignature<T,Sig>>
   {
   typedef XMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (5 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T  & self, FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-    typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-    typedef XScriptConvert::ArgCaster<A4> AC4;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv.at(0)));
-    AC1 ac1; A1 arg1(ac1.toNative(argv.at(1)));
-    AC2 ac2; A2 arg2(ac2.toNative(argv.at(2)));
-    AC3 ac3; A3 arg3(ac3.toNative(argv.at(3)));
-    AC4 ac4; A4 arg4(ac4.toNative(argv.at(4)));
+    ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3, arg4 );
-    }
-  static XScriptValue Call( T  & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative( self, func, argv );
-    return XScriptValue();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    return (ReturnType)CallNative(getThis<T>(argv), func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative(func, argv);
-    return XScriptValue();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  };
-}
-namespace Detail {
-template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarder<T, 5,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
-  {
-  typedef XConstMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (5 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T const & self, FunctionType func, XScriptArguments const & argv )
-    {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-    typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-    typedef XScriptConvert::ArgCaster<A4> AC4;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-    AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
-
-    Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3, arg4 );
-    }
-  static XScriptValue Call( T const & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative( self, func, argv ) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T const * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try { return CastToJS( CallNative(func, argv) ); }
-    HANDLE_PROPAGATE_EXCEPTION;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3(),
+                                    args.arg4());
     }
   };
 
 template <typename T, typename Sig, bool UnlockV8>
-struct XConstMethodForwarderVoid<T, 5,Sig, UnlockV8> : XConstMethodSignature<T,Sig>
+struct XConstMethodForwarder<T, 5,Sig, UnlockV8> :
+    XMethodForwarderHelper<XConstMethodForwarder<T, 5,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
   {
   typedef XConstMethodSignature<T,Sig> SignatureType;
-  typedef char AssertArity[ (5 == sl::Arity<SignatureType>::Value) ? 1 : -1];
-  typedef typename SignatureType::FunctionType FunctionType;
-  typedef typename SignatureType::ReturnType ReturnType;
-  static ReturnType CallNative( T const & self, FunctionType func, XScriptArguments const & argv )
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
     {
-    typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-    typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-    typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-    typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-    typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-    typedef XScriptConvert::ArgCaster<A0> AC0;
-    typedef XScriptConvert::ArgCaster<A1> AC1;
-    typedef XScriptConvert::ArgCaster<A2> AC2;
-    typedef XScriptConvert::ArgCaster<A3> AC3;
-    typedef XScriptConvert::ArgCaster<A4> AC4;
-
-    AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-    AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-    AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-    AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-    AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
+    ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
     Unlocker<UnlockV8> unlocker;
-    return (ReturnType)(self.*func)(  arg0, arg1, arg2, arg3, arg4 );
-    }
-  static XScriptValue Call( T const & self, FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative( self, func, argv );
-    return v8::Undefined();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
-    }
-  static ReturnType CallNative( FunctionType func, XScriptArguments const & argv )
-    {
-    T const * self = XScriptConvert::from<T>(argv.calleeThis());
-    if( ! self ) throw MissingThisExceptionT<T>();
-    return (ReturnType)CallNative(*self, func, argv);
-    }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
-    {
-    try
-    {
-    CallNative(func, argv);
-    return v8::Undefined();
-    }
-    HANDLE_PROPAGATE_EXCEPTION;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3(),
+                                    args.arg4());
     }
   };
-}
-namespace Detail {
+
+template <typename T, typename Sig, bool UnlockV8>
+struct XConstMethodForwarderVoid<T, 5,Sig, UnlockV8> :
+    XMethodForwarderHelperVoid<XConstMethodForwarderVoid<T, 5,Sig, UnlockV8>, XConstMethodSignature<T,Sig>>
+  {
+  typedef XConstMethodSignature<T,Sig> SignatureType;
+  FORWARDER_DEF
+
+  template <typename ArgsType>
+      static ReturnType CallNative( T  & self, FunctionType func, ArgsType const & argv )
+    {
+    ArgumentUnpacker5<Sig, ArgsType> args(argv);
+
+    Unlocker<UnlockV8> unlocker;
+    return (ReturnType)(self.*func)(args.arg0(),
+                                    args.arg1(),
+                                    args.arg2(),
+                                    args.arg3(),
+                                    args.arg4());
+    }
+  };
+
 template <typename Sig>
 struct CtorForwarderProxy<Sig,5>
   {
   enum { Arity = 5 };
   typedef typename XSignature<Sig>::ReturnType ReturnType;
-  static ReturnType Call( XScriptArguments const & argv )
+
+  template <typename ArgsType>
+      static ReturnType Call( ArgsType const & argv )
     {
     if( argv.Length() < Arity )
       {
@@ -940,30 +664,20 @@ struct CtorForwarderProxy<Sig,5>
       }
     else
       {
-      typedef typename sl::At< 0, XSignature<Sig> >::Type A0;
-      typedef typename sl::At< 1, XSignature<Sig> >::Type A1;
-      typedef typename sl::At< 2, XSignature<Sig> >::Type A2;
-      typedef typename sl::At< 3, XSignature<Sig> >::Type A3;
-      typedef typename sl::At< 4, XSignature<Sig> >::Type A4;
-
-      typedef XScriptConvert::ArgCaster<A0> AC0;
-      typedef XScriptConvert::ArgCaster<A1> AC1;
-      typedef XScriptConvert::ArgCaster<A2> AC2;
-      typedef XScriptConvert::ArgCaster<A3> AC3;
-      typedef XScriptConvert::ArgCaster<A4> AC4;
-
-      AC0 ac0; A0 arg0(ac0.toNative(argv[0]));
-      AC1 ac1; A1 arg1(ac1.toNative(argv[1]));
-      AC2 ac2; A2 arg2(ac2.toNative(argv[2]));
-      AC3 ac3; A3 arg3(ac3.toNative(argv[3]));
-      AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
+      ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
       typedef typename XScriptTypeInfo<ReturnType>::Type Type;
-      return new Type(  arg0, arg1, arg2, arg3, arg4 );
+      return new Type(args.arg0(),
+                      args.arg1(),
+                      args.arg2(),
+                      args.arg3(),
+                      args.arg4());
       }
     }
   };
 }
+
+#if 0
 namespace Detail {
 template <typename Sig, bool UnlockV8>
 struct FunctionForwarder<6,Sig,UnlockV8> : XFunctionSignature<Sig>
