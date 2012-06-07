@@ -100,7 +100,7 @@ XScriptObject::XScriptObject(const XScriptFunction &other)
   Dart_Handle& thsHndl = getDartHandle(_object);
   Dart_Handle othHndl = getDartInternal(other);
 
-  thsHndl = getDartInternal(other);
+  thsHndl = othHndl;
 #else
   v8::Handle<v8::Function> otherInternal = getV8Internal(other);
   XScriptObjectInternal *internal = XScriptObjectInternal::init(this);

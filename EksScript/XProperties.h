@@ -350,8 +350,7 @@ struct XMethodToSetter : XAccessorSetterType
       typedef typename XScriptTypeInfo<InputArg>::NativeHandle NativeHandle;
       typedef XSignature<void (NativeHandle)> Sig;
       typedef typename sl::At< 0, Sig >::Type ArgT;
-      XScriptConvert::ArgCaster<ArgT> ac;
-      typename XScriptConvert::ArgCaster<ArgT>::ResultType handle = ac.toNative( value );
+      typename XScriptConvert::ArgCaster<ArgT>::ResultType handle = XScriptConvert::ArgCaster<ArgT>::toNative( value );
 
       bool valid = true;
       InputArg in = XScriptConvert::match<InputArg, typename XScriptConvert::ArgCaster<ArgT>::ResultType>(&handle, valid);
@@ -380,8 +379,7 @@ struct XMethodToSetter : XAccessorSetterType
       typedef typename XScriptTypeInfo<InputArg>::NativeHandle NativeHandle;
       typedef XSignature<void (NativeHandle)> Sig;
       typedef typename sl::At< 0, Sig >::Type ArgT;
-      XScriptConvert::ArgCaster<ArgT> ac;
-      typename XScriptConvert::ArgCaster<ArgT>::ResultType handle = ac.toNative( args.at(0) );
+      typename XScriptConvert::ArgCaster<ArgT>::ResultType handle = XScriptConvert::ArgCaster<ArgT>::toNative( args.at(0) );
 
       bool valid = true;
       InputArg in = XScriptConvert::match<InputArg, typename XScriptConvert::ArgCaster<ArgT>::ResultType>(&handle, valid);

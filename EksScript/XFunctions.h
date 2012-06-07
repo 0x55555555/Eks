@@ -8,6 +8,7 @@
 #include "XScriptConstructors.h"
 #include "XConvertFromScript.h"
 #include "XConvertToScript.h"
+#include <type_traits>
 
 namespace XScript
 {
@@ -2031,21 +2032,22 @@ template <typename Type, typename ArgsType> class ArgumentUnpacker
   {
 public:
   typedef XScriptConvert::ArgCaster<Type> Caster;
+  typedef typename std::remove_reference<Type>::type StoredType;
 
   ArgumentUnpacker(const ArgsType &v, xsize idx) : val(Caster::toNative(v.at(idx)))
     {
     }
 
-  Type& operator()() { return val; }
+  StoredType& operator()() { return val; }
 
-  Type val;
+  StoredType val;
   };
 
 template <typename Sig, typename ArgsType> class ArgumentUnpacker1
   {
 public:
   ArgumentUnpacker1(const ArgsType &args) : arg0(args, 0) { }
-  
+
   ArgumentUnpacker<typename sl::At< 0, XSignature<Sig> >::Type, ArgsType> arg0;
   };
 
@@ -2053,7 +2055,7 @@ template <typename Sig, typename ArgsType> class ArgumentUnpacker2 : public Argu
   {
 public:
   ArgumentUnpacker2(const ArgsType &args) : ArgumentUnpacker1<Sig, ArgsType>(args), arg1(args, 1) { }
-  
+
   ArgumentUnpacker<typename sl::At< 1, XSignature<Sig> >::Type, ArgsType> arg1;
   };
 
