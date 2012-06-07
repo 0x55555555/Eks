@@ -2076,6 +2076,15 @@ public:
   };
 
 
+template <typename Sig, typename ArgsType> class ArgumentUnpacker5 : public ArgumentUnpacker4<Sig, ArgsType>
+  {
+public:
+  ArgumentUnpacker5(const ArgsType &args) : ArgumentUnpacker4<Sig, ArgsType>(args), arg4(args, 4) { }
+
+  ArgumentUnpacker<typename sl::At< 4, XSignature<Sig> >::Type, ArgsType> arg4;
+  };
+
+
 #include "XFunctionSpecialisations.h"
 #undef FORWARDER_DEF_WITH_TYPE
 #undef FOAWARDER_DEF

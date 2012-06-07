@@ -9,6 +9,4 @@
 # define EKSSCRIPT_EXPORT X_DECL_IMPORT
 #endif
 
-
-
 #endif // XSCRIPTGLOBAL_H

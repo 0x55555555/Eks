@@ -204,18 +204,18 @@ public:
             typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
   void addProperty(const char *name)
     {
-    Getter getter = XScript::XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD>::Get;
+    typedef XScript::XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    XInterfaceBase::addProperty(name, getter, 0);
+    XInterfaceBase::addProperty(name, Getter::Get, Getter::GetDart, 0, 0);
     }
 
   template <typename GETTYPE,
             typename XMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
   void addAccessProperty(const char *name)
     {
-    Getter getter = XScript::XMethodToGetter<T, GETTYPE (), GETTERMETHOD>::Get;
+    typedef XScript::XMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    XInterfaceBase::addProperty(name, getter, 0);
+    XInterfaceBase::addProperty(name, Getter::Get, Getter::GetDart, 0, 0);
     }
 
   template <typename SIG,
@@ -713,9 +713,7 @@ template <typename T, typename BASE> struct NativeToJSConvertableTypeInherited
 
 #define X_SCRIPTABLE_ABSTRACT_TYPE_INHERITS(type, base, ...) X_SCRIPTABLE_TYPE_BASE_INHERITED(type, base) \
   namespace XScriptConvert { namespace internal { \
-  template <> struct NativeToJS<type> : public XScript::NativeToJSConvertableTypeInherited<type, base> {}; } } \
-  namespace XScript { \
-  template <> class ClassCreator_Factory<type> : public ClassCreatorConvertableFactory<type, base> {}; }
+  template <> struct NativeToJS<type> : public XScript::NativeToJSConvertableTypeInherited<type, base> {}; } }
 
 
 #define X_SCRIPTABLE_TYPE_NOT_COPYABLE(type) X_SCRIPTABLE_TYPE_BASE(type)
