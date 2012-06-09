@@ -105,7 +105,7 @@ public:
   void addConstructor(const char *name, xsize extraArgs, xsize argCount, Function, FunctionDart);
   void addProperty(const char *name, Getter, FunctionDart, Setter, FunctionDart);
   void addFunction(const char *name, xsize extraArgs, xsize argCount, Function, FunctionDart);
-  void setIndexAccessor(IndexedGetter);
+  void setIndexAccessor(IndexedGetter, FunctionDart);
   void setNamedAccessor(NamedGetter);
 
   void addClassTo(const QString &thisClassName, XScriptObject const &dest) const;

@@ -337,10 +337,11 @@ void XInterfaceBase::addFunction(const char *cname, xsize extraArgs, xsize argCo
 #endif
   }
 
-void XInterfaceBase::setIndexAccessor(IndexedGetter g)
+void XInterfaceBase::setIndexAccessor(IndexedGetter g, FunctionDart dart)
   {
 #ifdef X_DART
-  xAssertFail();
+  QString resolvedName = addDartNativeLookup(_typeName, "_indexedAccessor", 2, (Dart_NativeFunction)dart);
+  _functionSource += "Dynamic operator [](idx) native \"" + resolvedName + "\";\n";
 #else
   (*::prototype(_prototype))->SetIndexedPropertyHandler((v8::IndexedPropertyGetter)g);
 #endif
@@ -349,7 +350,6 @@ void XInterfaceBase::setIndexAccessor(IndexedGetter g)
 void XInterfaceBase::setNamedAccessor(NamedGetter g)
   {
 #ifdef X_DART
-  xAssertFail();
 #else
   (*::prototype(_prototype))->SetFallbackPropertyHandler((v8::NamedPropertyGetter)g);
 #endif
