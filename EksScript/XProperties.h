@@ -540,6 +540,17 @@ struct XMethodToIndexedGetter : XAccessorGetterType
       }
     return XScriptValue::empty();
     }
+  inline static void GetDart(XScriptDartArguments argv)
+    {
+    XScriptDartArgumentsWithThis args(argv);
+    typedef typename XScriptTypeInfo<T>::Type Type;
+    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
+    NativeHandle self = XScriptConvert::from<T>( args.calleeThis() );
+    if(self)
+      {
+      argv.setReturnValue(XScriptConvert::to( (self->*Getter)(XScriptConvert::from<xuint32>(args.at(0))) ));
+      }
+    }
   };
 
 template <typename T, typename Sig, typename XMethodSignature<T,Sig>::FunctionType Getter>
