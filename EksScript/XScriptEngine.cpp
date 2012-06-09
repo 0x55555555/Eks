@@ -229,28 +229,6 @@ XScriptValue XScriptEngine::run(const QString &src)
 #endif
   }
 
-#ifndef X_DART
-XScriptObject XScriptEngine::get(const QString& name)
-  {
-  XScriptValue propName = XScriptConvert::to(name);
-  return fromHandle(g_engine->context->Global()->Get(getV8Internal(propName)));
-  }
-
-void XScriptEngine::set(const QString& in, const XScriptObject& obj)
-  {
-  XScriptValue propName = XScriptConvert::to(in);
-  g_engine->context->Global()->Set(getV8Internal(propName), getV8Internal(obj));
-  }
-
-void XScriptEngine::set(const QString &name, Function fn)
-  {
-  XScriptValue propName = XScriptConvert::to(name);
-  v8::Handle<v8::FunctionTemplate> fnTmpl = ::v8::FunctionTemplate::New((v8::InvocationCallback)fn);
-
-  g_engine->context->Global()->Set(getV8Internal(propName), fnTmpl->GetFunction());
-  }
-#endif
-
 QString getDartUrl(const XInterfaceBase* i)
   {
   return i->typeName();
@@ -274,6 +252,16 @@ void XScriptEngine::addInterface(const XInterfaceBase *i)
 #else
   xAssert(i->isSealed());
   i->addClassTo(i->typeName(), fromHandle(g_engine->context->Global()));
+#endif
+  }
+
+void XScriptEngine::removeInterface(const XInterfaceBase *i)
+  {
+#ifdef X_DART
+  xAssertFail();
+#else
+  xAssert(i->isSealed());
+  setGlobal(i->typeName(), XScriptValue());
 #endif
   }
 
