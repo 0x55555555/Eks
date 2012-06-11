@@ -54,8 +54,10 @@ LIBS += -lQtV8 -lEksCore
 
 INCLUDEPATH += $$ROOT/Eks/EksCore $$ROOT/Eks/EksScript/qtjsbackend/src/3rdparty/v8/include
 
-DEFINES += X_DART
-LIBS += -L./dart/ -llibdart_builtin -llibdart_withcore -llibdart_lib_withcore -llibdouble_conversion -llibdart_vm -llibjscre
+win32-msvc2010 {
+  DEFINES += X_DART
+  LIBS += -L./dart/ -llibdart_builtin -llibdart_withcore -llibdart_lib_withcore -llibdouble_conversion -llibdart_vm -llibjscre
+}
 
 OTHER_FILES += \
     License.txt

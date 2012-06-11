@@ -39,7 +39,7 @@ Dart_NativeFunction Resolve(Dart_Handle name, int num_of_arguments)
   const char* cname;
   Dart_StringToCString(name, &cname);
 
-  auto toFind(ArgPair(cname, num_of_arguments));
+  ArgPair toFind(ArgPair(cname, num_of_arguments));
 
   xAssert(_symbols.find(toFind) != _symbols.end());
   return _symbols[toFind];
@@ -261,7 +261,7 @@ void XScriptEngine::removeInterface(const XInterfaceBase *i)
   xAssertFail();
 #else
   xAssert(i->isSealed());
-  setGlobal(i->typeName(), XScriptValue());
+  fromObjectHandle(g_engine->context->Global()).set(i->typeName(), XScriptValue());
 #endif
   }
 

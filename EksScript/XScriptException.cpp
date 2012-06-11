@@ -3,7 +3,7 @@
 #include "XScriptValueV8Internals.h"
 #include "XScriptValueDartInternals.h"
 
-inline XScriptValue TossAsError(const QString &err)
+XScriptValue TossAsError(const QString &err)
   {
 #ifdef X_DART
   Dart_ThrowException(Dart_NewString16((uint16_t*)err.data(), err.length()));
@@ -15,7 +15,7 @@ inline XScriptValue TossAsError(const QString &err)
 #endif
   }
 
-inline XScriptValue Toss(const QString &err)
+XScriptValue Toss(const QString &err)
   {
 #ifdef X_DART
   Dart_ThrowException(Dart_NewString16((uint16_t*)err.data(), err.length()));
