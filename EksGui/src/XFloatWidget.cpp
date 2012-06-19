@@ -120,8 +120,8 @@ void XFloatWidget::setValue( qreal in )
             _spinner->setValue( in );
             }
         setSliderFromValue( in );
-        emit valueChanged( this );
-        emit valueChanged( _spinner->value() );
+        Q_EMIT valueChanged( this );
+        Q_EMIT valueChanged( _spinner->value() );
         _settingValue = false;
         }
     }

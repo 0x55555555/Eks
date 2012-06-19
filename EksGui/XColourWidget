@@ -22,13 +22,13 @@ public:
     double alpha();
     XColour colour();
 
-signals:
+Q_SIGNALS:
     void colourChanged( const XColour & );
 
-public slots:
+public Q_SLOTS:
     void setColour( const XColour & );
 
-private slots:
+private Q_SLOTS:
     void setAlpha(double);
     void rgbChanged( const XVector3D & );
     void pickerChanged( QColor );

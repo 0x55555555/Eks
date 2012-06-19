@@ -121,7 +121,7 @@ void XVector3DWidget::setValue( XVector3D in )
         _x->setValue( in.x() );
         _y->setValue( in.y() );
         _z->setValue( in.z() );
-        emit valueChanged( in );
+        Q_EMIT valueChanged( in );
         _setting = false;
         }
     }

@@ -99,7 +99,7 @@ void XColourWidget::setColour( const XColour &inCol )
             _alpha->setValue( col.w() );
             }
 
-        emit colourChanged( col );
+        Q_EMIT colourChanged( col );
 
         _setting = false;
         }

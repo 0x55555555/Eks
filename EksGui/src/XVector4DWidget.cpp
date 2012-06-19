@@ -134,7 +134,7 @@ void XVector4DWidget::setValue( const XVector4D &in )
         _y->setValue( in.y() );
         _z->setValue( in.z() );
         _w->setValue( in.w() );
-        emit valueChanged( in );
+        Q_EMIT valueChanged( in );
         _setting = false;
         }
     }

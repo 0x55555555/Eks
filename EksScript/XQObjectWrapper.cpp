@@ -211,7 +211,7 @@ XQObjectWrapper::~XQObjectWrapper()
 {
   _objects.remove(&QObject::staticMetaObject);
   _objects.remove(&QWidget::staticMetaObject);
-  foreach(XInterfaceBase *b, _objects)
+  Q_FOREACH(XInterfaceBase *b, _objects)
     {
     if(b != XInterface<QObject>::lookup())
       {

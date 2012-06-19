@@ -24,10 +24,10 @@ public:
 
     bool isReadOnly() const;
 
-signals:
+Q_SIGNALS:
     void valueChanged( XVector2D );
 
-public slots:
+public Q_SLOTS:
     void setValue( XVector2D );
     void setReadOnly(bool);
 
@@ -35,7 +35,7 @@ protected:
     void keyPressEvent( QKeyEvent * );
     void keyReleaseEvent( QKeyEvent * );
 
-private slots:
+private Q_SLOTS:
     void setValues();
 private:
     XFloatWidget *_x, *_y;

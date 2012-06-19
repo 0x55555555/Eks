@@ -109,7 +109,7 @@ void XVector2DWidget::setValue( XVector2D in )
         _setting = true;
         _x->setValue( in.x() );
         _y->setValue( in.y() );
-        emit valueChanged( in );
+        Q_EMIT valueChanged( in );
         _setting = false;
         }
     }

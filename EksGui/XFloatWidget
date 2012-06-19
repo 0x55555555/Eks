@@ -26,15 +26,15 @@ public:
 
     bool isReadOnly() const;
 
-signals:
+Q_SIGNALS:
     void valueChanged( double );
     void valueChanged( XFloatWidget * );
 
-public slots:
+public Q_SLOTS:
     void setValue( double );
     void setReadOnly(bool);
 
-private slots:
+private Q_SLOTS:
     void setValueFromSlider( int );
     void setValueFromSpinner( double );
 
