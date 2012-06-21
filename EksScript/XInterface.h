@@ -335,9 +335,16 @@ public:
   template <typename PARENT, typename BASE>
   static XInterface *createWithParent(const QString &name, const XInterface<PARENT> *constParent, const XInterface<BASE> *constBase)
     {
-    xsize id = constBase->typeId();
-    xsize nonPointerId = (xsize)constBase->nonPointerTypeId();
-    XInterface &bob = instance(name, qMetaTypeId<T*>(), XQMetaTypeIdOrInvalid<T>::id(), id, nonPointerId, constParent);
+    xsize baseId = constBase->typeId();
+    xsize baseNonPointerId = (xsize)constBase->nonPointerTypeId();
+
+    xsize id = qMetaTypeId<T*>();
+    xsize nonPointerId = XQMetaTypeIdOrInvalid<T>::id();
+
+    xAssert(baseId != id);
+    xAssert(nonPointerId == 0 || nonPointerId != baseNonPointerId);
+
+    XInterface &bob = instance(name, id, nonPointerId, baseId, baseNonPointerId, constParent);
 
     typedef T* (*TCastFn)(BASE *ptr);
     TCastFn typedFn = XScriptConvert::castFromBase<T, BASE>;
