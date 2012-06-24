@@ -291,14 +291,27 @@ struct FunctionToSetter : XAccessorSetterType
 template <typename T, typename Sig, typename XMethodSignature<T,Sig>::FunctionType Getter>
 struct XMethodToGetter : XAccessorGetterType
   {
+  typedef typename XScriptTypeInfo<T>::Type Type;
+  typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
+
   inline static XScriptValue Get( XScriptValue property, const XAccessorInfo & info )
     {
-    typedef typename XScriptTypeInfo<T>::Type Type;
-    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
     NativeHandle self = XScriptConvert::from<T>( info.calleeThis() );
     return self
         ? XScriptConvert::to( (self->*Getter)() )
         : Toss( QString("Native member property getter '%1' could not access native This object!").arg(XScriptConvert::from<QString>(property)) );
+    }
+  inline static void GetDart(XScriptDartArguments argv)
+    {
+    XScriptDartArgumentsWithThis args(argv);
+    xAssert(args.length() == 0);
+    NativeHandle const self = XScriptConvert::from<T>( args.calleeThis() );
+    if(!self)
+      {
+      Toss(QString("Native member property getter '%1' could not access native This object!"));
+      }
+
+    argv.setReturnValue(XScriptConvert::to( (self->*Getter)() ));
     }
   };
 
