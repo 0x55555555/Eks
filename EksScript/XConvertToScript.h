@@ -74,11 +74,25 @@ template <> struct NativeToJS<xuint64>
     }
   };
 
-template <> struct NativeToJS<xsize>
+
+template <> struct NativeToJS< XIfElse< XSameType<unsigned long int, xuint64>::Value,
+    internal::UselessConversionType<unsigned long>,
+    unsigned long >::Type >
   {
-  XScriptValue operator()( xsize v ) const
+  XScriptValue operator()( unsigned long int v ) const
     {
-    return (xuint64)v;
+    return XScriptValue((xuint64)v);
+    }
+  };
+
+
+template <> struct NativeToJS< XIfElse< XSameType<long, xint64>::Value,
+    internal::UselessConversionType<long>,
+    long >::Type >
+  {
+  XScriptValue operator()( xint64 v ) const
+    {
+    return v;
     }
   };
 
