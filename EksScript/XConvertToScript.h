@@ -47,14 +47,6 @@ template <typename IntegerT> struct NativeToJSUIntSmall
     }
   };
 
-template <typename IntegerT> struct NativeToJSNumber
-  {
-  XScriptValue operator()( IntegerT v ) const
-    {
-    return v;
-    }
-  };
-
 template <typename T> struct UselessConversionType
   {
   };
@@ -66,24 +58,36 @@ template <> struct NativeToJS<xuint16> : internal::NativeToJSUIntSmall<xuint16> 
 template <> struct NativeToJS<xint32> : internal::NativeToJS_int_small<xint32> {};
 template <> struct NativeToJS<xuint32> : internal::NativeToJSUIntSmall<xuint32> {};
 
-template <> struct NativeToJS<xint64> : internal::NativeToJSNumber<xint64> {};
-template <> struct NativeToJS<xuint64> : internal::NativeToJSNumber<xuint64> {};
-template <> struct NativeToJS<double> : internal::NativeToJSNumber<double> {};
-template <> struct NativeToJS<float> : internal::NativeToJSNumber<float> {};
-
-// workarounds where long int != uint64
-template <> struct NativeToJS< XIfElse< XSameType<unsigned long int, xuint64>::Value,
-    internal::UselessConversionType<unsigned long>,
-    unsigned long >::Type >
-    : internal::NativeToJSNumber<unsigned long int>
+template <> struct NativeToJS<xint64>
   {
+  XScriptValue operator()( xint64 v ) const
+    {
+    return v;
+    }
   };
 
-template <> struct NativeToJS< XIfElse< XSameType<long, xint64>::Value,
-    internal::UselessConversionType<long>,
-    long >::Type >
-    : internal::NativeToJSNumber<xint64>
+template <> struct NativeToJS<xuint64>
   {
+  XScriptValue operator()( xuint64 v ) const
+    {
+    return v;
+    }
+  };
+
+template <> struct NativeToJS<double>
+  {
+  XScriptValue operator()( double v ) const
+    {
+    return v;
+    }
+  };
+
+template <> struct NativeToJS<float>
+  {
+  XScriptValue operator()( float v ) const
+    {
+    return v;
+    }
   };
 
 template <> struct NativeToJS<bool>
