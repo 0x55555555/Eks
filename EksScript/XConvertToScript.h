@@ -51,7 +51,7 @@ template <typename IntegerT> struct NativeToJSNumber
   {
   XScriptValue operator()( IntegerT v ) const
     {
-    return XScriptValue(v);
+    return v;
     }
   };
 

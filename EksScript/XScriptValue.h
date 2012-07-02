@@ -19,7 +19,7 @@ public:
   XScriptValue(float x);
   XScriptValue(const QString &str);
   XScriptValue(const XScriptObject &str);
-  XScriptValue(const QVariant& val);
+  explicit XScriptValue(const QVariant& val);
   explicit XScriptValue(void* val);
   ~XScriptValue();
 
