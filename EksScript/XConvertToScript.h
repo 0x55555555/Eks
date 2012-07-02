@@ -74,6 +74,14 @@ template <> struct NativeToJS<xuint64>
     }
   };
 
+template <> struct NativeToJS<xsize>
+  {
+  XScriptValue operator()( xsize v ) const
+    {
+    return (xuint64)v;
+    }
+  };
+
 template <> struct NativeToJS<double>
   {
   XScriptValue operator()( double v ) const
