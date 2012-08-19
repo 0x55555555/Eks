@@ -1,7 +1,6 @@
 #include "XQObjectWrapper.h"
 #include "XQtWrappers.h"
 #include "QMetaProperty"
-#include "XScriptValueV8Internals.h"
 #include "QVarLengthArray"
 #include "XFunctions.h"
 
@@ -19,21 +18,15 @@ public:
     Connection()
       : needsDestroy(false) {}
     Connection(const Connection &other)
-      : thisObject(other.thisObject), function(other.function), needsDestroy(false) {}
+      : callback(other.callback), needsDestroy(false) {}
+
     Connection &operator=(const Connection &other) {
-      thisObject = other.thisObject;
-      function = other.function;
+      callback = other.callback;
       needsDestroy = other.needsDestroy;
       return *this;
       }
 
-    v8::Persistent<v8::Object> thisObject;
-    v8::Persistent<v8::Function> function;
-
-    void dispose() {
-      thisObject.Dispose();
-      function.Dispose();
-      }
+    XScriptCallback callback;
 
     bool needsDestroy;
     };
@@ -59,15 +52,6 @@ XQObjectConnectionList::XQObjectConnectionList() : needsDestroy(false), inUse(0)
 
 XQObjectConnectionList::~XQObjectConnectionList()
   {
-  for(SlotHash::Iterator iter = slotHash.begin(); iter != slotHash.end(); ++iter)
-    {
-    QList<Connection> &connections = *iter;
-    for(int ii = 0; ii < connections.count(); ++ii)
-      {
-      connections[ii].thisObject.Dispose();
-      connections[ii].function.Dispose();
-      }
-    }
   slotHash.clear();
   }
 
@@ -110,12 +94,8 @@ int XQObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, voi
     QMetaMethod snd = sender()->metaObject()->method(senderSignalIndex());
     QList<QByteArray> types = snd.parameterTypes();
 
-#ifndef X_DART
-    v8::Locker l;
-    v8::Handle<v8::Context> ctxt = getV8EngineInternal();
 
-    v8::HandleScope handle_scope;
-    v8::Context::Scope scope(ctxt);
+    XScriptFunction::Scope scope;
 
     int argCount = types.size();
     QVarLengthArray<XScriptValue, 9> args(argCount);
@@ -147,27 +127,19 @@ int XQObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, voi
         continue;
         }
 
-      v8::TryCatch trycatch;
-
-      v8::Handle<v8::Value> result;
+      XScriptValue result;
       try
         {
-        xAssert(!connection.function.IsEmpty());
-        xAssert(connection.function->IsFunction());
-        if(connection.thisObject.IsEmpty())
-          {
-          result = connection.function->Call(ctxt->Global(), argCount, getV8Internal(args.data()));
-          }
-        else
-          {
-          result = connection.function->Call(connection.thisObject, argCount, getV8Internal(args.data()));
-          }
+        xAssert(connection.callback.isValid());
 
-        if(result.IsEmpty())
+        bool hasError = false;
+        QString errorStr;
+
+        connection.callback.call(&result, argCount, args.data(), &hasError, &errorStr);
+
+        if(hasError)
           {
-          trycatch.ReThrow();
-          qCritical() << XScriptConvert::from<QString>(fromHandle(trycatch.StackTrace()));
-          qCritical() << XScriptConvert::from<QString>(fromHandle(trycatch.Exception()));
+          qCritical() << errorStr;
           }
         }
       catch(...)
@@ -177,13 +149,17 @@ int XQObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, voi
       }
 
     connectionList.connectionsInUse--;
-    if (connectionList.connectionsInUse == 0 && connectionList.connectionsNeedClean) {
+    if (connectionList.connectionsInUse == 0 && connectionList.connectionsNeedClean)
+      {
       for (QList<Connection>::Iterator iter = connectionList.begin();
-           iter != connectionList.end(); ) {
-        if (iter->needsDestroy) {
-          iter->dispose();
+           iter != connectionList.end(); )
+        {
+        if (iter->needsDestroy)
+          {
           iter = connectionList.erase(iter);
-          } else {
+          }
+        else
+          {
           ++iter;
           }
         }
@@ -194,7 +170,6 @@ int XQObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, voi
       {
       delete this;
       }
-#endif
     }
 
   return -1;
@@ -387,7 +362,7 @@ struct CallArgument
       }
     }
 
-  void fromValue(int callType, v8::Handle<v8::Value> value)
+  void fromValue(int callType, XScriptValue value)
     {
     if (type != 0)
       {
@@ -401,58 +376,53 @@ struct CallArgument
         } else */
     if (callType == QMetaType::Int)
       {
-      intValue = quint32(value->Int32Value());
+      intValue = quint32(value.toInteger());
       type = callType;
       }
     else if (callType == QMetaType::UInt)
       {
-      intValue = quint32(value->Uint32Value());
+      intValue = quint32(value.toInteger());
       type = callType;
       }
     else if (callType == QMetaType::Bool)
       {
-      boolValue = value->BooleanValue();
+      boolValue = value.toBoolean();
       type = callType;
       }
     else if (callType == QMetaType::Double)
       {
-      doubleValue = double(value->NumberValue());
+      doubleValue = double(value.toNumber());
       type = callType;
       }
     else if (callType == QMetaType::Float)
       {
-      floatValue = float(value->NumberValue());
+      floatValue = float(value.toNumber());
       type = callType;
       }
     else if (callType == QMetaType::QString)
       {
-      if (value->IsNull() || value->IsUndefined())
-        {
-        qstringPtr = new (&allocData) QString();
-        }
-      else
-        {
-        qstringPtr = new (&allocData) QString(XScriptConvert::from<QString>(fromHandle(value)));
-        }
+      qstringPtr = new (&allocData) QString(XScriptConvert::from<QString>(value));
       type = callType;
     }
     else if (callType == QMetaType::QObjectStar)
     {
-      qobjectPtr = XScriptConvert::from<QObject>(fromHandle(value));
+      qobjectPtr = XScriptConvert::from<QObject>(value);
       type = callType;
     }
     else if (callType == QMetaType::QWidgetStar)
     {
-      qobjectPtr = XScriptConvert::from<QWidget>(fromHandle(value));
+      qobjectPtr = XScriptConvert::from<QWidget>(value);
       type = callType;
     }
     else if (callType == qMetaTypeId<QVariant>())
       {
-      qvariantPtr = new (&allocData) QVariant(fromHandle(value).toVariant());
+      qvariantPtr = new (&allocData) QVariant(value.toVariant());
       type = callType;
       }
     else if (callType == qMetaTypeId<QList<QObject*> >())
       {
+      xAssertFail();
+#if 0
       qlistPtr = new (&allocData) QList<QObject *>();
       if (value->IsArray())
         {
@@ -468,6 +438,7 @@ struct CallArgument
         qlistPtr->append(XScriptConvert::from<QObject>(fromHandle(value)));
         }
       type = callType;
+#endif
       }
     /*else if (callType == qMetaTypeId<QQmlV8Handle>())
         {
@@ -479,7 +450,7 @@ struct CallArgument
       qvariantPtr = new (&allocData) QVariant();
       type = -1;
 
-      QVariant v = fromHandle(value).toVariant(callType);
+      QVariant v = value.toVariant(callType);
       if (v.userType() == callType)
         {
         *qvariantPtr = v;
@@ -509,42 +480,40 @@ struct CallArgument
       }
     }
 
-  v8::Handle<v8::Value> toValue()
+  XScriptValue toValue()
     {
-    /*if (type == qMetaTypeId<QJSValue>())
+    if (type == QMetaType::Int)
       {
-      return QJSValuePrivate::get(*qjsValuePtr)->asV8Value(engine);
-      }
-    else */if (type == QMetaType::Int)
-      {
-      return v8::Integer::New(int(intValue));
+      return XScriptValue(int(intValue));
       }
     else if (type == QMetaType::UInt)
       {
-      return v8::Integer::NewFromUnsigned(intValue);
+      return XScriptValue(intValue);
       }
     else if (type == QMetaType::Bool)
       {
-      return v8::Boolean::New(boolValue);
+      return XScriptValue(boolValue);
       }
     else if (type == QMetaType::Double)
       {
-      return v8::Number::New(doubleValue);
+      return XScriptValue(doubleValue);
       }
     else if (type == QMetaType::Float)
       {
-      return v8::Number::New(floatValue);
+      return XScriptValue(floatValue);
       }
     else if (type == QMetaType::QString)
       {
-      return getV8Internal(XScriptConvert::to(*qstringPtr));
+      return XScriptConvert::to(*qstringPtr);
       }
     else if (type == QMetaType::QObjectStar)
       {
-      return getV8Internal(XScriptConvert::to(qobjectPtr));
+      return XScriptConvert::to(qobjectPtr);
       }
     else if (type == qMetaTypeId<QList<QObject *> >())
       {
+      xAssertFail();
+#if 0
       // XXX Can this be made more by using Array as a prototype and implementing
       // directly against QList<QObject*>?
       QList<QObject *> &list = *qlistPtr;
@@ -554,6 +523,8 @@ struct CallArgument
         array->Set(ii, getV8Internal(XScriptConvert::to(list.at(ii))));
         }
       return array;
+#endif
+      return XScriptValue();
       }/*
     else if(type == qMetaTypeId<QQmlV8Handle>())
       {
@@ -561,11 +532,11 @@ struct CallArgument
       }*/
     else if (type == -1 || type == qMetaTypeId<QVariant>())
       {
-      return getV8Internal(XScriptValue(*qvariantPtr));
+      return XScriptValue(*qvariantPtr);
       }
     else
       {
-      return v8::Undefined();
+      return XScriptValue();
       }
     }
 
@@ -620,7 +591,7 @@ private:
 
 struct Utils
   {
-  static v8::Handle<v8::Value> signal(v8::Local<v8::String>, const v8::AccessorInfo& info)
+  static XSriptValue signal(XScriptValue, const XAccessorInfo& info)
     {
     QObject *ths = XScriptConvert::from<QObject>(fromHandle(info.This()));
     int id = XScriptConvert::from<int>(fromHandle(info.Data()));

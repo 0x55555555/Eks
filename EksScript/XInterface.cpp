@@ -267,7 +267,7 @@ void XInterfaceBase::set(const char *name, XScriptValue val)
 #endif
   }
 
-void XInterfaceBase::addConstructor(const char *cname, xsize extraArgs, size_t argCount, Function fn, FunctionDart ctor)
+void XInterfaceBase::addConstructor(const char *cname, xsize extraArgs, size_t argCount, XScript::Function fn, XScript::FunctionDart ctor)
   {
 #ifdef X_DART
   QString callArgs;
@@ -298,7 +298,7 @@ void XInterfaceBase::addConstructor(const char *cname, xsize extraArgs, size_t a
 #endif
   }
 
-void XInterfaceBase::addProperty(const char *cname, Getter getter, FunctionDart fnGetter, Setter setter, FunctionDart fnSetter)
+void XInterfaceBase::addProperty(const char *cname, XScript::GetterFn getter, XScript::FunctionDart fnGetter, XScript::SetterFn setter, XScript::FunctionDart fnSetter)
   {
 #ifdef X_DART
   QString name = cname;
@@ -315,7 +315,7 @@ void XInterfaceBase::addProperty(const char *cname, Getter getter, FunctionDart 
 #endif
   }
 
-void XInterfaceBase::addFunction(const char *cname, xsize extraArgs, xsize argCount, Function fn, FunctionDart fnDart)
+void XInterfaceBase::addFunction(const char *cname, xsize extraArgs, xsize argCount, XScript::Function fn, XScript::FunctionDart fnDart)
   {
 #ifdef X_DART
   QString callArgs;
@@ -328,16 +328,22 @@ void XInterfaceBase::addFunction(const char *cname, xsize extraArgs, xsize argCo
       }
     }
 
+  const char* leadIn = "Dynamic ";
+  if(extraArgs == 0)
+  {
+    leadIn = "static Dynamic";
+  }
+
   QString name = cname;
   QString resolvedName = addDartNativeLookup(_typeName, name, extraArgs + argCount, (Dart_NativeFunction)fnDart);
-  _functionSource += "Dynamic " + name + "(" + callArgs + ") native \"" + resolvedName + "\";\n";
+  _functionSource += leadIn + name + "(" + callArgs + ") native \"" + resolvedName + "\";\n";
 #else
   v8::Handle<v8::FunctionTemplate> fnTmpl = ::v8::FunctionTemplate::New((v8::InvocationCallback)fn);
   (*::prototype(_prototype))->Set(v8::String::New(cname), fnTmpl->GetFunction());
 #endif
   }
 
-void XInterfaceBase::setIndexAccessor(IndexedGetter g, FunctionDart dart)
+void XInterfaceBase::setIndexAccessor(IndexedGetter g, XScript::FunctionDart dart)
   {
 #ifdef X_DART
   QString resolvedName = addDartNativeLookup(_typeName, "_indexedAccessor", 2, (Dart_NativeFunction)dart);

@@ -6,10 +6,12 @@
 #include "QString"
 
 class XScriptValue;
+class QFile;
 
 class EKSSCRIPT_EXPORT XScriptSource
   {
 public:
+  XScriptSource(QFile *file);
   XScriptSource(const QString &filename, const QString &data);
 
   class EKSSCRIPT_EXPORT Error
@@ -27,6 +29,7 @@ public:
   XScriptValue run(Error *error=0);
 
 private:
+  void load(const QString &key, const QString &src);
   void *_impl;
   };
 

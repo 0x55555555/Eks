@@ -13,7 +13,6 @@ XScriptValue fromHandle(v8::Handle<v8::Value>);
 XScriptObject fromObjectHandle(v8::Handle<v8::Object>);
 XScriptFunction fromFunction(v8::Handle<v8::Function>);
 
-v8::Handle<v8::Value> getV8Internal(const XScriptValue&);
 v8::Handle<v8::Object> getV8Internal(const XScriptObject &o);
 v8::Handle<v8::ObjectTemplate> getV8Internal(XInterfaceBase *o);
 v8::Handle<v8::Function> getV8Internal(const XScriptFunction&);

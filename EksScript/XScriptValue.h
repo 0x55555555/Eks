@@ -4,6 +4,7 @@
 #include "XScriptGlobal.h"
 
 class XScriptObject;
+class XScriptFunction;
 class QVariant;
 
 class EKSSCRIPT_EXPORT XScriptValue
@@ -19,6 +20,7 @@ public:
   XScriptValue(float x);
   XScriptValue(const QString &str);
   XScriptValue(const XScriptObject &str);
+  XScriptValue(const XScriptFunction &str);
   explicit XScriptValue(const QVariant& val);
   explicit XScriptValue(void* val);
   ~XScriptValue();
@@ -48,7 +50,7 @@ public:
   QVariant toVariant(int typeHint=0) const;
 
   static XScriptValue newArray();
-  static XScriptValue empty();
+  static XScriptValue newEmpty();
 
 private:
   void *_object;
@@ -74,6 +76,23 @@ public:
 
 private:
   void *_object;
+  };
+
+class XScriptCallback
+  {
+public:
+  XScriptCallback() { }
+  XScriptCallback(const XScriptFunction &fn);
+  XScriptCallback(const XScriptObject &val, const XScriptFunction &fn);
+  ~XScriptCallback();
+
+  bool isValid() const;
+
+  void call(XScriptValue *result, xsize argCount, XScriptValue *args, bool *error, QString *errorOut);
+
+private:
+  XPersistentScriptValue _object;
+  XPersistentScriptValue _function;
   };
 
 #endif // XSCRIPTVALUE_H

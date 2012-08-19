@@ -68,7 +68,7 @@ struct XSignature<RV (T::*)(XScriptArguments const &) const> : XSignature<RV (XS
 
 */
 template <typename FunctionSig>
-struct XFunctionSignature : XSignature< FunctionSig > {};
+struct XFunctionSignature : XSignature< FunctionSig > { };
 
 /** @class XMethodSignature
    Base (unimplemented) signature for XMethodSignature

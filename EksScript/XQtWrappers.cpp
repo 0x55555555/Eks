@@ -62,11 +62,25 @@ template <typename T> void setupBindings(XInterface<T> *templ)
 
 template <> void setupBindings<QPointF>(XInterface<QPointF> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addCopyConstructor();
-  templ->addConstructor<QPointF *(float, float)>();
-  templ->addProperty<qreal, qreal, &QPointF::x, &QPointF::setX>("x");
-  templ->addProperty<qreal, qreal, &QPointF::y, &QPointF::setY>("y");
+  typedef QPointF CLASS;
+
+  XScript::ClassDef<3,2,2> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptCopyConstructor,
+      XScriptConstructor("", float, float),
+    },
+    {
+      XScriptPropertyDef(qreal, "x", x, setX),
+      XScriptPropertyDef(qreal, "y", y, setY),
+    },
+    {
+      XScriptMethod("rx", qreal&(), rx),
+      XScriptMethod("ry", qreal&(), ry)
+    }
+  };
+
+  templ->add(cls);
   }
 
 template <> void setupBindings<QPoint>(XInterface<QPoint> *templ)

@@ -2,17 +2,38 @@
 #define XSCRIPTFUNCTION_H
 
 #include "XScriptGlobal.h"
+#include "XScriptEngine.h"
 #include "QMetaType"
 
 class XScriptObject;
 class XScriptValue;
 class XScriptArguments;
 
+namespace XScript
+{
+class FunctionScope
+  {
+public:
+  FunctionScope()
+    {
+    currentInterface()->beginFunctionScope(this);
+    }
+
+  ~FunctionScope()
+    {
+    currentInterface()->endFunctionScope(this);
+    }
+
+private:
+  void* _data[2];
+  };
+}
+
 class EKSSCRIPT_EXPORT XScriptFunction
   {
 public:
-  typedef XScriptValue (*Function)( XScriptArguments const & argv );
-  XScriptFunction(Function fn);
+  //typedef XScriptValue (*Function)( XScriptArguments const & argv );
+  //XScriptFunction(Function fn);
 
   XScriptFunction(const XScriptValue& );
   XScriptFunction();
@@ -23,9 +44,11 @@ public:
 
   bool isValid() const;
 
-  XScriptValue callWithTryCatch(const XScriptObject &thisObject, int argc, const XScriptValue args[], bool *error, QString *) const;
-  XScriptValue call(const XScriptObject &thisObject, int argc, const XScriptValue args[]) const;
-  XScriptValue callAsConstructor(const XScriptArguments&);
+  void callWithTryCatch(XScriptValue *result, const XScriptObject &thisObject, int argc, const XScriptValue args[], bool *error, QString *) const;
+  //XScriptValue call(const XScriptObject &thisObject, int argc, const XScriptValue args[]) const;
+  void callAsConstructor(XScriptValue *result, const XScriptArguments&);
+
+  typedef XScript::FunctionScope Scope;
 
 private:
   void *_func;

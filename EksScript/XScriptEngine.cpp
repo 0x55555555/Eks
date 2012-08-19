@@ -207,28 +207,6 @@ XScriptEngine::XScriptEngine(bool debugging)
 XScriptEngine::~XScriptEngine()
   {
   }
-
-XScriptValue XScriptEngine::run(const QString &src)
-  {
-#ifdef X_DART
-  // Create a test library and Load up a test script in it.
-  Dart_Handle source = getDartInternal(XScriptConvert::to(src));
-  Dart_Handle url = Dart_NewString("temp");
-  Dart_Handle script = Dart_LoadScript(url, source);
-  CHECK_HANDLE(script)
-
-  Dart_Handle result = Dart_Invoke(script,
-    Dart_NewString("main"),
-    0,
-    0);
-  CHECK_HANDLE(result)
-
-  return fromHandle(result);
-#else
-  return XScriptValue();
-#endif
-  }
-
 QString getDartUrl(const XInterfaceBase* i)
   {
   return i->typeName();

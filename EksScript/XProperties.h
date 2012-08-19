@@ -58,7 +58,7 @@ struct Accessors : XAccessorGetterType, XAccessorSetterType {};
         templating contexts. e.g. this can be useful if we want to
         wrap a custom v8::AccessorGetter in a GetterCatcher.
     */
-template <XInterfaceBase::Getter G>
+template <XScript::GetterFn G>
 struct GetterToGetter : XAccessorGetterType
   {
   /** Implements the v8::AccessorGetter() interface. */
@@ -74,7 +74,7 @@ struct GetterToGetter : XAccessorGetterType
         templating contexts. e.g. this can be useful if we want to
         wrap a custom v8::AccessorSetter in a SetterCatcher.
     */
-template <XInterfaceBase::Setter S>
+template <XScript::SetterFn S>
 struct SetterToSetter : XAccessorSetterType
   {
   /** Implements the v8::AccessorSetter() interface. */

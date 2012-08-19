@@ -30,6 +30,77 @@ template <typename T> struct XQMetaTypeIdOrInvalid<T, true>
     }
   };
 
+
+namespace XScript
+{
+typedef XScriptValue (*Function)( XScriptArguments const & argv );
+typedef void (*FunctionDart)( XScriptDartArguments argv );
+
+typedef XScriptValue (*GetterFn)(XScriptValue property,const XAccessorInfo& info);
+typedef void (*SetterFn)(XScriptValue property, XScriptValue value, const XAccessorInfo& info);
+
+struct ConstructorDef
+  {
+  const char *name;
+  Function functionV8;
+  FunctionDart functionDart;
+  xuint8 argCount;
+  };
+
+#define XScriptConstructor(name, ...) \
+{ name, \
+0, \
+XScript::CtorFunctionWrapper<CLASS, CLASS*(__VA_ARGS__), XInterface<CLASS>::weak_dtor>::CallDart, \
+XScript::CtorFunctionWrapper<CLASS, CLASS*(__VA_ARGS__), XInterface<CLASS>::weak_dtor>::Arity }
+
+#define XScriptDefaultConstructor XScriptConstructor("")
+#define XScriptCopyConstructor XScriptConstructor("", const CLASS&)
+
+struct FunctionDef
+  {
+  const char *name;
+  Function functionV8;
+  FunctionDart functionDart;
+  xuint8 argCount;
+  bool isStatic;
+  };
+
+#define XScriptMethod(name, sig, fn) \
+{ name, \
+XScript::MethodToInCa<CLASS, sig, &CLASS::fn>::Call,\
+XScript::MethodToInCa<CLASS, sig, &CLASS::fn>::CallDart, \
+XScript::MethodToInCa<CLASS, sig, &CLASS::fn>::Arity, \
+false \
+}
+
+struct PropertyDef
+  {
+  const char *name;
+  GetterFn getterV8;
+  SetterFn setterV8;
+  FunctionDart getterDart;
+  FunctionDart setterDart;
+  };
+
+#define XScriptPropertyDef(type, name, get, set) \
+{ name, \
+XScript::XConstMethodToGetter<CLASS, type (), &CLASS::get>::Get, \
+XScript::XMethodToSetter<CLASS, type, &CLASS::set>::Set, \
+XScript::XConstMethodToGetter<CLASS, type (), &CLASS::get>::GetDart, \
+XScript::XMethodToSetter<CLASS, type, &CLASS::set>::SetDart }
+
+
+template <xsize ConstructorCount,
+          xsize PropertyCount,
+          xsize FunctionCount>
+struct ClassDef
+  {
+  ConstructorDef ctors[ConstructorCount];
+  PropertyDef properties[PropertyCount];
+  FunctionDef functions[FunctionCount];
+  };
+}
+
 class EKSSCRIPT_EXPORT XInterfaceBase
   {
 public:
@@ -95,17 +166,35 @@ public:
   XScriptObject newInstance(int argc, XScriptValue argv[], const QString& name="") const;
   void set(const char *name, XScriptValue val);
 
-  typedef XScriptValue (*Function)( XScriptArguments const & argv );
-  typedef void (*FunctionDart)( XScriptDartArguments argv );
-  typedef XScriptValue (*Getter)(XScriptValue property,const XAccessorInfo& info);
-  typedef void (*Setter)(XScriptValue property, XScriptValue value, const XAccessorInfo& info);
   typedef XScriptValue (*NamedGetter)(XScriptValue, const XAccessorInfo& info);
   typedef XScriptValue (*IndexedGetter)(xuint32, const XAccessorInfo& info);
 
-  void addConstructor(const char *name, xsize extraArgs, xsize argCount, Function, FunctionDart);
-  void addProperty(const char *name, Getter, FunctionDart, Setter, FunctionDart);
-  void addFunction(const char *name, xsize extraArgs, xsize argCount, Function, FunctionDart);
-  void setIndexAccessor(IndexedGetter, FunctionDart);
+  template <xsize CCount,
+            xsize PCount,
+            xsize FCount>
+  void add(const XScript::ClassDef<CCount, PCount, FCount>& cls)
+    {
+    for(xsize i = 0; i < CCount; ++i)
+      {
+      const XScript::ConstructorDef& ctor = cls.ctors[i];
+      addConstructor(ctor.name, 0, ctor.argCount, ctor.functionV8, ctor.functionDart);
+      }
+    for(xsize i = 0; i < PCount; ++i)
+      {
+      const XScript::PropertyDef& prop = cls.properties[i];
+      addProperty(prop.name, prop.getterV8, prop.getterDart, prop.setterV8, prop.setterDart);
+      }
+    for(xsize i = 0; i < CCount; ++i)
+      {
+      const XScript::FunctionDef& fn = cls.functions[i];
+      addFunction(fn.name, fn.isStatic ? 0 : 1, fn.argCount, fn.functionV8, fn.functionDart);
+      }
+    }
+
+  void addConstructor(const char *name, xsize extraArgs, xsize argCount, XScript::Function, XScript::FunctionDart);
+  void addProperty(const char *name, XScript::GetterFn, XScript::FunctionDart, XScript::SetterFn, XScript::FunctionDart);
+  void addFunction(const char *name, xsize extraArgs, xsize argCount, XScript::Function, XScript::FunctionDart);
+  void setIndexAccessor(IndexedGetter, XScript::FunctionDart);
   void setNamedAccessor(NamedGetter);
 
   void addClassTo(const QString &thisClassName, XScriptObject const &dest) const;
@@ -183,7 +272,7 @@ public:
   {
     typedef XScript::CtorFunctionWrapper<T, TYPE, XInterface<T>::weak_dtor> Wrapper;
 
-    FunctionDart ctorDart = Wrapper::CallDart;
+    XScript::FunctionDart ctorDart = Wrapper::CallDart;
 
     addConstructor(name, 1, Wrapper::Arity, 0, ctorDart);
   }
@@ -239,12 +328,12 @@ public:
     }
 
   template <typename SIG,
-            typename XMethodSignature<T, SIG>::FunctionType METHOD>
+            typename XFunctionSignature<SIG>::FunctionType METHOD>
   void addStaticMethod(const char *name)
     {
-    Function fn = XScript::FunctionToInCa<SIG, METHOD>::Call;
+    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
 
-    XInterfaceBase::addFunction(name, fn);
+    XInterfaceBase::addFunction(name, 0, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
     }
 
   template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (xsize i)>::FunctionType METHOD>
@@ -398,51 +487,6 @@ public:
       }
     }
 
-private:
-  typedef XScript::ClassCreator_InternalFields<T> InternalFields;
-  typedef XScript::ClassCreator_Factory<T> Factory;
-
-  static XInterface &instance(const QString &name, xsize id, xsize nonPointerId, xsize baseId, xsize baseNonPointerId, const XInterfaceBase* parent)
-    {
-    static XInterface bob(id, nonPointerId, baseId, baseNonPointerId,name, parent);
-    return bob;
-    }
-
-  template <typename BASE>
-      static XScriptObject FindHolder( XScriptObject const & jo, BASE const * nh )
-    {
-    if( !nh || !jo.isValid() ) return XScriptObject();
-    XScriptValue proto(jo);
-    void const * ext = NULL;
-    typedef XScript::ClassCreator_SearchPrototypeForThis<T> SPFT;
-    while( !ext && proto.isValid() && proto.isObject() )
-      {
-      XScriptObject obj(proto);
-      ext = (obj.internalFieldCount() != (xsize)InternalFields::Count)
-            ? NULL
-            : obj.internalField( InternalFields::NativeIndex );
-      // FIXME: if InternalFields::TypeIDIndex>=0 then also do a check on that one.
-      /*
-              If !ext, there is no bound pointer. If (ext &&
-              (ext!=nh)) then there is one, but it's not the droid
-              we're looking for. In either case, (possibly) check the
-              prototype...
-          */
-      if( ext == nh )
-        {
-        return obj;
-        }
-      else if( !SPFT::Value )
-        {
-        break;
-        }
-      else
-        {
-        proto = obj.getPrototype();
-        }
-      }
-    return XScriptObject();
-    }
 
   static void weak_dtor( XPersistentScriptValue pv, void * )
     {
@@ -535,6 +579,51 @@ private:
     pv.dispose();
     }
 
+private:
+  typedef XScript::ClassCreator_InternalFields<T> InternalFields;
+  typedef XScript::ClassCreator_Factory<T> Factory;
+
+  static XInterface &instance(const QString &name, xsize id, xsize nonPointerId, xsize baseId, xsize baseNonPointerId, const XInterfaceBase* parent)
+    {
+    static XInterface bob(id, nonPointerId, baseId, baseNonPointerId,name, parent);
+    return bob;
+    }
+
+  template <typename BASE>
+      static XScriptObject FindHolder( XScriptObject const & jo, BASE const * nh )
+    {
+    if( !nh || !jo.isValid() ) return XScriptObject();
+    XScriptValue proto(jo);
+    void const * ext = NULL;
+    typedef XScript::ClassCreator_SearchPrototypeForThis<T> SPFT;
+    while( !ext && proto.isValid() && proto.isObject() )
+      {
+      XScriptObject obj(proto);
+      ext = (obj.internalFieldCount() != (xsize)InternalFields::Count)
+            ? NULL
+            : obj.internalField( InternalFields::NativeIndex );
+      // FIXME: if InternalFields::TypeIDIndex>=0 then also do a check on that one.
+      /*
+              If !ext, there is no bound pointer. If (ext &&
+              (ext!=nh)) then there is one, but it's not the droid
+              we're looking for. In either case, (possibly) check the
+              prototype...
+          */
+      if( ext == nh )
+        {
+        return obj;
+        }
+      else if( !SPFT::Value )
+        {
+        break;
+        }
+      else
+        {
+        proto = obj.getPrototype();
+        }
+      }
+    return XScriptObject();
+    }
   /**
      Gets installed as the NewInstance() handler for T.
    */
@@ -548,7 +637,9 @@ private:
           */
       if (!argv.isConstructCall())
         {
-        return argv.callee().callAsConstructor(argv);
+        XScriptValue val;
+        argv.callee().callAsConstructor(&val, argv);
+        return val;
         }
       }
     else
