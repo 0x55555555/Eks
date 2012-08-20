@@ -9,29 +9,31 @@
 #include "XScriptEngine.h"
 #include "QWidget"
 
-class XQObjectConnectionList;
+namespace XScript
+{
 
-class EKSSCRIPT_EXPORT XQObjectWrapper
+class QObjectConnectionList;
+class EKSSCRIPT_EXPORT QObjectWrapper
   {
 public:
-  static void initiate(XScriptEngine *);
-  static XQObjectWrapper *instance();
-  ~XQObjectWrapper();
+  static void initiate(Engine *);
+  static QObjectWrapper *instance();
+  ~QObjectWrapper();
 
   XScriptObject wrap(QObject *);
   XInterfaceBase *findInterface(const QMetaObject *object);
 
 private:
-  XQObjectWrapper();
+  QObjectWrapper();
 
   static void buildInterface(XInterfaceBase *interface, const QMetaObject *metaObject);
 
-  XScriptEngine *_context;
   XUnorderedMap<const QMetaObject *, XInterfaceBase *> _objects;
-  XUnorderedMap<QObject *, XQObjectConnectionList *> _connections;
-  friend class XQObjectConnectionList;
+  XUnorderedMap<QObject *, QObjectConnectionList *> _connections;
+  friend class QObjectConnectionList;
   friend struct Utils;
   };
+}
 
 namespace XScriptConvert {
 namespace internal {
@@ -41,7 +43,7 @@ template <> struct NativeToJS<QObject>
   {
   XScriptValue operator()(QObject *n) const
     {
-    return XQObjectWrapper::instance()->wrap(n);
+    return XScript::QObjectWrapper::instance()->wrap(n);
     }
   XScriptValue operator()(QObject &n) const
     {

@@ -6,6 +6,7 @@
 #include "dart/dart_api.h"
 #include "QDebug"
 
+#if 0
 class XScriptValue;
 class XScriptObject;
 class XInterfaceBase;
@@ -28,7 +29,10 @@ XScriptObject fromObjectHandle(Dart_Handle);
 
 #define CHECK_HANDLE(handle) if(Dart_IsError(handle)) { printError(handle); }
 
+namespace XScript
+{
 QString getDartUrl(const XInterfaceBase* ifc);
+}
 
 Dart_Handle getDartInternal(const XScriptValue&);
 Dart_Handle *getDartInternal(const XScriptValue*);
@@ -44,5 +48,7 @@ inline Dart_Handle &getDartHandle(void *&ptr)
 QString addDartNativeLookup(const QString &typeName, const QString &functionName, xsize argCount, Dart_NativeFunction);
 
 QString getDartSource(const XInterfaceBase *, const QString &parentName);
+
+#endif
 
 #endif // XSCRIPTVALUEDARTINTERNALS_H

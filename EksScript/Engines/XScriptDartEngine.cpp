@@ -3,10 +3,12 @@
 #include "../XScriptValue.h"
 #include "../XScriptObject.h"
 #include "../XScriptFunction.h"
+#include "../XConvertFromScript.h"
 #include "XAssert"
 
 namespace
 {
+#define WRAPPER_NAME "NativeWrapper"
 
 Dart_Handle& getDartHandle(const XScriptValue *obj)
   {
@@ -97,9 +99,134 @@ XScriptValue fromHandle(Dart_Handle h)
   return v;
   }
 
+bool isolateCreateCallback(const char* ,
+  const char* ,
+  void* ,
+  char** )
+{
+  xAssertFail();
+  return true;
+}
+
+bool isolateInterruptCallback()
+{
+  xAssertFail();
+  return true;
+}
+
+typedef QPair<QString, uint8_t> ArgPair;
+QMap<ArgPair, Dart_NativeFunction> _symbols;
+
+Dart_NativeFunction Resolve(Dart_Handle name, int num_of_arguments)
+{
+  const char* cname;
+  Dart_StringToCString(name, &cname);
+
+  ArgPair toFind(ArgPair(cname, num_of_arguments));
+
+  xAssert(_symbols.find(toFind) != _symbols.end());
+  return _symbols[toFind];
+}
+
+QString addDartNativeLookup(const QString &typeName, const QString &functionName, xsize argCount, Dart_NativeFunction fn)
+{
+  QString fullName = typeName + "_" + functionName + QString::number(argCount);
+  _symbols[ArgPair(fullName, argCount)] = fn;
+
+  return fullName;
+}
+
+Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc)
+{
+  Dart_Handle lib = Dart_LoadLibrary(url, libSrc);
+
+  CHECK_HANDLE(lib)
+  Dart_SetNativeResolver(lib, Resolve);
+
+  Dart_CreateNativeWrapperClass(lib,
+    Dart_NewString(WRAPPER_NAME),
+    kNumEventHandlerFields);
+
+  return lib;
+}
+
+QMap<QString, Dart_Handle> _libs;
+Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url)
+{
+  if (!Dart_IsLibrary(library)) {
+    return Dart_Error("not a library");
+  }
+  if (!Dart_IsString8(url)) {
+    return Dart_Error("url is not a string");
+  }
+
+  if (tag == kCanonicalizeUrl) {
+    return url;
+  }
+
+  Dart_Handle importLibrary = Dart_LookupLibrary(url);
+  if (Dart_IsError(importLibrary))
+  {
+    QString strUrl = XScriptConvert::from<QString>(fromHandle(url));
+    xAssert(_libs.find(strUrl) != _libs.end());
+    Dart_Handle source = _libs[strUrl];
+    importLibrary = loadLibrary(url, source);
+  }
+
+  if (!Dart_IsError(importLibrary) && (tag == kImportTag))
+  {
+    Dart_Handle result = Dart_LibraryImportLibrary(library, importLibrary);
+    CHECK_HANDLE(result);
+  }
+
+  return importLibrary;
+}
+
 
 class DartEngineInterface : public EngineInterface
   {
+  DartEngineInterface(bool debugging)
+    {
+    xAssert(!debugging);
+
+    Dart_SetVMFlags(0, (const char**)0);
+    Dart_Initialize(isolateCreateCallback, isolateInterruptCallback);
+
+    // Start an Isolate, load a script and create a full snapshot.
+    Dart_CreateIsolate(0, 0, 0, 0, 0);
+
+    Dart_EnterScope();
+    Dart_SetLibraryTagHandler(tagHandler);
+    }
+
+  ~DartEngineInterface()
+    {
+    Dart_ExitScope();
+    Dart_ShutdownIsolate();
+    }
+
+  void addInterface(const XInterfaceBase *i)
+    {
+    QString parentName = i->parent() ? i->parent()->typeName() : WRAPPER_NAME;
+    QString src = getDartSource(i, parentName);
+
+    if(i->parent())
+      {
+      src = "#import(\"" + parentName + "\");\n" + src;
+      }
+
+    QString url = getDartUrl(i);
+    src = "#library(\"" + url + "\");\n" + src;
+
+    _libs[url] = getDartInternal(XScriptConvert::to(src));
+    }
+
+  void removeInterface(const XInterfaceBase *ifc)
+    {
+    (void)ifc;
+    xAssertFail();
+    }
+
   void newValue(XScriptValue *v) X_OVERRIDE
     {
     getDartHandle(v) = Dart_Null();
@@ -373,10 +500,8 @@ class DartEngineInterface : public EngineInterface
     }
   };
 
-EngineInterface *currentInterface()
+EngineInterface *createDartInterface(bool debugging)
   {
-  static EngineInterface* ifc = new DartEngineInterface;
-
-  return ifc;
+  return new DartEngineInterface(debugging);
   }
 }

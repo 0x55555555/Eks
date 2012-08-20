@@ -19,6 +19,11 @@ class FunctionScope;
 class EngineInterface
   {
 public:
+  virtual ~EngineInterface();
+
+  virtual void addInterface(const XInterfaceBase *ifc) = 0;
+  virtual void removeInterface(const XInterfaceBase *ifc) = 0;
+
   virtual void newValue(XScriptValue* val) = 0;
   virtual void newValue(XScriptValue* val, bool c) = 0;
   virtual void newValue(XScriptValue* val, xint32 i) = 0;
@@ -91,23 +96,46 @@ public:
   virtual void endFunctionScope(FunctionScope *sc);
   };
 
-EngineInterface *currentInterface();
+EKSSCRIPT_EXPORT EngineInterface *currentInterface();
 
-}
-
-class EKSSCRIPT_EXPORT XScriptEngine
+class EKSSCRIPT_EXPORT Engine
   {
 public:
-  XScriptEngine(bool enableDebugging);
-  ~XScriptEngine();
+  enum
+    {
+    InterfaceCount = 2
+    };
 
   static void adjustAmountOfExternalAllocatedMemory(int in);
 
-  static void initiate();
+  static void initiate(bool enableDebugging);
+  static void initiateQtWrappers();
   static void terminate();
 
-  void addInterface(const XInterfaceBase *i);
-  void removeInterface(const XInterfaceBase *i);
+  static EngineInterface *beginScope(EngineInterface *ifc);
+  static void endScope(EngineInterface *ifc, EngineInterface *oldIfc);
+
+  static void addInterface(const XInterfaceBase *i);
+  static void removeInterface(const XInterfaceBase *i);
+
+  class Walker
+    {
+  public:
+    EngineInterface **begin() { return &_begin; }
+    EngineInterface **end() { return &_end; }
+
+  private:
+    EngineInterface *_begin;
+    EngineInterface *_end;
+    };
+
+  static Walker interfaces();
+
+private:
+  Engine();
+  ~Engine();
   };
+
+}
 
 #endif // XSCRIPTENGINE_H

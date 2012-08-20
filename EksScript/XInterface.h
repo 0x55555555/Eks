@@ -121,8 +121,6 @@ XProperties:
   XROProperty(xsize, typeIdField);
   XROProperty(xsize, nativeField);
 
-  XRORefProperty(QString, functionSource);
-
   XProperty(ToScriptFn, toScript, setToScript);
   XProperty(FromScriptFn, fromScript, setFromScript);
 
@@ -193,7 +191,9 @@ public:
 
   void addConstructor(const char *name, xsize extraArgs, xsize argCount, XScript::Function, XScript::FunctionDart);
   void addProperty(const char *name, XScript::GetterFn, XScript::FunctionDart, XScript::SetterFn, XScript::FunctionDart);
+  void addProperty(const char *name, XScript::GetterFn, XScript::FunctionDart, XScript::SetterFn, XScript::FunctionDart, int userData);
   void addFunction(const char *name, xsize extraArgs, xsize argCount, XScript::Function, XScript::FunctionDart);
+  void addFunction(const char *name, xsize extraArgs, xsize argCount, XScript::Function, XScript::FunctionDart, int userData);
   void setIndexAccessor(IndexedGetter, XScript::FunctionDart);
   void setNamedAccessor(NamedGetter);
 
@@ -208,12 +208,9 @@ protected:
 
   mutable bool _isSealed;
   NativeCtor _nativeCtor;
-  void *_constructor;
-  void *_prototype;
 
-#ifndef X_DART
-  XScriptFunction constructorFunction() const;
-#endif
+
+  void *_data[XScript::Engine::InterfaceCount][2];
   };
 
 EKSSCRIPT_EXPORT XInterfaceBase *findInterface(int qMetaTypeId);

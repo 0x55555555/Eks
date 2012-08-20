@@ -2,6 +2,7 @@
 #include "XScriptValueDartInternals.h"
 #include "XScriptValueV8Internals.h"
 #include "XUnorderedMap"
+#include "XScriptEngine.h"
 #include "QUrl"
 
 typedef v8::Persistent<v8::FunctionTemplate> FnTempl;
@@ -187,6 +188,11 @@ XScriptFunction XInterfaceBase::constructorFunction() const
 
 void XInterfaceBase::wrapInstance(XScriptObject scObj, void *object) const
   {
+  xForeach(XScript::EngineInterface *ifc, XScript::Engine::interfaces())
+    {
+    ifc->wrapInstance(scObj, object);
+    }
+
 #ifdef X_DART
   Dart_Handle obj = getDartInternal(scObj);
   if( 0 <= _typeIdField )
@@ -234,7 +240,7 @@ void XInterfaceBase::unwrapInstance(XScriptObject scObj) const
 #ifdef X_DART
 Dart_Handle getDartInternal(const XInterfaceBase *ifc)
   {
-  Dart_Handle lib = Dart_LookupLibrary(getDartInternal(XScriptConvert::to(getDartUrl(ifc))));
+  Dart_Handle lib = Dart_LookupLibrary(getDartInternal(XScriptConvert::to(XScript::getDartUrl(ifc))));
   return Dart_GetClass(lib, getDartInternal(XScriptConvert::to(ifc->typeName())));
   }
 #endif
@@ -315,7 +321,11 @@ void XInterfaceBase::addProperty(const char *cname, XScript::GetterFn getter, XS
 #endif
   }
 
-void XInterfaceBase::addFunction(const char *cname, xsize extraArgs, xsize argCount, XScript::Function fn, XScript::FunctionDart fnDart)
+void XInterfaceBase::addFunction(const char *cname,
+                                 xsize extraArgs,
+                                 xsize argCount,
+                                 XScript::Function fn,
+                                 XScript::FunctionDart fnDart)
   {
 #ifdef X_DART
   QString callArgs;
@@ -340,6 +350,46 @@ void XInterfaceBase::addFunction(const char *cname, xsize extraArgs, xsize argCo
 #else
   v8::Handle<v8::FunctionTemplate> fnTmpl = ::v8::FunctionTemplate::New((v8::InvocationCallback)fn);
   (*::prototype(_prototype))->Set(v8::String::New(cname), fnTmpl->GetFunction());
+#endif
+  }
+
+void XInterfaceBase::addFunction(const char *cname,
+                 xsize extraArgs,
+                 xsize argCount,
+                 XScript::Function fn,
+                 XScript::FunctionDart fnDart,
+                 int userData)
+  {
+#ifdef X_DART
+  QString callArgs;
+  for(size_t i = 0; i < argCount; ++i)
+    {
+    callArgs += "_" + QString::number(i);;
+    if(i < (argCount-1))
+      {
+      callArgs += ",";
+      }
+    }
+
+  const char* leadIn = "Dynamic ";
+  if(extraArgs == 0)
+    {
+    leadIn = "static Dynamic";
+    }
+
+  xAssertFail(); // userData?
+
+  QString name = cname;
+  QString resolvedName = addDartNativeLookup(_typeName, name, extraArgs + argCount, (Dart_NativeFunction)fnDart);
+  _functionSource += leadIn + name + "(" + callArgs + ") native \"" + resolvedName + "\";\n";
+#else
+  v8::Handle<v8::FunctionTemplate> fnTmpl = ::v8::FunctionTemplate::New((v8::InvocationCallback)fn);
+
+
+  v8::Handle<v8::Integer> id = v8::Integer::New(userData);
+  fnTmpl->Set(v8::String::New("0"), id);
+
+  (*::prototype(_prototype))->Set(v8::String::New(cname), fnTmpl);
 #endif
   }
 

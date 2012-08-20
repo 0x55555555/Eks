@@ -28,22 +28,24 @@ template <> struct JSToNative<QIODevice::OpenMode>
 }
 
 
-namespace XQtWrappers
+namespace XScript
+{
+namespace QtWrappers
 {
 
 template <typename T> void setupBindings(XInterface<T> *templ);
 
 template <typename T> struct Binder
   {
-  static void init(XScriptEngine *engine, const char *name)
+  static void init(Engine *engine, const char *name)
     {
     XInterface<T> *templ = XInterface<T>::create(name);
     setupBindings<T>(templ);
     templ->seal();
-    engine->addInterface(templ);
+    XSript::Engine::addInterface(templ);
     }
 
-  template <typename PARENT, typename BASE> static void initWithParent(XScriptEngine *engine, const char *name)
+  template <typename PARENT, typename BASE> static void initWithParent(Engine *engine, const char *name)
     {
     const XInterface<PARENT> *parent = XInterface<PARENT>::lookup();
     const XInterface<BASE> *base = XInterface<BASE>::lookup();
@@ -51,7 +53,7 @@ template <typename T> struct Binder
 
     setupBindings<T>(templ);
     templ->seal();
-    engine->addInterface(templ);
+    XSript::Engine::addInterface(templ);
     }
   };
 
@@ -147,10 +149,10 @@ template <> void setupBindings<QIODevice>(XInterface<QIODevice> *templ)
   templ->addMethod<void(), &QIODevice::close>("close");
   }
 
-void initiate(XScriptEngine *eng)
+void initiate()
   {
-#define BIND(t) Binder<Q##t>::init(eng, #t)
-#define BIND_WITH_PARENT(t, p, b) Binder<Q##t>::initWithParent<Q##p, Q##b>(eng, #t)
+#define BIND(t) Binder<Q##t>::init(#t)
+#define BIND_WITH_PARENT(t, p, b) Binder<Q##t>::initWithParent<Q##p, Q##b>(#t)
 
   BIND(PointF);
   BIND(RectF);
@@ -174,4 +176,5 @@ void initiate(XScriptEngine *eng)
 #undef BIND
 #undef BIND_WITH_PARENT
   }
+}
 }

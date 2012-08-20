@@ -322,30 +322,34 @@ void XPersistentScriptValue::dispose()
   XScript::currentInterface()->dispose(this);
   }
 
-XScriptCallback::XScriptCallback(const XScriptFunction &fn)
-    : _function(fn)
+namespace XScript
+{
+
+Callback::Callback(EngineInterface *ifc, const XScriptFunction &fn)
+    : _engineInterface(ifc), _function(fn)
   {
   }
 
-XScriptCallback::XScriptCallback(const XScriptObject &obj, const XScriptFunction &fn)
-  : _object(obj), _function(fn)
+Callback::Callback(EngineInterface *ifc, const XScriptObject& obj, const XScriptFunction &fn)
+  : _engineInterface(ifc), _object(obj), _function(fn)
   {
   }
 
-XScriptCallback::~XScriptCallback()
+Callback::~Callback()
   {
   _object.dispose();
   _function.dispose();
   }
 
-bool XScriptCallback::isValid() const
+bool Callback::isValid() const
   {
   XScriptFunction fn(_function.asValue());
   return fn.isValid();
   }
 
-void XScriptCallback::call(XScriptValue *result, xsize argCount, XScriptValue *args, bool *error, QString *errorOut)
+void Callback::call(XScriptValue *result, xsize argCount, XScriptValue *args, bool *error, QString *errorOut)
   {
+  xAssert(currentInterface() == _engineInterface);
   XScriptObject obj(_object.asValue());
   XScriptFunction fn(_object.asValue());
 
@@ -361,3 +365,16 @@ void XScriptCallback::call(XScriptValue *result, xsize argCount, XScriptValue *a
       }
     }
   }
+
+CallbackScope::CallbackScope(Callback& callback) : _currentInterface(callback.engineInterface())
+  {
+  xAssert(_currentInterface);
+  _oldInterface = Engine::beginScope(_currentInterface);
+  }
+
+CallbackScope::~CallbackScope()
+  {
+  Engine::endScope(_currentInterface, _oldInterface);
+  }
+
+}

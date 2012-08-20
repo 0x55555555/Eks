@@ -1,6 +1,7 @@
 #ifndef XSCRIPTVALUE_H
 #define XSCRIPTVALUE_H
 
+#include "XProperty"
 #include "XScriptGlobal.h"
 
 class XScriptObject;
@@ -78,13 +79,21 @@ private:
   void *_object;
   };
 
-class XScriptCallback
+namespace XScript
+{
+
+class EngineInterface;
+
+class Callback
   {
+XProperties:
+  XROProperty(EngineInterface *, engineInterface);
+
 public:
-  XScriptCallback() { }
-  XScriptCallback(const XScriptFunction &fn);
-  XScriptCallback(const XScriptObject &val, const XScriptFunction &fn);
-  ~XScriptCallback();
+  Callback() : _engineInterface(0) { }
+  Callback(XScript::EngineInterface* ifc, const XScriptObject& obj, const XScriptFunction &fn);
+  Callback(XScript::EngineInterface* ifc, const XScriptFunction &fn);
+  ~Callback();
 
   bool isValid() const;
 
@@ -94,5 +103,16 @@ private:
   XPersistentScriptValue _object;
   XPersistentScriptValue _function;
   };
+
+class CallbackScope
+  {
+  CallbackScope(Callback& callback);
+  ~CallbackScope();
+
+private:
+  EngineInterface *_currentInterface;
+  EngineInterface *_oldInterface;
+  };
+}
 
 #endif // XSCRIPTVALUE_H

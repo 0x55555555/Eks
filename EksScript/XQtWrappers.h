@@ -18,11 +18,14 @@
 #include "QRegion"
 #include "QFile"
 
-class XScriptEngine;
-
-namespace XQtWrappers
+namespace XScript
 {
-EKSSCRIPT_EXPORT void initiate(XScriptEngine *eng);
+class ScriptEngine;
+
+namespace QtWrappers
+{
+EKSSCRIPT_EXPORT void initiate(Engine *eng);
+}
 }
 
 X_SCRIPTABLE_TYPE_COPYABLE(QRectF)

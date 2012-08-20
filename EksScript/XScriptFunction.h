@@ -58,6 +58,7 @@ class EKSSCRIPT_EXPORT XAccessorInfo
   {
 public:
   XScriptObject calleeThis() const;
+  XScriptValue data() const;
 
 private:
   XAccessorInfo();

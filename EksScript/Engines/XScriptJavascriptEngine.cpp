@@ -199,6 +199,11 @@ XScriptObject XAccessorInfo::calleeThis() const
   return fromObjectHandle(XAccessorInfoInternal::val(this).This());
   }
 
+XScriptValue XAccessorInfo::data() const
+  {
+  return fromHandle(XAccessorInfoInternal::val(this).Data());
+  }
+
 XScriptArguments::XScriptArguments()
   {
   }
@@ -259,8 +264,77 @@ v8::Handle<v8::Value> *getV8Internal(const XScriptValue *o)
 
 namespace XScript
 {
+
+void fatal(const char* location, const char* message)
+  {
+  qFatal("%s: %s", location, message);
+  }
+
+void debugHandler()
+  {
+  // We are in some random thread. We should already have v8::Locker acquired
+  // (we requested this when registered this callback). We was called
+  // because new debug messages arrived; they may have already been processed,
+  // but we shouldn't worry about this.
+  //
+  // All we have to do is to set context and call ProcessDebugMessages.
+  //
+  // We should decide which V8 context to use here. This is important for
+  // "evaluate" command, because it must be executed some context.
+  // In our sample we have only one context, so there is nothing really to
+  // think about.
+
+  v8::HandleScope scope;
+
+  //v8::Context::Scope contextScope(g_engine->context);
+
+  //v8::Debug::ProcessDebugMessages();
+  }
+
 class JavascriptEngineInterface : public EngineInterface
   {
+  v8::Locker locker;
+  v8::HandleScope scope;
+  v8::Handle<v8::ObjectTemplate> globalTemplate;
+  v8::Persistent<v8::Context> context;
+  v8::Context::Scope contextScope;
+  v8::Unlocker unlocker;
+
+public:
+  JavascriptEngineInterface(bool debugging)
+      : globalTemplate(v8::ObjectTemplate::New()),
+      context(v8::Context::New(NULL, globalTemplate)),
+      contextScope(context)
+    {
+    v8::V8::SetFatalErrorHandler(fatal);
+
+    context->AllowCodeGenerationFromStrings(false);
+
+    if(debugging)
+      {
+      v8::Debug::EnableAgent("XScriptAgent", 9222, false);
+      v8::Debug::SetDebugMessageDispatchHandler(debugHandler, true);
+      }
+    }
+
+  ~JavascriptEngineInterface()
+    {
+    v8::V8::LowMemoryNotification();
+    context.Dispose();
+    }
+
+  void addInterface(const XInterfaceBase *i)
+    {
+    xAssert(i->isSealed());
+    i->addClassTo(i->typeName(), fromHandle(g_engine->context->Global()));
+    }
+
+  void removeInterface(const XInterfaceBase *i)
+    {
+    xAssert(i->isSealed());
+    fromObjectHandle(g_engine->context->Global()).set(i->typeName(), XScriptValue());
+    }
+
   void newValue(XScriptValue *v) X_OVERRIDE
     {
     XScriptValueInternal *internal = XScriptValueInternal::init(v);
@@ -659,5 +733,10 @@ class JavascriptEngineInterface : public EngineInterface
     {
     }
   };
+
+EngineInterface *createV8Interface(bool debugging)
+  {
+  return new JavascriptEngineInterface(bool debugging);
+  }
 
 }
