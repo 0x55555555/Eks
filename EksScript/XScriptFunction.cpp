@@ -5,46 +5,49 @@
 #include "XScriptEngine.h"
 #include "XAssert"
 
-/*XScriptFunction::XScriptFunction(Function fn)
+namespace XScript
+{
+
+/*Function::Function(Function fn)
   {
-  XScriptFunctionInternal *internal = XScriptFunctionInternal::init(this);
+  FunctionInternal *internal = FunctionInternal::init(this);
 
   v8::Handle<v8::FunctionTemplate> fnTmpl = ::v8::FunctionTemplate::New((v8::InvocationCallback)fn);
   internal->_object = fnTmpl->GetFunction();
   }*/
 
-XScriptFunction::XScriptFunction(const XScriptValue &other)
+Function::Function(const Value &other)
   {
-  XScript::currentInterface()->newFunction(this, other);
+  currentInterface()->newFunction(this, other);
   }
 
-XScriptFunction::XScriptFunction()
+Function::Function()
   {
-  XScript::currentInterface()->newFunction(this);
+  currentInterface()->newFunction(this);
   }
 
-XScriptFunction::~XScriptFunction()
+Function::~Function()
   {
-  XScript::currentInterface()->destroy(this);
+  currentInterface()->destroy(this);
   }
 
-XScriptFunction::XScriptFunction(const XScriptFunction &other)
+Function::Function(const Function &other)
   {
-  XScript::currentInterface()->newFunction(this, other);
+  currentInterface()->newFunction(this, other);
   }
 
-XScriptFunction& XScriptFunction::operator=(const XScriptFunction &other)
+Function& Function::operator=(const Function &other)
   {
-  XScript::currentInterface()->destroy(this);
-  XScript::currentInterface()->newFunction(this, other);
+  currentInterface()->destroy(this);
+  currentInterface()->newFunction(this, other);
   return *this;
   }
 
-//XScriptValue XScriptFunction::call(const XScriptObject &self, int argc, const XScriptValue args[]) const
+//XScriptValue Function::call(const XScriptObject &self, int argc, const XScriptValue args[]) const
 //  {
-//  XScript::currentInterface()->call(this, self, argc, args);
+//  currentInterface()->call(this, self, argc, args);
 //  v8::Locker locker;
-//  const XScriptFunctionInternal* func = XScriptFunctionInternal::val(this);
+//  const FunctionInternal* func = FunctionInternal::val(this);
 
 //  try
 //    {
@@ -60,17 +63,14 @@ XScriptFunction& XScriptFunction::operator=(const XScriptFunction &other)
 //  return XScriptValue();
 //  }
 
-bool XScriptFunction::isValid() const
+bool Function::isValid() const
   {
-  return XScript::currentInterface()->isValid(this);
+  return currentInterface()->isValid(this);
   }
 
-void XScriptFunction::callWithTryCatch(XScriptValue *result, const XScriptObject &self, int argc, const XScriptValue *args, bool *error, QString *message) const
+void Function::callWithTryCatch(Value *result, const Object &self, int argc, const Value *args, bool *error, QString *message) const
   {
-  XScript::currentInterface()->call(this, result, self, argc, args, error, message);
+  currentInterface()->call(this, result, self, argc, args, error, message);
   }
 
-void XScriptFunction::callAsConstructor(XScriptValue *result, const XScriptArguments &argv)
-  {
-  XScript::currentInterface()->callAsConstructor(this, result, argv);
-  }
+}

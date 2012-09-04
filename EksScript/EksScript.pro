@@ -9,7 +9,7 @@ TEMPLATE = lib
 
 include("../EksCore/GeneralOptions.pri")
 
-SOURCES += XScriptGlobal.cpp \
+SOURCES += \
     XInterface.cpp \
     XScriptException.cpp \
     XScriptValue.cpp \
@@ -21,7 +21,8 @@ SOURCES += XScriptGlobal.cpp \
     XScriptEngine.cpp \
     XQtWrappers.cpp \
     Engines/XScriptDartEngine.cpp \
-    Engines/XScriptJavascriptEngine.cpp
+    Engines/XScriptJavascriptEngine.cpp \
+    XScriptInterfaceBase.cpp
 
 HEADERS += XScriptGlobal.h \
     XInterface.h \
@@ -36,7 +37,6 @@ HEADERS += XScriptGlobal.h \
     XConvert.h \
     XScriptException.h \
     XScriptValue.h \
-    XScriptValueV8Internals.h \
     XScriptFunction.h \
     XInterfaceUtilities.h \
     XProperties.h \
@@ -49,8 +49,8 @@ HEADERS += XScriptGlobal.h \
     XQObjectWrapper.h \
     XScriptEngine.h \
     XQtWrappers.h \
-    XScriptValueDartInternals.h \
-    XScriptDefinitions.h
+    XScriptDefinitions.h \
+    XScriptInterfaceBase.h
 
 LIBS += -lQtV8 -lEksCore
 

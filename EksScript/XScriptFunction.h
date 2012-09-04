@@ -5,12 +5,12 @@
 #include "XScriptEngine.h"
 #include "QMetaType"
 
-class XScriptObject;
-class XScriptValue;
-class XScriptArguments;
-
 namespace XScript
 {
+class Object;
+class Value;
+class Arguments;
+
 class FunctionScope
   {
 public:
@@ -27,62 +27,64 @@ public:
 private:
   void* _data[2];
   };
-}
 
-class EKSSCRIPT_EXPORT XScriptFunction
+class EKSSCRIPT_EXPORT Function
   {
 public:
   //typedef XScriptValue (*Function)( XScriptArguments const & argv );
   //XScriptFunction(Function fn);
 
-  XScriptFunction(const XScriptValue& );
-  XScriptFunction();
-  ~XScriptFunction();
+  Function(const Value& );
+  Function();
+  ~Function();
 
-  XScriptFunction(const XScriptFunction&);
-  XScriptFunction& operator=(const XScriptFunction&);
+  Function(const Function&);
+  Function& operator=(const Function&);
 
   bool isValid() const;
 
-  void callWithTryCatch(XScriptValue *result, const XScriptObject &thisObject, int argc, const XScriptValue args[], bool *error, QString *) const;
+  void callWithTryCatch(Value *result, const Object &thisObject, int argc, const Value args[], bool *error, QString *) const;
   //XScriptValue call(const XScriptObject &thisObject, int argc, const XScriptValue args[]) const;
-  void callAsConstructor(XScriptValue *result, const XScriptArguments&);
+  //void callAsConstructor(Value *result, const Arguments&);
 
-  typedef XScript::FunctionScope Scope;
+  typedef FunctionScope Scope;
 
 private:
   void *_func;
   };
 
-class EKSSCRIPT_EXPORT XAccessorInfo
+namespace internal
+{
+
+class EKSSCRIPT_EXPORT JSAccessorInfo
   {
 public:
-  XScriptObject calleeThis() const;
-  XScriptValue data() const;
+  Object calleeThis() const;
+  Value data() const;
 
 private:
-  XAccessorInfo();
-  ~XAccessorInfo();
-  XAccessorInfo(const XAccessorInfo&);
-  XAccessorInfo& operator=(const XAccessorInfo&);
+  JSAccessorInfo();
+  ~JSAccessorInfo();
+  JSAccessorInfo(const JSAccessorInfo&);
+  JSAccessorInfo& operator=(const JSAccessorInfo&);
 
   void* _info;
   };
 
-class EKSSCRIPT_EXPORT XScriptArguments
+class EKSSCRIPT_EXPORT JSArguments
   {
 public:
   bool isConstructCall() const;
-  XScriptFunction callee() const;
-  XScriptObject calleeThis() const;
+  Function callee() const;
+  Object calleeThis() const;
   xsize length() const;
-  XScriptValue at(xsize i) const;
+  Value at(xsize i) const;
 
 private:
-  XScriptArguments();
-  ~XScriptArguments();
-  XScriptArguments(const XScriptArguments&);
-  XScriptArguments& operator=(const XScriptArguments&);
+  JSArguments();
+  ~JSArguments();
+  JSArguments(const JSArguments&);
+  JSArguments& operator=(const JSArguments&);
 
   void* _args;
   void* _values;
@@ -90,48 +92,50 @@ private:
   bool _isConstructCall;
   };
 
-class EKSSCRIPT_EXPORT XScriptDartArguments
+class EKSSCRIPT_EXPORT DartArguments
   {
 public:
-  void setReturnValue(const XScriptValue& val);
+  void setReturnValue(const Value& val);
 
 private:
-  XScriptDartArguments();
+  DartArguments() { }
 
-  friend class XScriptDartArgumentsNoThis;
-  friend class XScriptDartArgumentsWithThis;
+  friend class DartArgumentsNoThis;
+  friend class DartArgumentsWithThis;
   void *_args;
   };
 
-class EKSSCRIPT_EXPORT XScriptDartArgumentsNoThis
+class EKSSCRIPT_EXPORT DartArgumentsNoThis
   {
 public:
-  XScriptDartArgumentsNoThis(XScriptDartArguments args, xsize offset=0)
+  DartArgumentsNoThis(DartArguments args, xsize offset=0)
     : _args(args), _offset(offset)
     {
     }
 
-  XScriptValue at(xsize idx) const;
+  Value at(xsize idx) const;
   xsize length() const;
 
 protected:
-  XScriptDartArguments _args;
+  DartArguments _args;
   xsize _offset;
   };
 
-class EKSSCRIPT_EXPORT XScriptDartArgumentsWithThis : public XScriptDartArgumentsNoThis
+class EKSSCRIPT_EXPORT DartArgumentsWithThis : public DartArgumentsNoThis
   {
 public:
-  XScriptDartArgumentsWithThis(XScriptDartArguments args)
-      : XScriptDartArgumentsNoThis(args, 1)
+  DartArgumentsWithThis(DartArguments args)
+      : DartArgumentsNoThis(args, 1)
     {
     }
 
-  XScriptObject calleeThis();
+  Object calleeThis();
   };
+}
 
+}
 
-Q_DECLARE_METATYPE(XScriptFunction*);
-Q_DECLARE_METATYPE(XScriptFunction);
+Q_DECLARE_METATYPE(XScript::Function*);
+Q_DECLARE_METATYPE(XScript::Function);
 
 #endif // XSCRIPTFUNCTION_H

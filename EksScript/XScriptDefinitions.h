@@ -3,18 +3,18 @@
 
 #include "XAssert"
 
-class XInterfaceBase;
-
-template <typename T> const XInterfaceBase* findInterface(const T*);
-
 namespace XScript
 {
+
+class InterfaceBase;
+
+template <typename T> const InterfaceBase* findInterface(const T*);
 
 template <typename T> class ClassCreator_Factory
   {
 public:
   typedef T * ReturnType;
-  static ReturnType Create( XScriptObject &, XScriptArguments const & )
+  template <typename Args> static ReturnType Create( Object &, Args const & )
     {
     xAssertFail();
     return 0;

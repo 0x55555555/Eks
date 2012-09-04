@@ -1,103 +1,145 @@
+#include "../XScriptGlobal.h"
+
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+# include "../dart/dart_api.h"
+#endif
+
 #include "../XScriptEngine.h"
-#include "../XScriptValueDartInternals.h"
 #include "../XScriptValue.h"
 #include "../XScriptObject.h"
 #include "../XScriptFunction.h"
+#include "../XScriptSource.h"
 #include "../XConvertFromScript.h"
+#include "../XInterface.h"
+
 #include "XAssert"
-
-namespace
-{
-#define WRAPPER_NAME "NativeWrapper"
-
-Dart_Handle& getDartHandle(const XScriptValue *obj)
-  {
-  struct Internal
-    {
-    Dart_Handle ptr;
-    };
-
-  return ((Internal*)(obj))->ptr;
-  }
-
-Dart_Handle& getDartHandle(const XPersistentScriptValue *obj)
-  {
-  struct Internal
-    {
-    Dart_Handle ptr;
-    };
-
-  return ((Internal*)(obj))->ptr;
-  }
-
-Dart_Handle& getDartHandle(const XScriptFunction &obj)
-  {
-  struct Internal
-    {
-    Dart_Handle ptr;
-    };
-  xCompileTimeAssert(sizeof(Internal) == sizeof(XScriptFunction));
-
-  return ((Internal*)(&obj))->ptr;
-  }
-
-}
-
-Dart_Handle getDartInternal(const XScriptFunction& v)
-  {
-  return getDartHandle(v);
-  }
-
-void XScriptDartArguments::setReturnValue(const XScriptValue& val)
-  {
-  Dart_SetReturnValue((Dart_NativeArguments)_args, getDartInternal(val));
-  }
-
-XScriptDartArguments::XScriptDartArguments()
-  {
-  }
-
-xsize XScriptDartArgumentsNoThis::length() const
-  {
-  return Dart_GetNativeArgumentCount((Dart_NativeArguments)_args._args) - _offset;
-  }
-
-XScriptValue XScriptDartArgumentsNoThis::at(xsize i) const
-  {
-#ifdef X_DART
-  return fromHandle(Dart_GetNativeArgument((Dart_NativeArguments)_args._args, i + _offset));
-#else
-  return XScriptValue();
-#endif
-  }
-
-XScriptObject XScriptDartArgumentsWithThis::calleeThis()
-  {
-  return fromObjectHandle(Dart_GetNativeArgument((Dart_NativeArguments)_args._args, 0));
-  }
-
 
 namespace XScript
 {
 
-xCompileTimeAssert(sizeof(XScriptValue) == sizeof(Dart_Handle));
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
 
-Dart_Handle *getDartInternal(const XScriptValue *o)
+template <typename T> T fromHandle(Dart_Handle h)
   {
-  return (Dart_Handle*)o;
-  }
-
-Dart_Handle *getDartInternal(const XScriptValue &o)
-  {
-  return (Dart_Handle*)&o;
-  }
-
-XScriptValue fromHandle(Dart_Handle h)
-  {
-  XScriptValue v;
+  T v;
   getDartHandle(&v) = h;
   return v;
   }
+
+template <typename T> Dart_Handle& getDartHandle(const T *obj)
+  {
+  struct Internal
+    {
+    Dart_Handle ptr;
+    };
+
+  xCompileTimeAssert(sizeof(T) == sizeof(Dart_Handle));
+
+  return ((Internal*)(obj))->ptr;
+  }
+
+template <typename T> Dart_Handle* getDartArrayHandle(const T *obj)
+  {
+  struct Internal
+    {
+    Dart_Handle ptr;
+    };
+
+  xCompileTimeAssert(sizeof(T) == sizeof(Dart_Handle));
+
+  return &((Internal*)(obj))->ptr;
+  }
+#endif
+
+namespace internal
+{
+
+void DartArguments::setReturnValue(const Value& val)
+  {
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+  Dart_SetReturnValue((Dart_NativeArguments)_args, getDartHandle(&val));
+#else
+  (void)val;
+#endif
+  }
+
+xsize DartArgumentsNoThis::length() const
+  {
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+  return Dart_GetNativeArgumentCount((Dart_NativeArguments)_args._args) - _offset;
+#else
+  return 0;
+#endif
+  }
+
+Value DartArgumentsNoThis::at(xsize i) const
+  {
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+  return fromHandle<Value>(Dart_GetNativeArgument((Dart_NativeArguments)_args._args, i + _offset));
+#else
+  (void)i;
+  return Value();
+#endif
+  }
+
+Object DartArgumentsWithThis::calleeThis()
+  {
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+  return fromHandle<Object>(Dart_GetNativeArgument((Dart_NativeArguments)_args._args, 0));
+#else
+  return Object();
+#endif
+  }
+
+}
+
+}
+
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+
+namespace XScript
+{
+
+#define WRAPPER_NAME "NativeWrapper"
+
+const int NumEventHandlerFields = 2;
+
+inline void printError(Dart_Handle han)
+  {
+  const char *err = Dart_GetError(han);
+  if(err)
+    {
+    qWarning() << err;
+    }
+  }
+
+#define CHECK_HANDLE(handle) if(Dart_IsError(handle)) { printError(handle); }
+
+QString getDartUrl(const InterfaceBase* i)
+  {
+  return i->typeName();
+  }
+
+
+QString getDartSource(const InterfaceBase *ifc, const QString &parentName)
+  {
+  xAssertFail(); // source is wrong.
+  QString source = "class " + ifc->typeName() +
+                   " extends " + parentName + " {\n" +
+                   //ifc->functionSource() +
+                   "}";
+
+  return source;
+  }
+
+#if 0
+Object fromObjectHandle(Dart_Handle v)
+  {
+  Object o;
+  getDartHandle(&o) = v;
+  return o;
+  }
+#endif
 
 bool isolateCreateCallback(const char* ,
   const char* ,
@@ -113,6 +155,16 @@ bool isolateInterruptCallback()
   xAssertFail();
   return true;
 }
+
+Dart_Handle getDartClass(const InterfaceBase *ifc)
+  {
+  Value urlVal = Convert::to(getDartUrl(ifc));
+  Dart_Handle lib = Dart_LookupLibrary(getDartHandle(&urlVal));
+
+  Value typenameVal = Convert::to(ifc->typeName());
+
+  return Dart_GetClass(lib, getDartHandle(&typenameVal));
+  }
 
 typedef QPair<QString, uint8_t> ArgPair;
 QMap<ArgPair, Dart_NativeFunction> _symbols;
@@ -145,7 +197,7 @@ Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc)
 
   Dart_CreateNativeWrapperClass(lib,
     Dart_NewString(WRAPPER_NAME),
-    kNumEventHandlerFields);
+    NumEventHandlerFields);
 
   return lib;
 }
@@ -167,7 +219,7 @@ Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url
   Dart_Handle importLibrary = Dart_LookupLibrary(url);
   if (Dart_IsError(importLibrary))
   {
-    QString strUrl = XScriptConvert::from<QString>(fromHandle(url));
+    QString strUrl = Convert::from<QString>(fromHandle<Value>(url));
     xAssert(_libs.find(strUrl) != _libs.end());
     Dart_Handle source = _libs[strUrl];
     importLibrary = loadLibrary(url, source);
@@ -185,6 +237,7 @@ Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url
 
 class DartEngineInterface : public EngineInterface
   {
+public:
   DartEngineInterface(bool debugging)
     {
     xAssert(!debugging);
@@ -205,84 +258,222 @@ class DartEngineInterface : public EngineInterface
     Dart_ShutdownIsolate();
     }
 
-  void addInterface(const XInterfaceBase *i)
+  bool loadSource(Source *src, const QString &key, const QString &data)
+    {
+    Value srcVal = Convert::to(data);
+    Value urlVal = Convert::to(key);
+    // Create a test library and Load up a test script in it.
+    Dart_Handle source = getDartHandle(&srcVal);
+    Dart_Handle url = getDartHandle(&urlVal);
+
+    Dart_Handle &hnd = getDartHandle(src);
+
+    hnd = Dart_LoadScript(url, source);
+
+    if(Dart_IsError(hnd))
+      {
+      printError(hnd);
+      return false;
+      }
+
+    return true;
+    }
+
+  void runSource(Value *result, const Source *src, SourceError *err)
+    {
+    xAssert(!err);
+
+    Dart_Handle &hnd = getDartHandle(result);
+
+    hnd = Dart_Invoke(getDartHandle(src),
+      Dart_NewString("main"),
+      0,
+      0);
+    CHECK_HANDLE(hnd)
+    }
+
+  void throwError(Value *val, const QString &err)
+    {
+    Dart_ThrowException(Dart_NewString16((uint16_t*)err.data(), err.length()));
+    getDartHandle(val) = 0;
+    }
+
+  void addInterface(const InterfaceBase *i)
     {
     QString parentName = i->parent() ? i->parent()->typeName() : WRAPPER_NAME;
-    QString src = getDartSource(i, parentName);
+    QString functionSource;
+
+    QString typeName = i->typeName();
+
+    for(xsize c = 0; c < i->constructorCount(); ++c)
+      {
+      const ConstructorDef &ctor = i->constructor(c);
+
+      QString callArgs;
+      for(xuint8 i = 0; i < ctor.argCount; ++i)
+        {
+        callArgs += "_" + QString::number(i);;
+        if(i < (ctor.argCount-1))
+          {
+          callArgs += ",";
+          }
+        }
+
+      QString name = typeName;
+      QString shortName(ctor.name);
+      if(shortName.length())
+        {
+        name = typeName + "." + shortName;
+        }
+
+      // plus one for this.
+      QString nativeName = addDartNativeLookup(typeName, "_ctor_" + shortName, 1 + ctor.argCount, (Dart_NativeFunction)ctor.functionDart);
+      functionSource += name + "(" + callArgs + ") {" + nativeName + "(" + callArgs + "); } \n";
+      functionSource += "void " + nativeName + "(" + callArgs + ") native \"" + nativeName + "\";\n";
+      }
+
+    for(xuint8  p = 0; p < i->propertyCount(); ++p)
+      {
+      const PropertyDef &prop = i->property(p);
+
+      xAssertFail();
+
+      QString name = prop.name;
+      if(prop.getterDart)
+        {
+        functionSource += "Dynamic get " + name + "() => null;\n";
+        }
+      if(prop.setterDart)
+        {
+        functionSource += "set " + name + "(var a) => null;\n";
+        }
+      }
+
+    for(xsize f = 0; f < i->functionCount(); ++f)
+      {
+      const FunctionDef &fn = i->function(f);
+
+      QString callArgs;
+      for(xuint8 i = 0; i < fn.argCount; ++i)
+        {
+        callArgs += "_" + QString::number(i);;
+        if(i < (fn.argCount-1))
+          {
+          callArgs += ",";
+          }
+        }
+
+      const char* leadIn = "Dynamic ";
+      xsize extraArgs = 0;
+      if(fn.isStatic)
+        {
+        leadIn = "static Dynamic";
+        extraArgs = 1;
+        }
+
+      QString name = fn.name;
+      QString resolvedName = addDartNativeLookup(typeName, name, extraArgs + fn.argCount, (Dart_NativeFunction)fn.functionDart);
+      functionSource += leadIn + name + "(" + callArgs + ") native \"" + resolvedName + "\";\n";
+      }
 
     if(i->parent())
       {
-      src = "#import(\"" + parentName + "\");\n" + src;
+      functionSource = "#import(\"" + parentName + "\");\n" + functionSource;
       }
 
     QString url = getDartUrl(i);
-    src = "#library(\"" + url + "\");\n" + src;
+    functionSource = "#library(\"" + url + "\");\n" + functionSource;
 
-    _libs[url] = getDartInternal(XScriptConvert::to(src));
+    Value val = Convert::to(functionSource);
+    _libs[url] = getDartHandle(&val);
     }
 
-  void removeInterface(const XInterfaceBase *ifc)
+  void removeInterface(const InterfaceBase *ifc)
     {
     (void)ifc;
     xAssertFail();
     }
 
-  void newValue(XScriptValue *v) X_OVERRIDE
+  void wrapInstance(const InterfaceBase *ifc, Object *scObj, void *object)
+    {
+    Dart_Handle &obj = getDartHandle(scObj);
+    Dart_SetNativeInstanceField(obj, TypeId, (intptr_t)ifc->baseTypeId());
+    Dart_SetNativeInstanceField(obj, NativePointer, (intptr_t)object);
+    }
+
+  void unwrapInstance(const InterfaceBase *, Object *scObj)
+    {
+    Dart_Handle &obj = getDartHandle(scObj);
+
+    Dart_SetNativeInstanceField(obj, TypeId, (intptr_t)0);
+    Dart_SetNativeInstanceField(obj, NativePointer, (intptr_t)0);
+    }
+
+  void newInstance(Object *result, const InterfaceBase *ifc, int argc, Value argv[], const QString& name) const
+    {
+    Dart_Handle cls = getDartClass(ifc);
+
+    Value nameVal = Convert::to(name);
+    Dart_Handle obj = Dart_New(cls, getDartHandle(&nameVal), argc, getDartArrayHandle(argv));
+    getDartHandle(result) = obj;
+    }
+
+  void newValue(Value *v) X_OVERRIDE
     {
     getDartHandle(v) = Dart_Null();
     }
 
-  void newValue(XScriptValue *v, bool x) X_OVERRIDE
+  void newValue(Value *v, bool x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewBoolean(x);
     }
 
-  void newValue(XScriptValue *v, xuint32 x) X_OVERRIDE
+  void newValue(Value *v, xuint32 x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewInteger(x);
     }
 
-  void newValue(XScriptValue *v, xint32 x) X_OVERRIDE
+  void newValue(Value *v, xint32 x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewInteger(x);
     }
 
-  void newValue(XScriptValue *v, xuint64 x) X_OVERRIDE
+  void newValue(Value *v, xuint64 x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewInteger(x);
     }
 
-  void newValue(XScriptValue *v, xint64 x) X_OVERRIDE
+  void newValue(Value *v, xint64 x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewInteger(x);
     }
 
-  void newValue(XScriptValue *v, double x) X_OVERRIDE
+  void newValue(Value *v, double x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewDouble(x);
     }
 
-  void newValue(XScriptValue *v, float x) X_OVERRIDE
+  void newValue(Value *v, float x) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewDouble(x);
     }
 
-  void newValue(XScriptValue*, QVariantMap &) X_OVERRIDE
+  void newValue(Value*, QVariantMap &) X_OVERRIDE
     {
     xAssertFail();
     }
 
-  void newValue(XScriptValue*, QVariantList &) X_OVERRIDE
+  void newValue(Value*, QVariantList &) X_OVERRIDE
     {
     xAssertFail();
     }
 
-  void newValue(XScriptValue*, QStringList &) X_OVERRIDE
+  void newValue(Value*, QStringList &) X_OVERRIDE
     {
     xAssertFail();
     }
 
-  void newValue(XScriptValue *v, const QString &str) X_OVERRIDE
+  void newValue(Value *v, const QString &str) X_OVERRIDE
     {
     if(str.length())
       {
@@ -294,119 +485,119 @@ class DartEngineInterface : public EngineInterface
       }
     }
 
-  void newValue(XScriptValue *v, const XScriptObject &obj) X_OVERRIDE
+  void newValue(Value *v, const Object *obj) X_OVERRIDE
     {
-    getDartHandle(v) = getDartInternal(obj);
+    getDartHandle(v) = getDartHandle(&obj);
     }
 
-  void newValue(XScriptValue *v, const XScriptFunction &obj) X_OVERRIDE
+  void newValue(Value *v, const Function *obj) X_OVERRIDE
     {
-    getDartHandle(v) = getDartInternal(obj);
+    getDartHandle(v) = getDartHandle(&obj);
     }
 
-  void newValue(XScriptValue *v, void* val) X_OVERRIDE
+  void newValue(Value *v, void* val) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewInteger((int64_t)val);
     }
 
-  void destroy(XScriptValue* v) X_OVERRIDE
+  void destroy(Value* v) X_OVERRIDE
     {
     getDartHandle(v) = Dart_Null();
     }
 
 
-  void newEmpty(XScriptValue *v) X_OVERRIDE
+  void newEmpty(Value *v) X_OVERRIDE
     {
     getDartHandle(v) = 0;
     }
 
-  void newArray(XScriptValue *v) X_OVERRIDE
+  void newArray(Value *v) X_OVERRIDE
     {
     getDartHandle(v) = Dart_NewList(0);
     }
 
-  bool isValid(const XScriptValue *v) X_OVERRIDE
+  bool isValid(const Value *v) X_OVERRIDE
     {
     Dart_Handle h = getDartHandle(v);
     return h != 0 && !Dart_IsNull(h);
     }
 
-  bool isObject(const XScriptValue *v) X_OVERRIDE
+  bool isObject(const Value *v) X_OVERRIDE
     {
     // everything is an object!
     // probably not so useful.
     return isValid(v);
     }
 
-  bool isBoolean(const XScriptValue *v) X_OVERRIDE
+  bool isBoolean(const Value *v) X_OVERRIDE
     {
     return Dart_IsBoolean(getDartHandle(v));
     }
 
-  bool isArray(const XScriptValue *v) X_OVERRIDE
+  bool isArray(const Value *v) X_OVERRIDE
     {
     return Dart_IsList(getDartHandle(v));
     }
 
-  bool isNumber(const XScriptValue *v) X_OVERRIDE
+  bool isNumber(const Value *v) X_OVERRIDE
     {
     return Dart_IsNumber(getDartHandle(v));
     }
 
-  bool isString(const XScriptValue *v) X_OVERRIDE
+  bool isString(const Value *v) X_OVERRIDE
     {
     return Dart_IsString(getDartHandle(v));
     }
 
-  bool isInteger(const XScriptValue *v) X_OVERRIDE
+  bool isInteger(const Value *v) X_OVERRIDE
     {
     return Dart_IsInteger(getDartHandle(v));
     }
 
-  xsize length(const XScriptValue *v) X_OVERRIDE
+  xsize length(const Value *v) X_OVERRIDE
     {
     intptr_t len = 0;
     Dart_ListLength(getDartHandle(v), &len);
     return len;
     }
 
-  void at(XScriptValue* out, const XScriptValue *v, xsize id) X_OVERRIDE
+  void at(Value* out, const Value *v, xsize id) X_OVERRIDE
     {
     getDartHandle(out) = Dart_ListGetAt(getDartHandle(v), id);
     }
 
-  void set(XScriptValue *v, xsize id, const XScriptValue &val) X_OVERRIDE
+  void set(Value *v, xsize id, const Value *val) X_OVERRIDE
     {
-    Dart_ListSetAt(getDartHandle(v), id, getDartHandle(&val));
+    Dart_ListSetAt(getDartHandle(v), id, getDartHandle(val));
     }
 
-  void *toExternal(const XScriptValue *v) X_OVERRIDE
+  void *toExternal(const Value *v) X_OVERRIDE
     {
     return (void*)toInteger(v);
     }
 
-  double toNumber(const XScriptValue *v) X_OVERRIDE
+  double toNumber(const Value *v) X_OVERRIDE
     {
     double dbl = 0.0f;
     Dart_DoubleValue(getDartHandle(v), &dbl);
     return dbl;
     }
 
-  xint64 toInteger(const XScriptValue *v) X_OVERRIDE
+  xint64 toInteger(const Value *v) X_OVERRIDE
     {
     xint64 igr = 0;
     Dart_IntegerToInt64(getDartHandle(v), &igr);
     return igr;
     }
 
-  bool toBoolean(const XScriptValue *v) X_OVERRIDE
+  bool toBoolean(const Value *v) X_OVERRIDE
     {
     bool b = 0;
     Dart_BooleanValue(getDartHandle(v), &b);
     return b;
     }
 
-  void toString(QString *val, const XScriptValue *v) X_OVERRIDE
+  void toString(QString *val, const Value *v) X_OVERRIDE
     {
     intptr_t len;
     Dart_Handle str = getDartHandle(v);
@@ -423,32 +614,32 @@ class DartEngineInterface : public EngineInterface
       }
     }
 
-  void toList(QVariantList *, const XScriptValue *) X_OVERRIDE
+  void toList(QVariantList *, const Value *) X_OVERRIDE
     {
     }
 
-  void toMap(QVariantMap *out, const XScriptValue *) X_OVERRIDE
+  void toMap(QVariantMap *out, const Value *) X_OVERRIDE
     {
     xAssertFail();
     *out = QVariantMap();
     }
 
-  void newPersistentValue(XPersistentScriptValue *value)
+  void newPersistentValue(PersistentValue *value)
     {
     getDartHandle(value) = 0;
     }
 
-  void newPersistentValue(XPersistentScriptValue *value, const XScriptValue &in)
+  void newPersistentValue(PersistentValue *value, const Value &in)
     {
     getDartHandle(value) = Dart_NewPersistentHandle(getDartHandle(&in));
     }
 
-  void asValue(XScriptValue *out, const XPersistentScriptValue *value)
+  void asValue(Value *out, const PersistentValue *value)
     {
     getDartHandle(out) = getDartHandle(value);
     }
 
-  void makeWeak(XPersistentScriptValue *val, void *data, WeakDtor cb)
+  void makeWeak(PersistentValue *val, void *data, WeakDtor cb)
     {
     Dart_Handle oldhandle = getDartHandle(val);
     getDartHandle(val) = Dart_NewPrologueWeakPersistentHandle(
@@ -457,51 +648,111 @@ class DartEngineInterface : public EngineInterface
                                (Dart_WeakPersistentHandleFinalizer)cb);
     }
 
-  void dispose(XPersistentScriptValue *val)
+  void dispose(PersistentValue *val)
     {
     Dart_DeletePersistentHandle(getDartHandle(val));
     }
 
-  void newFunction(XScriptFunction *)
+  void newObject(Object *obj)
+    {
+    getDartHandle(obj) = 0;
+    }
+
+  void newObject(Object *obj, const Value *v)
+    {
+    getDartHandle(obj) = getDartHandle(v);
+    }
+
+  void newObject(Object *obj, const Object *o)
+    {
+    getDartHandle(obj) = getDartHandle(o);
+    }
+
+  void destroy(Object *obj)
+    {
+    getDartHandle(obj) = 0;
+    }
+
+  void *internalField(const Object *obj, ObjectInternalField idx)
+    {
+    intptr_t val = 0;
+    Dart_GetNativeInstanceField(getDartHandle(obj),
+                                idx,
+                                &val);
+    return (void*)val;
+    }
+
+  bool isValid(const Object *o)
+    {
+    return getDartHandle(o) != 0 && !Dart_IsNull(getDartHandle(o));
+    }
+
+  void newMap(Object *obj)
+    {
+    (void)obj;
+    xAssertFail();
+    }
+
+  void get(Value *ret, const Object *obj, const QString &n)
+    {
+    Value key = Convert::to(n);
+
+    getDartHandle(ret) = Dart_GetField(getDartHandle(obj), getDartHandle(&key));
+    }
+
+  void set(Object *obj, const QString &n, const Value *val)
+    {
+    Value key = Convert::to(n);
+
+    Dart_SetField(getDartHandle(obj), getDartHandle(&key), getDartHandle(val));
+    }
+
+  void newFunction(Function *)
     {
     }
 
-  void newFunction(XScriptFunction *, const XScriptValue &)
+  void newFunction(Function *, const Value &)
     {
     }
 
-  void newFunction(XScriptFunction *, const XScriptFunction &)
+  void newFunction(Function *, const Function &)
     {
     }
 
-  void destroy(XScriptFunction *)
+  void destroy(Function *)
     {
     }
 
-  bool isValid(const XScriptFunction *)
+  bool isValid(const Function *)
     {
     return false;
     }
 
-  void call(const XScriptFunction *,
-            XScriptValue *,
-            const XScriptObject &,
+  void call(const Function *,
+            Value *,
+            const Object &,
             int,
-            const XScriptValue *,
+            const Value *,
             bool *,
             QString *)
     {
     }
 
-  void callAsConstructor(const XScriptFunction *,
-                                 XScriptValue *,
-                                 const XScriptArguments &)
+
+  void beginFunctionScope(FunctionScope *sc)
+    {
+    }
+
+  void endFunctionScope(FunctionScope *sc)
     {
     }
   };
+
 
 EngineInterface *createDartInterface(bool debugging)
   {
   return new DartEngineInterface(debugging);
   }
 }
+
+#endif

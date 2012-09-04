@@ -7,231 +7,234 @@
 #include "XInterface.h"
 #include "XAssert"
 
-XScriptValue::XScriptValue()
+namespace XScript
+{
+
+Value::Value()
   {
-  XScript::currentInterface()->newValue(this);
+  currentInterface()->newValue(this);
   }
 
-XScriptValue::XScriptValue(bool x)
+Value::Value(bool x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(xuint32 x)
+Value::Value(xuint32 x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(xint32 x)
+Value::Value(xint32 x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(xuint64 x)
+Value::Value(xuint64 x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(xint64 x)
+Value::Value(xint64 x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(double x)
+Value::Value(double x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(float x)
+Value::Value(float x)
   {
-  XScript::currentInterface()->newValue(this, x);
+  currentInterface()->newValue(this, x);
   }
 
-XScriptValue::XScriptValue(const QString &str)
+Value::Value(const QString &str)
   {
-  XScript::currentInterface()->newValue(this, str);
+  currentInterface()->newValue(this, str);
   }
 
-XScriptValue::XScriptValue(const XScriptObject &obj)
+Value::Value(const Object &obj)
   {
-  XScript::currentInterface()->newValue(this, obj);
+  currentInterface()->newValue(this, &obj);
   }
 
-XScriptValue::XScriptValue(const XScriptFunction &fn)
+Value::Value(const Function &fn)
   {
-  XScript::currentInterface()->newValue(this, fn);
+  currentInterface()->newValue(this, &fn);
   }
 
-XScriptValue::XScriptValue(const QVariant& val)
+Value::Value(const QVariant& val)
   {
   switch(val.type())
     {
     case QVariant::String:
-      XScript::currentInterface()->newValue(this, val.toString());
+      currentInterface()->newValue(this, val.toString());
       break;
     case QVariant::Bool:
-      XScript::currentInterface()->newValue(this, val.toBool());
+      currentInterface()->newValue(this, val.toBool());
       break;
     case QVariant::Int:
-      XScript::currentInterface()->newValue(this, val.toInt());
+      currentInterface()->newValue(this, val.toInt());
       break;
     case QVariant::Double:
-    XScript::currentInterface()->newValue(this, val.toDouble());
+    currentInterface()->newValue(this, val.toDouble());
       break;
     case QVariant::List:
       {
-      XScript::currentInterface()->newValue(this, val.toList());
+      currentInterface()->newValue(this, val.toList());
       }
       break;
     case QVariant::StringList:
       {
-      XScript::currentInterface()->newValue(this, val.toStringList());
+      currentInterface()->newValue(this, val.toStringList());
       }
       break;
     case QVariant::Map:
       {
-      XScript::currentInterface()->newValue(this, val.toMap());
+      currentInterface()->newValue(this, val.toMap());
       }
       break;
 
     default:
       {
-      const XInterfaceBase* interface = findInterface(val.userType());
+      const InterfaceBase* interface = findInterface(val.userType());
       xAssert(interface);
       if(interface)
         {
-        XScriptValue cpy = interface->copyValue(val);
-        XScript::currentInterface()->newValue(this, &cpy);
+        Value cpy = interface->copyValue(val);
+        currentInterface()->newValue(this, &cpy);
         }
       break;
       }
     }
   }
 
-XScriptValue::XScriptValue(void* val)
+Value::Value(void* val)
   {
-  XScript::currentInterface()->newValue(this, val);
+  currentInterface()->newValue(this, val);
   }
 
 
-XScriptValue XScriptValue::newArray()
+Value Value::newArray()
   {
-  XScriptValue val;
-  XScript::currentInterface()->newArray(&val);
+  Value val;
+  currentInterface()->newArray(&val);
   return val;
   }
 
-XScriptValue XScriptValue::newEmpty()
+Value Value::newEmpty()
   {
-  XScriptValue val;
-  XScript::currentInterface()->newEmpty(&val);
+  Value val;
+  currentInterface()->newEmpty(&val);
   return val;
   }
 
-XScriptValue::~XScriptValue()
+Value::~Value()
   {
-  XScript::currentInterface()->destroy(this);
+  currentInterface()->destroy(this);
   }
 
-XScriptValue::XScriptValue(const XScriptValue &other)
+Value::Value(const Value &other)
   {
-  XScript::currentInterface()->newValue(this, &other);
+  currentInterface()->newValue(this, &other);
   }
 
-XScriptValue& XScriptValue::operator=(const XScriptValue &other)
+Value& Value::operator=(const Value &other)
   {
-  XScript::currentInterface()->destroy(this);
-  XScript::currentInterface()->newValue(this, &other);
+  currentInterface()->destroy(this);
+  currentInterface()->newValue(this, &other);
   return *this;
   }
 
-void XScriptValue::clear()
+void Value::clear()
   {
-  XScript::currentInterface()->destroy(this);
-  XScript::currentInterface()->newEmpty(this);
+  currentInterface()->destroy(this);
+  currentInterface()->newEmpty(this);
   }
 
-bool XScriptValue::isValid() const
+bool Value::isValid() const
   {
-  return XScript::currentInterface()->isValid(this);
+  return currentInterface()->isValid(this);
   }
 
-bool XScriptValue::isObject() const
+bool Value::isObject() const
   {
-  return XScript::currentInterface()->isObject(this);
+  return currentInterface()->isObject(this);
   }
 
-bool XScriptValue::isBoolean() const
+bool Value::isBoolean() const
   {
-  return XScript::currentInterface()->isBoolean(this);
+  return currentInterface()->isBoolean(this);
   }
 
-bool XScriptValue::isNumber() const
+bool Value::isNumber() const
   {
-  return XScript::currentInterface()->isNumber(this);
+  return currentInterface()->isNumber(this);
   }
 
-bool XScriptValue::isString() const
+bool Value::isString() const
   {
-  return XScript::currentInterface()->isString(this);
+  return currentInterface()->isString(this);
   }
 
-bool XScriptValue::isInteger() const
+bool Value::isInteger() const
   {
-  return XScript::currentInterface()->isInteger(this);
+  return currentInterface()->isInteger(this);
   }
 
-bool XScriptValue::isArray() const
+bool Value::isArray() const
   {
-  return XScript::currentInterface()->isArray(this);
+  return currentInterface()->isArray(this);
   }
 
-xsize XScriptValue::length() const
+xsize Value::length() const
   {
-  return XScript::currentInterface()->length(this);
+  return currentInterface()->length(this);
   }
 
-XScriptValue XScriptValue::at(xsize id) const
+Value Value::at(xsize id) const
   {
-  XScriptValue out;
-  XScript::currentInterface()->at(&out, this, id);
+  Value out;
+  currentInterface()->at(&out, this, id);
 
   return out;
   }
 
-void XScriptValue::set(xsize id, const XScriptValue &val)
+void Value::set(xsize id, const Value &val)
   {
-  return XScript::currentInterface()->set(this, id, val);
+  return currentInterface()->set(this, id, &val);
   }
 
-void *XScriptValue::toExternal() const
+void *Value::toExternal() const
   {
-  return XScript::currentInterface()->toExternal(this);
+  return currentInterface()->toExternal(this);
   }
 
-double XScriptValue::toNumber() const
+double Value::toNumber() const
   {
-  return XScript::currentInterface()->toNumber(this);
+  return currentInterface()->toNumber(this);
   }
 
-xint64 XScriptValue::toInteger() const
+xint64 Value::toInteger() const
   {
-  return XScript::currentInterface()->toInteger(this);
+  return currentInterface()->toInteger(this);
   }
 
-bool XScriptValue::toBoolean() const
+bool Value::toBoolean() const
   {
-  return XScript::currentInterface()->toBoolean(this);
+  return currentInterface()->toBoolean(this);
   }
 
-QString XScriptValue::toString() const
+QString Value::toString() const
   {
   QString out;
-  XScript::currentInterface()->toString(&out, this);
+  currentInterface()->toString(&out, this);
   return out;
   }
 
-QVariant XScriptValue::toVariant(int typeHint) const
+QVariant Value::toVariant(int typeHint) const
   {
   if(typeHint == QVariant::Bool || isBoolean())
     {
@@ -249,13 +252,13 @@ QVariant XScriptValue::toVariant(int typeHint) const
     {
     return toString();
     }
-  else if (typeHint == qMetaTypeId<XScriptObject>())
+  else if (typeHint == qMetaTypeId<Object>())
     {
-    return QVariant::fromValue(XScriptObject(*this));
+    return QVariant::fromValue(Object(*this));
     }
-  else if (typeHint == qMetaTypeId<XScriptFunction>())
+  else if (typeHint == qMetaTypeId<Function>())
     {
-    return QVariant::fromValue(XScriptFunction(*this));
+    return QVariant::fromValue(Function(*this));
     }
   else if(isArray())
     {
@@ -270,67 +273,64 @@ QVariant XScriptValue::toVariant(int typeHint) const
 
   if(isObject())
     {
-    XScriptObject object(*this);
-    XInterfaceBase* interface = object.getInterface();
+    Object object(*this);
+    InterfaceBase* interface = object.getInterface();
     if(interface)
       {
       return interface->toVariant(*this, typeHint);
       }
     }
 
-  XInterfaceBase *interface = typeHint != QVariant::Invalid ? findInterface(typeHint) : 0;
+  InterfaceBase *interface = typeHint != QVariant::Invalid ? findInterface(typeHint) : 0;
   if(interface)
     {
-    return interface->toVariant(XScriptValue(), typeHint);
+    return interface->toVariant(Value(), typeHint);
     }
 
   if(typeHint == QVariant::Map || isObject())
     {
     QVariantMap map;
-    XScript::currentInterface()->toMap(&map, this);
+    currentInterface()->toMap(&map, this);
     return map;
     }
 
   return QVariant();
   }
 
-XPersistentScriptValue::XPersistentScriptValue()
+PersistentValue::PersistentValue()
   {
-  XScript::currentInterface()->newPersistentValue(this);
+  currentInterface()->newPersistentValue(this);
   }
 
-XPersistentScriptValue::XPersistentScriptValue(const XScriptValue &val)
+PersistentValue::PersistentValue(const Value &val)
   {
-  XScript::currentInterface()->newPersistentValue(this, val);
+  currentInterface()->newPersistentValue(this, val);
   }
 
-XScriptValue XPersistentScriptValue::asValue() const
+Value PersistentValue::asValue() const
   {
-  XScriptValue v;
-  XScript::currentInterface()->asValue(&v, this);
+  Value v;
+  currentInterface()->asValue(&v, this);
 
   return v;
   }
 
-void XPersistentScriptValue::makeWeak(void *data, WeakDtor cb)
+void PersistentValue::makeWeak(void *data, WeakDtor cb)
   {
-  XScript::currentInterface()->makeWeak(this, data, cb);
+  currentInterface()->makeWeak(this, data, cb);
   }
 
-void XPersistentScriptValue::dispose()
+void PersistentValue::dispose()
   {
-  XScript::currentInterface()->dispose(this);
+  currentInterface()->dispose(this);
   }
 
-namespace XScript
-{
-
-Callback::Callback(EngineInterface *ifc, const XScriptFunction &fn)
+Callback::Callback(EngineInterface *ifc, const Function &fn)
     : _engineInterface(ifc), _function(fn)
   {
   }
 
-Callback::Callback(EngineInterface *ifc, const XScriptObject& obj, const XScriptFunction &fn)
+Callback::Callback(EngineInterface *ifc, const Object& obj, const Function &fn)
   : _engineInterface(ifc), _object(obj), _function(fn)
   {
   }
@@ -343,15 +343,15 @@ Callback::~Callback()
 
 bool Callback::isValid() const
   {
-  XScriptFunction fn(_function.asValue());
+  Function fn(_function.asValue());
   return fn.isValid();
   }
 
-void Callback::call(XScriptValue *result, xsize argCount, XScriptValue *args, bool *error, QString *errorOut)
+void Callback::call(Value *result, xsize argCount, Value *args, bool *error, QString *errorOut)
   {
   xAssert(currentInterface() == _engineInterface);
-  XScriptObject obj(_object.asValue());
-  XScriptFunction fn(_object.asValue());
+  Object obj(_object.asValue());
+  Function fn(_object.asValue());
 
   if(fn.isValid())
     {
@@ -361,7 +361,7 @@ void Callback::call(XScriptValue *result, xsize argCount, XScriptValue *args, bo
       }
     else
       {
-      fn.callWithTryCatch(result, XScriptObject(), argCount, args, error, errorOut);
+      fn.callWithTryCatch(result, Object(), argCount, args, error, errorOut);
       }
     }
   }

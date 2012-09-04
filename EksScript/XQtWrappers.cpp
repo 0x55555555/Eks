@@ -1,8 +1,11 @@
 #include "XQtWrappers.h"
 #include "XScriptEngine.h"
 #include "XInterface.h"
+#include "XScriptConstructors.h"
 
-namespace XScriptConvert
+namespace XScript
+{
+namespace Convert
 {
 namespace internal
 {
@@ -10,9 +13,9 @@ template <> struct JSToNative<QIODevice::OpenMode>
   {
   typedef QIODevice::OpenMode ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
-    QString n = XScriptConvert::from<QString>(h);
+    QString n = Convert::from<QString>(h);
     if(n == "write")
       {
       return QIODevice::WriteOnly;
@@ -27,46 +30,43 @@ template <> struct JSToNative<QIODevice::OpenMode>
 }
 }
 
-
-namespace XScript
-{
 namespace QtWrappers
 {
 
-template <typename T> void setupBindings(XInterface<T> *templ);
+template <typename T> void setupBindings(Interface<T> *templ);
 
 template <typename T> struct Binder
   {
-  static void init(Engine *engine, const char *name)
+  static void init(const char *name)
     {
-    XInterface<T> *templ = XInterface<T>::create(name);
+    Interface<T> *templ = Interface<T>::create(name);
     setupBindings<T>(templ);
     templ->seal();
-    XSript::Engine::addInterface(templ);
+    Engine::addInterface(templ);
     }
 
-  template <typename PARENT, typename BASE> static void initWithParent(Engine *engine, const char *name)
+  template <typename PARENT, typename BASE> static void initWithParent(const char *name)
     {
-    const XInterface<PARENT> *parent = XInterface<PARENT>::lookup();
-    const XInterface<BASE> *base = XInterface<BASE>::lookup();
-    XInterface<T> *templ = XInterface<T>::createWithParent(name, parent, base);
+    const Interface<PARENT> *parent = Interface<PARENT>::lookup();
+    const Interface<BASE> *base = Interface<BASE>::lookup();
+    Interface<T> *templ = Interface<T>::createWithParent(name, parent, base);
 
     setupBindings<T>(templ);
     templ->seal();
-    XSript::Engine::addInterface(templ);
+    Engine::addInterface(templ);
     }
   };
 
-template <typename T> void setupBindings(XInterface<T> *templ)
+template <typename T> void setupBindings(Interface<T> *templ)
   {
   (void)templ;
   }
 
-template <> void setupBindings<QPointF>(XInterface<QPointF> *templ)
+template <> void setupBindings<QPointF>(Interface<QPointF> *templ)
   {
   typedef QPointF CLASS;
 
-  XScript::ClassDef<3,2,2> cls = {
+  static ClassDef<3,2,0> cls = {
     {
       XScriptDefaultConstructor,
       XScriptCopyConstructor,
@@ -75,78 +75,136 @@ template <> void setupBindings<QPointF>(XInterface<QPointF> *templ)
     {
       XScriptPropertyDef(qreal, "x", x, setX),
       XScriptPropertyDef(qreal, "y", y, setY),
-    },
-    {
-      XScriptMethod("rx", qreal&(), rx),
-      XScriptMethod("ry", qreal&(), ry)
     }
   };
 
-  templ->add(cls);
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QPoint>(XInterface<QPoint> *templ)
+template <> void setupBindings<QPoint>(Interface<QPoint> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addCopyConstructor();
-  templ->addConstructor<QPoint *(int, int)>();
-  templ->addProperty<int, int, &QPoint::x, &QPoint::setX>("x");
-  templ->addProperty<int, int, &QPoint::y, &QPoint::setY>("y");
+  typedef QPoint CLASS;
+
+  static ClassDef<3,2,0> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptCopyConstructor,
+      XScriptConstructor("", int, int),
+    },
+    {
+      XScriptPropertyDef(int, "x", x, setX),
+      XScriptPropertyDef(int, "y", y, setY),
+    }
+  };
+
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QSizeF>(XInterface<QSizeF> *templ)
+template <> void setupBindings<QSizeF>(Interface<QSizeF> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addCopyConstructor();
-  templ->addProperty<qreal, qreal, &QSizeF::width, &QSizeF::setWidth>("width");
-  templ->addProperty<qreal, qreal, &QSizeF::height, &QSizeF::setHeight>("height");
+  typedef QSizeF CLASS;
+
+  static ClassDef<2,2,0> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptCopyConstructor,
+    },
+    {
+      XScriptPropertyDef(qreal, "width", width, setWidth),
+      XScriptPropertyDef(qreal, "height", height, setHeight),
+    }
+  };
+
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QSize>(XInterface<QSize> *templ)
+template <> void setupBindings<QSize>(Interface<QSize> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addCopyConstructor();
-  templ->addProperty<int, int, &QSize::width, &QSize::setWidth>("width");
-  templ->addProperty<int, int, &QSize::height, &QSize::setHeight>("height");
+  typedef QSize CLASS;
+
+  static ClassDef<2,2,0> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptCopyConstructor,
+    },
+    {
+      XScriptPropertyDef(int, "width", width, setWidth),
+      XScriptPropertyDef(int, "height", height, setHeight),
+    }
+  };
+
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QRectF>(XInterface<QRectF> *templ)
+template <> void setupBindings<QRectF>(Interface<QRectF> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addCopyConstructor();
-  templ->addProperty<qreal, qreal, &QRectF::left, &QRectF::setLeft>("left");
-  templ->addProperty<qreal, qreal, &QRectF::right, &QRectF::setRight>("right");
-  templ->addProperty<qreal, qreal, &QRectF::top, &QRectF::setTop>("top");
-  templ->addProperty<qreal, qreal, &QRectF::bottom, &QRectF::setBottom>("bottom");
-  templ->addProperty<QPointF, const QPointF &, &QRectF::topLeft, &QRectF::setTopLeft>("topLeft");
+  typedef QRectF CLASS;
+
+  static ClassDef<2,5,0> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptCopyConstructor,
+    },
+    {
+      XScriptPropertyDef(qreal, "width", left, setLeft),
+      XScriptPropertyDef(qreal, "right", right, setRight),
+      XScriptPropertyDef(qreal, "top", top, setTop),
+      XScriptPropertyDef(qreal, "bottom", bottom, setBottom),
+      XScriptPropertyDefExplicit(const QPointF &, QPointF, "topLeft", topLeft, setTopLeft),
+    }
+  };
+
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QRect>(XInterface<QRect> *templ)
+template <> void setupBindings<QRect>(Interface<QRect> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addCopyConstructor();
-  templ->addProperty<int, int, &QRect::left, &QRect::setLeft>("left");
-  templ->addProperty<int, int, &QRect::right, &QRect::setRight>("right");
-  templ->addProperty<int, int, &QRect::top, &QRect::setTop>("top");
-  templ->addProperty<int, int, &QRect::bottom, &QRect::setBottom>("bottom");
-  templ->addProperty<QPoint, const QPoint &, &QRect::topLeft, &QRect::setTopLeft>("topLeft");
+  typedef QRect CLASS;
+
+  static ClassDef<2,5,0> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptCopyConstructor,
+    },
+    {
+      XScriptPropertyDef(int, "width", left, setLeft),
+      XScriptPropertyDef(int, "right", right, setRight),
+      XScriptPropertyDef(int, "top", top, setTop),
+      XScriptPropertyDef(int, "bottom", bottom, setBottom),
+      XScriptPropertyDefExplicit(const QPoint &, QPoint, "topLeft", topLeft, setTopLeft),
+    }
+  };
+
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QFile>(XInterface<QFile> *templ)
+template <> void setupBindings<QFile>(Interface<QFile> *templ)
   {
-  templ->addDefaultConstructor();
-  templ->addNativeConvertConstructor();
-  templ->addConstructor<QFile *(const QString &)>("fromFilename");
+  typedef QFile CLASS;
+
+  static ClassDef<3,0,0> cls = {
+    {
+      XScriptDefaultConstructor,
+      XScriptConstructor("fromFilename", const QString &),
+    }
+  };
+
+  templ->buildInterface(cls);
   }
 
-template <> void setupBindings<QIODevice>(XInterface<QIODevice> *templ)
+template <> void setupBindings<QIODevice>(Interface<QIODevice> *templ)
   {
-  templ->addMethod<bool(QIODevice::OpenMode), &QIODevice::open>("open");
+  typedef QIODevice CLASS;
 
-  typedef XScript::MethodToInCa<QIODevice, qint64(const QByteArray &), &QIODevice::write> FunctionType;
-  templ->addFunction("write", 1, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
+  static ClassDef<0,0,3> cls = {
+    {
+      XScriptMethod("open", bool(QIODevice::OpenMode), open),
+      XScriptMethod("write", qint64(const QByteArray &), write),
+      XScriptMethod("close", void(), close)
+    }
+  };
 
-  templ->addMethod<void(), &QIODevice::close>("close");
+  templ->buildInterface(cls);
   }
 
 void initiate()

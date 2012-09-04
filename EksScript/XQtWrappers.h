@@ -24,7 +24,7 @@ class ScriptEngine;
 
 namespace QtWrappers
 {
-EKSSCRIPT_EXPORT void initiate(Engine *eng);
+EKSSCRIPT_EXPORT void initiate();
 }
 }
 
@@ -49,11 +49,14 @@ X_SCRIPTABLE_TYPE_COPYABLE(QRegion)
 X_SCRIPTABLE_ABSTRACT_TYPE(QIODevice)
 X_SCRIPTABLE_TYPE_BASE_INHERITED(QFile, QIODevice)
 
-namespace XScriptConvert
+namespace XScript
+{
+namespace Convert
 {
 namespace internal
 {
-template <> struct NativeToJS<QFile> : public XScript::NativeToJSConvertableTypeInherited<QFile, QIODevice> {};
+template <> struct NativeToJS<QFile> : public NativeToJSConvertableTypeInherited<QFile, QIODevice> {};
+}
 }
 }
 

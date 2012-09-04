@@ -25,7 +25,7 @@ template <typename Sig, int Arity = sl::Arity< XSignature<Sig> >::Value >
 struct CtorForwarderProxy
   {
   typedef typename XSignature<Sig>::ReturnType ReturnType;
-  static ReturnType Call( XScriptArguments const & );
+  template <typename ArgsType> static ReturnType Call( ArgsType const & );
   };
 
 //! Specialization for 0-arity ctors.
@@ -36,7 +36,7 @@ struct CtorForwarderProxy<Sig,0>
   template <typename ArgsType>
       static ReturnType Call( ArgsType const & )
     {
-    typedef typename XScriptTypeInfo<ReturnType>::Type RType;
+    typedef typename TypeInfo<ReturnType>::Type RType;
     return new RType;
     }
   };
@@ -48,7 +48,7 @@ struct CtorForwarderProxy<Sig,-1>
   template <typename ArgsType>
       static ReturnType Call( ArgsType const & argv )
     {
-    typedef typename XScriptTypeInfo<ReturnType>::Type T;
+    typedef typename TypeInfo<ReturnType>::Type T;
     return new T(argv);
     }
   };
@@ -113,7 +113,7 @@ struct CtorForwarder : XSignature<Sig>
     }
   };
 
-#if !defined(DOXYGEN)
+#if 0
 namespace Detail
 {
 
@@ -124,20 +124,23 @@ namespace Detail
 template <typename T,typename CTOR>
 struct CtorFwdDispatch
   {
-  typedef typename XScriptTypeInfo<T>::NativeHandle ReturnType;
-  static ReturnType Call( XScriptArguments const &  argv )
+  typedef typename TypeInfo<T>::NativeHandle ReturnType;
+  template <typename ArgType>
+      static ReturnType Call( ArgType const & argv)
     {
     return CTOR::Call( argv );
     }
   };
+
 /**
            Internal dispatch end-of-list routine.
         */
 template <typename T>
 struct CtorFwdDispatch<T, XNilType>
   {
-  typedef typename XScriptTypeInfo<T>::NativeHandle ReturnType;
-  static ReturnType Call( XScriptArguments const & )
+  typedef typename TypeInfo<T>::NativeHandle ReturnType;
+  template <typename ArgType>
+      static ReturnType Call( ArgType const & argv)
     {
     return 0;
     }
@@ -153,12 +156,12 @@ struct CtorFwdDispatch<T, XNilType>
 template <typename T,typename List>
 struct CtorFwdDispatchList
   {
-  typedef typename XScriptTypeInfo<T>::NativeHandle ReturnType;
+  typedef typename TypeInfo<T>::NativeHandle ReturnType;
   /**
                Tries to dispatch Arguments to one of the constructors
                in the List type, based on the argument count.
              */
-  static ReturnType Call( XScriptArguments const &  argv )
+  static ReturnType Call( internal::JSArguments const &  argv )
     {
     typedef typename List::Head CTOR;
     typedef typename List::Tail Tail;
@@ -176,9 +179,9 @@ struct CtorFwdDispatchList
 template <typename T>
 struct CtorFwdDispatchList<T,XNilType>
   {
-  typedef typename XScriptTypeInfo<T>::NativeHandle ReturnType;
+  typedef typename TypeInfo<T>::NativeHandle ReturnType;
   /** Writes an error message to errmsg and returns 0. */
-  static ReturnType Call( XScriptArguments const &  argv )
+  static ReturnType Call( internal::JSArguments const &  argv )
     {
     QString error = QString("No native constructor was defined for %1 arguments!\n").arg(argv.length());
     throw std::range_error(error.toUtf8().data());
@@ -186,8 +189,6 @@ struct CtorFwdDispatchList<T,XNilType>
     }
   };
 }
-#endif // !DOXYGEN
-
 /**
         Proxies a list of constructors from XScriptArguments.
 
@@ -223,7 +224,7 @@ template <typename CtorList>
 struct CtorArityDispatcher
   {
   typedef typename CtorList::ReturnType RT;
-  typedef typename XScriptTypeInfo<RT>::NativeHandle NativeHandle;
+  typedef typename TypeInfo<RT>::NativeHandle NativeHandle;
   static NativeHandle Call( XScriptArguments const & argv )
     {
     typedef typename XPlainType<RT>::Type Type;
@@ -231,53 +232,53 @@ struct CtorArityDispatcher
     return Proxy::Call( argv );
     }
   };
+#endif
 
-template <typename T, typename Wrapper, void Dtor(XPersistentScriptValue, void *)>
+template <typename T, typename Wrapper, void Dtor(PersistentValue, void *)>
 struct CtorFunctionWrapperBase
   {
-  typedef XScript::ClassCreator_Factory<T> Factory;
+  typedef ClassCreator_Factory<T> Factory;
 
-  static void CallDart(XScriptDartArguments argv)
+  static void CallDart(internal::DartArguments argv)
     {
-    XScriptDartArgumentsWithThis args(argv);
-    XScriptValue ths = args.calleeThis();
+    internal::DartArgumentsWithThis args(argv);
+    Value ths = args.calleeThis();
     if( !ths.isValid() )
       {
       return;
       }
 
-    XPersistentScriptValue persistent(ths);
-    XScriptObject self(persistent.asValue());
+    PersistentValue persistent(ths);
+    Object self(persistent.asValue());
 
     void *constructed = Wrapper::Wrap(args);
     if(!constructed)
       {
-      Toss("Native constructor failed");
+      toss("Native constructor failed");
       }
 
-    typedef typename XScriptTypeInfo<T>::NativeHandle NativeHandle;
+    typedef typename TypeInfo<T>::NativeHandle NativeHandle;
     NativeHandle native = static_cast<NativeHandle>(constructed);
 
     persistent.makeWeak( constructed, Dtor );
-    ::findInterface<T>(native)->wrapInstance(self, constructed);
+    findInterface<T>(native)->wrapInstance(&self, constructed);
     }
   };
 
-template <typename T, typename CtorType, void Dtor(XPersistentScriptValue, void *)>
+template <typename T, typename CtorType, void Dtor(PersistentValue, void *)>
 struct CtorFunctionWrapper : CtorFunctionWrapperBase<T, CtorFunctionWrapper<T, CtorType, Dtor>, Dtor>
   {
   typedef XScript::CtorForwarder<CtorType> Forwarder;
   enum { Arity = Forwarder::Arity };
 
-  template <typename ArgsType>
-  static T *Wrap(ArgsType argv)
+  template <typename ArgsType> static T *Wrap(ArgsType argv)
     {
     return Forwarder::Call(argv);
     }
   };
 
 
-template <typename T, void Dtor(XPersistentScriptValue, void *)>
+template <typename T, void Dtor(PersistentValue, void *)>
     struct CtorNativeWrap : XScript::CtorFunctionWrapperBase<T, CtorNativeWrap<T, Dtor>, Dtor>
   {
   enum { Arity = 1 };

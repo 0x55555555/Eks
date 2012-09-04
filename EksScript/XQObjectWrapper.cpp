@@ -98,10 +98,10 @@ int QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void
     QList<QByteArray> types = snd.parameterTypes();
 
 
-    XScriptFunction::Scope scope;
+    Function::Scope scope;
 
     int argCount = types.size();
-    QVarLengthArray<XScriptValue, 9> args(argCount);
+    QVarLengthArray<Value, 9> args(argCount);
 
     for(int ii = 0; ii < argCount; ++ii)
       {
@@ -114,11 +114,11 @@ int QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void
 
       if(type == qMetaTypeId<QVariant>())
         {
-        args[ii] = XScriptValue(*((QVariant *)metaArgs[ii + 1]));
+        args[ii] = Value(*((QVariant *)metaArgs[ii + 1]));
         }
       else
         {
-        args[ii] = XScriptValue(QVariant(type, metaArgs[ii + 1]));
+        args[ii] = Value(QVariant(type, metaArgs[ii + 1]));
         }
       }
 
@@ -130,7 +130,7 @@ int QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void
         continue;
         }
 
-      XScriptValue result;
+      Value result;
       try
         {
         xAssert(connection.callback.isValid());
@@ -182,16 +182,15 @@ Q_DECLARE_METATYPE(QObjectList)
 
 QObjectWrapper::QObjectWrapper()
   {
-  _context = 0;
   }
 
 QObjectWrapper::~QObjectWrapper()
 {
   _objects.remove(&QObject::staticMetaObject);
   _objects.remove(&QWidget::staticMetaObject);
-  Q_FOREACH(XInterfaceBase *b, _objects)
+  Q_FOREACH(InterfaceBase *b, _objects)
     {
-    if(b != XInterface<QObject>::lookup())
+    if(b != Interface<QObject>::lookup())
       {
       delete b;
       }
@@ -211,27 +210,36 @@ QString formatClassName(const QString &n)
 const char *qobjectName = "QObject";
 void QObjectWrapper::initiate()
   {
-  qRegisterMetaType<XScriptObject>("XScriptObject");
-  qRegisterMetaType<XScriptFunction>("XScriptFunction");
+  qRegisterMetaType<Object>("ScriptObject");
+  qRegisterMetaType<Function>("ScriptFunction");
 
   // build up custom QObject wrapper
-  XInterface<QObject>* interface = XInterface<QObject>::create(qobjectName);
-  interface->addNativeConvertConstructor();
+  Interface<QObject>* interface = Interface<QObject>::create(qobjectName);
   buildInterface(interface, &QObject::staticMetaObject);
+
   interface->seal();
-  c->addInterface(interface);
+
+  Engine::addInterface(interface);
   instance()->_objects.insert(&QObject::staticMetaObject, interface);
 
 
   // build up custom QWidget wrapper
-  XInterface<QWidget>* widget = XInterface<QWidget>::createWithParent("QWidget", interface, interface);
-  widget->addNativeConvertConstructor();
+  Interface<QWidget>* widget = Interface<QWidget>::createWithParent("QWidget", interface, interface);
 
-  widget->addConstMethod<QPoint (QWidget*, const QPoint&), &QWidget::mapTo>("mapTo");
-  widget->addConstMethod<QPoint (const QPoint&), &QWidget::mapToGlobal>("mapToGlobal");
 
-  buildInterface(widget, &QWidget::staticMetaObject);
-  widget->seal();
+  // QWidget
+    {
+    typedef QWidget CLASS;
+
+    FunctionDef extraWidgetFunctions[] =
+    {
+      XScriptConstMethod("mapTo", QPoint (QWidget*, const QPoint&), mapTo),
+      XScriptConstMethod("mapToGlobal", QPoint (const QPoint&), mapToGlobal),
+    };
+
+    buildInterface(widget, &QWidget::staticMetaObject, extraWidgetFunctions, X_ARRAY_COUNT(extraWidgetFunctions));
+    widget->seal();
+    }
 
   instance()->_objects.insert(&QWidget::staticMetaObject, widget);
   }
@@ -242,42 +250,42 @@ QObjectWrapper *QObjectWrapper::instance()
   return &wrap;
   }
 
-XScriptObject QObjectWrapper::wrap(QObject *obj)
+Object QObjectWrapper::wrap(QObject *obj)
   {
-  const XInterfaceBase* interface = findInterface(obj->metaObject());
+  const InterfaceBase* interface = findInterface(obj->metaObject());
 
-  XScriptValue vals[1] = { XScriptValue(obj) };
-  XScriptObject self = interface->newInstance(1, vals);
+  Value vals[1] = { Value(obj) };
+  Object self = interface->newInstance(1, vals);
   xAssert(self.isValid());
 
   return self;
   }
 
-XInterfaceBase *QObjectWrapper::findInterface(const QMetaObject *object)
+InterfaceBase *QObjectWrapper::findInterface(const QMetaObject *object)
   {
-  XInterfaceBase *base = _objects[object];
+  InterfaceBase *base = _objects[object];
   if(base)
     {
     return base;
     }
 
   const QMetaObject *parent = object->superClass();
-  XInterfaceBase *parentInterface = 0;
+  InterfaceBase *parentInterface = 0;
   if(parent)
     {
     parentInterface = findInterface(parent);
     }
 
 
-  XInterfaceBase* qobject = ::findInterface(qMetaTypeId<QObject*>());
-  base = new XInterface<QObject>(qobject->typeId(), 0, qobject->typeId(), qobject->nonPointerTypeId(), formatClassName(object->className()), parentInterface);
+  InterfaceBase* qobject = XScript::findInterface(qMetaTypeId<QObject*>());
+  base = new Interface<QObject>(qobject->typeId(), 0, qobject->typeId(), qobject->nonPointerTypeId(), formatClassName(object->className()), parentInterface);
 
   _objects.insert(object, base);
 
   buildInterface(base, object);
 
   base->seal();
-  _context->addInterface(base);
+  Engine::addInterface(base);
 
   return base;
   }
@@ -361,7 +369,7 @@ struct CallArgument
       }
     }
 
-  void fromValue(int callType, XScriptValue value)
+  void fromValue(int callType, const Value &value)
     {
     if (type != 0)
       {
@@ -400,17 +408,17 @@ struct CallArgument
       }
     else if (callType == QMetaType::QString)
       {
-      qstringPtr = new (&allocData) QString(XScriptConvert::from<QString>(value));
+      qstringPtr = new (&allocData) QString(Convert::from<QString>(value));
       type = callType;
     }
     else if (callType == QMetaType::QObjectStar)
     {
-      qobjectPtr = XScriptConvert::from<QObject>(value);
+      qobjectPtr = Convert::from<QObject>(value);
       type = callType;
     }
     else if (callType == QMetaType::QWidgetStar)
     {
-      qobjectPtr = XScriptConvert::from<QWidget>(value);
+      qobjectPtr = Convert::from<QWidget>(value);
       type = callType;
     }
     else if (callType == qMetaTypeId<QVariant>())
@@ -429,12 +437,12 @@ struct CallArgument
         uint32_t length = array->Length();
         for (uint32_t ii = 0; ii < length; ++ii)
           {
-          qlistPtr->append(XScriptConvert::from<QObject>(fromHandle(array->Get(ii))));
+          qlistPtr->append(Convert::from<QObject>(fromHandle(array->Get(ii))));
           }
         }
       else
         {
-        qlistPtr->append(XScriptConvert::from<QObject>(fromHandle(value)));
+        qlistPtr->append(Convert::from<QObject>(fromHandle(value)));
         }
       type = callType;
 #endif
@@ -479,35 +487,35 @@ struct CallArgument
       }
     }
 
-  XScriptValue toValue()
+  Value toValue()
     {
     if (type == QMetaType::Int)
       {
-      return XScriptValue(int(intValue));
+      return Value(int(intValue));
       }
     else if (type == QMetaType::UInt)
       {
-      return XScriptValue(intValue);
+      return Value(intValue);
       }
     else if (type == QMetaType::Bool)
       {
-      return XScriptValue(boolValue);
+      return Value(boolValue);
       }
     else if (type == QMetaType::Double)
       {
-      return XScriptValue(doubleValue);
+      return Value(doubleValue);
       }
     else if (type == QMetaType::Float)
       {
-      return XScriptValue(floatValue);
+      return Value(floatValue);
       }
     else if (type == QMetaType::QString)
       {
-      return XScriptConvert::to(*qstringPtr);
+      return Convert::to(*qstringPtr);
       }
     else if (type == QMetaType::QObjectStar)
       {
-      return XScriptConvert::to(qobjectPtr);
+      return Convert::to(qobjectPtr);
       }
     else if (type == qMetaTypeId<QList<QObject *> >())
       {
@@ -519,11 +527,11 @@ struct CallArgument
       v8::Local<v8::Array> array = v8::Array::New(list.count());
       for (int ii = 0; ii < list.count(); ++ii)
         {
-        array->Set(ii, getV8Internal(XScriptConvert::to(list.at(ii))));
+        array->Set(ii, getV8Internal(Convert::to(list.at(ii))));
         }
       return array;
 #endif
-      return XScriptValue();
+      return Value();
       }/*
     else if(type == qMetaTypeId<QQmlV8Handle>())
       {
@@ -531,12 +539,10 @@ struct CallArgument
       }*/
     else if (type == -1 || type == qMetaTypeId<QVariant>())
       {
-      return XScriptValue(*qvariantPtr);
+      return Value(*qvariantPtr);
       }
-    else
-      {
-      return XScriptValue();
-      }
+
+    return Value();
     }
 
 private:
@@ -590,14 +596,14 @@ private:
 
 struct Utils
   {
-  static void signalDart(XScriptDartArguments args)
+  static void signalDart(internal::DartArguments args)
     {
     }
 
-  static XScriptValue signal(XScriptValue, const XAccessorInfo& info)
+  static Value signal(Value, const internal::JSAccessorInfo& info)
     {
-    QObject *ths = XScriptConvert::from<QObject>(info.calleeThis());
-    int id = XScriptConvert::from<int>(info.data());
+    QObject *ths = Convert::from<QObject>(info.calleeThis());
+    int id = Convert::from<int>(info.data());
 
     xAssertFail();
 #if 0
@@ -625,23 +631,23 @@ struct Utils
 
     return t->GetFunction();
 #endif
-    return XScriptValue();
+    return Value();
     }
 
-  static void readDart(XScriptDartArguments args)
+  static void readDart(internal::DartArguments args)
     {
     xAssertFail();
     }
 
-  static XScriptValue read(XScriptValue, const XAccessorInfo& info)
+  static Value read(Value, const internal::JSAccessorInfo& info)
     {
-    QObject *ths = XScriptConvert::from<QObject>(info.calleeThis());
+    QObject *ths = Convert::from<QObject>(info.calleeThis());
     if(!ths)
       {
-      return XScriptValue();
+      return Value();
       }
 
-    int id = XScriptConvert::from<int>(info.data());
+    int id = Convert::from<int>(info.data());
     QMetaProperty prop(ths->metaObject()->property(id));
 
 #ifdef X_TYPE_DEBUG
@@ -651,44 +657,44 @@ struct Utils
 #endif
 
     QVariant value = prop.read(ths);
-    return XScriptValue(value);
+    return Value(value);
     }
 
-  static void writeDart(XScriptDartArguments args)
+  static void writeDart(internal::DartArguments args)
     {
     xAssertFail();
     }
 
-  static void write(XScriptValue, XScriptValue value, const XAccessorInfo& info)
+  static void write(Value, Value value, const internal::JSAccessorInfo& info)
     {
-    QObject *ths = XScriptConvert::from<QObject>(info.calleeThis());
+    QObject *ths = Convert::from<QObject>(info.calleeThis());
     if(!ths)
       {
       return;
       }
 
-    int id = XScriptConvert::from<int>(info.data());
+    int id = Convert::from<int>(info.data());
     ths->metaObject()->property(id).write(ths, value.toVariant());
     }
 
-  static void methodDart(XScriptDartArguments args)
+  static void methodDart(internal::DartArguments args)
     {
     xAssertFail();
     }
 
-  static XScriptValue method(const XScriptArguments& args)
+  static Value method(const internal::JSArguments& args)
     {
-    QObject *ths = XScriptConvert::from<QObject>(args.calleeThis());
+    QObject *ths = Convert::from<QObject>(args.calleeThis());
     xAssertFail();
 #if 0
     v8::Local<v8::Value> idVal = args.Callee()->Get(0);
-    int id = XScriptConvert::from<int>(fromHandle(idVal));
+    int id = Convert::from<int>(fromHandle(idVal));
     return methodCall(ths, id, args);
 #endif
-    return XScriptValue();
+    return Value();
     }
 
-  static XScriptValue methodCall(QObject *ths, int id, const XScriptArguments& args)
+  static Value methodCall(QObject *ths, int id, const internal::JSArguments& args)
     {
     QMetaMethod method = ths->metaObject()->method(id);
 #ifdef X_TYPE_DEBUG
@@ -699,7 +705,7 @@ struct Utils
     int length = args.length();
     if(length < types.size())
       {
-      return Toss(QString("Too few arguments to method ") + method.signature());
+      return toss(QString("Too few arguments to method ") + method.signature());
       }
     length = qMin(length, types.size());
 
@@ -743,11 +749,11 @@ struct Utils
 
 #if 0
 
-  static XScriptValue connect(XScriptArguments const &xArgs)
+  static Value connect(XScriptArguments const &xArgs)
     {;
     if(args.length() == 0)
       {
-      return Toss("Function.prototype.connect: no arguments given");
+      return toss("Function.prototype.connect: no arguments given");
       }
 
     v8::Handle<v8::Object> calleeThis = getV8Internal(xArgs.callee());
@@ -756,17 +762,17 @@ struct Utils
 
     if(id == -1)
       {
-      return Toss("Function.prototype.connect: this object is not a signal");
+      return toss("Function.prototype.connect: this object is not a signal");
       }
 
     if(!object)
       {
-      return Toss("Function.prototype.connect: cannot connect to deleted QObject");
+      return toss("Function.prototype.connect: cannot connect to deleted QObject");
       }
 
     if(id < 0 || object->metaObject()->method(id).methodType() != QMetaMethod::Signal)
       {
-      return Toss("Function.prototype.connect: this object is not a signal");
+      return toss("Function.prototype.connect: this object is not a signal");
       }
 
     v8::Local<v8::Value> functionValue;
@@ -784,12 +790,12 @@ struct Utils
 
     if(!functionValue->IsFunction())
       {
-      return Toss("Function.prototype.connect: target is not a function");
+      return toss("Function.prototype.connect: target is not a function");
       }
 
     if(!functionThisValue.IsEmpty() && !functionThisValue->IsObject())
       {
-      return Toss("Function.prototype.connect: target this is not an object");
+      return toss("Function.prototype.connect: target this is not an object");
       }
 
     QObjectWrapper *qobjectWrapper = QObjectWrapper::instance();
@@ -817,16 +823,16 @@ struct Utils
 
     slotIter->append(connection);
 
-    return XScriptValue();
+    return Value();
     }
 
-  static XScriptValue disconnect(XScriptArguments const &xArgs)
+  static Value disconnect(XScriptArguments const &xArgs)
     {
     v8::Arguments const &args = *(v8::Arguments const *)&xArgs;
 
     if(args.Length() == 0)
       {
-      return Toss("Function.prototype.disconnect: no arguments given");
+      return toss("Function.prototype.disconnect: no arguments given");
       }
 
     v8::Handle<v8::Object> calleeThis = getV8Internal(xArgs.callee());
@@ -835,17 +841,17 @@ struct Utils
 
     if(id == -1)
       {
-      return Toss("Function.prototype.disconnect: this object is not a signal");
+      return toss("Function.prototype.disconnect: this object is not a signal");
       }
 
     if(!object)
       {
-      return Toss("Function.prototype.disconnect: cannot disconnect from deleted QObject");
+      return toss("Function.prototype.disconnect: cannot disconnect from deleted QObject");
       }
 
     if (id < 0 || object->metaObject()->method(id).methodType() != QMetaMethod::Signal)
       {
-      return Toss("Function.prototype.disconnect: this object is not a signal");
+      return toss("Function.prototype.disconnect: this object is not a signal");
       }
 
     v8::Local<v8::Value> functionValue;
@@ -863,12 +869,12 @@ struct Utils
 
     if(!functionValue->IsFunction())
       {
-      return Toss("Function.prototype.disconnect: target is not a function");
+      return toss("Function.prototype.disconnect: target is not a function");
       }
 
     if(!functionThisValue.IsEmpty() && !functionThisValue->IsObject())
       {
-      return Toss("Function.prototype.disconnect: target this is not an object");
+      return toss("Function.prototype.disconnect: target this is not an object");
       }
 
     QObjectWrapper *qobjectWrapper = QObjectWrapper::instance();
@@ -876,14 +882,14 @@ struct Utils
     XUnorderedMap<QObject *, QObjectConnectionList *>::Iterator iter = connectionsList.find(object);
     if(iter == connectionsList.end())
       {
-      return XScriptValue(); // Nothing to disconnect from
+      return Value(); // Nothing to disconnect from
       }
 
     QObjectConnectionList *connectionList = *iter;
     QObjectConnectionList::SlotHash::Iterator slotIter = connectionList->slotHash.find(id);
     if(slotIter == connectionList->slotHash.end())
       {
-      return XScriptValue(); // Nothing to disconnect from
+      return Value(); // Nothing to disconnect from
       }
 
     QObjectConnectionList::ConnectionList &connections = *slotIter;
@@ -934,16 +940,16 @@ struct Utils
             connection.dispose();
             connections.removeAt(ii);
             }
-          return XScriptValue();
+          return Value();
           }
         }
       //}
 
-    return XScriptValue();
+    return Value();
     }
 #endif
 
-  static XScriptValue emitSignal(XScriptArguments const &xArgs)
+  static Value emitSignal(internal::JSArguments const &xArgs)
     {
 #if 0
     v8::Handle<v8::Object> calleeThis = getV8Internal(xArgs.callee());
@@ -966,8 +972,23 @@ struct Utils
     }
   };
 
-void QObjectWrapper::buildInterface(XInterfaceBase *interface, const QMetaObject *metaObject)
-  {
+void QObjectWrapper::buildInterface(
+    InterfaceBase *interface,
+    const QMetaObject *metaObject,
+    FunctionDef* extraFns,
+    xsize extraFnCount)
+  {/*
+
+  ClassDef<1,0,0> qobjectdesc = {
+    {
+      XScriptNativeConstructor
+    },
+    {
+    },
+    {
+    }
+  };
+
   for(int i = metaObject->propertyOffset(), s = metaObject->propertyCount(); i < s; ++i)
     {
     QMetaProperty prop(metaObject->property(i));
@@ -1013,7 +1034,7 @@ void QObjectWrapper::buildInterface(XInterfaceBase *interface, const QMetaObject
 
       interface->addProperty(shortName.constData(), Utils::signal, Utils::signalDart, 0, 0, i);
       }
-    }
+    }*/
   }
 
 }

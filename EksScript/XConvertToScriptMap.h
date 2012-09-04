@@ -3,17 +3,23 @@
 
 #include "XScriptTypeInfo.h"
 
-template <typename T> struct XNativeToJSMap
+namespace XScript
+{
+
+namespace Convert
+{
+
+template <typename T> struct NativeToJSMap
   {
 private:
-  typedef XScriptTypeInfo<T> TI;
+  typedef TypeInfo<T> TI;
   typedef typename TI::Type Type;
   /**
            The native type to bind to.
         */
   typedef typename TI::NativeHandle NativeHandle;
   /** The type for holding the JS 'this' object. */
-  typedef XPersistentScriptValue JSObjHandle;
+  typedef PersistentValue JSObjHandle;
   typedef std::pair<NativeHandle,JSObjHandle> ObjBindT;
   typedef std::map<void const *, ObjBindT> OneOfUsT;
   /** Maps (void const *) to ObjBindT.
@@ -83,11 +89,11 @@ public:
            Returns the JS object associated with key, or
            an empty handle if !key or no object is found.
         */
-  static XScriptValue GetJSObject( void const * key )
+  static Value GetJSObject( void const * key )
     {
-    if( ! key ) return XScriptValue();
+    if( ! key ) return Value();
     typename OneOfUsT::const_iterator it = Map().find(key);
-    if( Map().end() == it ) return XScriptValue();
+    if( Map().end() == it ) return Value();
     else return (*it).second.second;
     }
 
@@ -103,14 +109,14 @@ public:
         */
   struct NativeToJSImpl
     {
-    XScriptValue operator()( Type const * n ) const
+    Value operator()( Type const * n ) const
       {
       typedef XNativeToJSMap<T> BM;
-      XScriptValue const & rc( BM::GetJSObject(n) );
-      if( !rc.isValid() ) return XScriptValue();
+      Value const & rc( BM::GetJSObject(n) );
+      if( !rc.isValid() ) return Value();
       else return rc;
       }
-    XScriptValue operator()( Type const & n ) const
+    Value operator()( Type const & n ) const
       {
       return this->operator()( &n );
       }
@@ -130,7 +136,7 @@ public:
         typedef typename NativeToJSMap<ParentType>::NativeToJSImpl PI;
         return PI()(n);
 #if 0
-        typedef typename XScriptTypeInfo<ParentType>::NativeHandle PH;
+        typedef typename TypeInfo<ParentType>::NativeHandle PH;
         rc = CastToJS<ParentType>(n);
         if( rc.IsEmpty() ) return v8::Null();
         else return rc;
@@ -145,5 +151,7 @@ public:
     };
 #endif
   };
+}
+}
 
 #endif // XCONVERTTOSCRIPTMAP_H

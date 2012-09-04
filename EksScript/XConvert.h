@@ -5,7 +5,10 @@
 #include "XScriptValue.h"
 #include "XAssert"
 
-namespace XScriptConvert
+namespace XScript
+{
+
+namespace Convert
 {
 
 template <typename T, typename U> T *castFromBase(U *ptr)
@@ -14,38 +17,39 @@ template <typename T, typename U> T *castFromBase(U *ptr)
   }
 
 template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
-{
-  if(!*in)
   {
+  if(!*in)
+    {
     static char o[sizeof(T)];
     valid = false;
     return *(T*)o;
-  }
+    }
   return **in;
-}
+  }
 
 template <typename Out, typename In> Out match(In *in, bool &valid)
-{
+  {
   valid = true;
   return Out(*in);
-}
+  }
 
 namespace internal
 {
 
 template <typename JST> struct JSToNative
   {
-  typedef typename XScriptTypeInfo<JST>::NativeHandle ResultType;
+  typedef typename TypeInfo<JST>::NativeHandle ResultType;
 
   //! Must be specialized to be useful.
-  ResultType operator()(XScriptValue const &h) const;
+  ResultType operator()(Value const &h) const;
   };
 
 template <typename NT> struct NativeToJS
   {
   template <typename X>
-  XScriptValue operator()( X const & ) const;
+  Value operator()( X const & ) const;
   };
+}
 
 }
 

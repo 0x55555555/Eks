@@ -1,10 +1,3 @@
-#include "XScriptValueDartInternals.h"
-#include "XScriptValueV8Internals.h"
-
-#ifndef X_DART
-# include "v8-debug.h"
-#endif
-
 #include "XScriptGlobal.h"
 #include "XScriptEngine.h"
 #include "XScriptValue.h"
@@ -15,18 +8,29 @@
 
 namespace XScript
 {
+
+#ifdef X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
 EngineInterface *createV8Interface(bool debugging);
+#endif
+
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
 EngineInterface *createDartInterface(bool debugging);
-
-xCompileTimeAssert(Engine::InterfaceCount == 2);
-
+#endif
 
 struct StaticEngine
   {
   StaticEngine(bool debugging)
     {
-    engines[0] = createV8Interface(debugging);
-    engines[1] = createDartInterface(debugging);
+    (void)debugging;
+    xsize idx = 0;
+
+#ifdef X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
+    engines[idx++] = createV8Interface(debugging);
+#endif
+
+#ifdef X_SCRIPT_ENGINE_ENABLE_DART
+    engines[idx++] = createDartInterface(debugging);
+#endif
     }
 
   ~StaticEngine()
@@ -37,7 +41,12 @@ struct StaticEngine
       }
     }
 
-  EngineInterface *engines[Engine::MaxInterfaces];
+  enum
+    {
+    EngineAllocation = Engine::InterfaceCount < 1 ? 1 : Engine::InterfaceCount
+    };
+
+  EngineInterface *engines[EngineAllocation];
 
   EngineInterface *currentInterface;
   };
@@ -66,12 +75,7 @@ void Engine::initiateQtWrappers()
   QtWrappers::initiate();
   }
 
-QString getDartUrl(const XInterfaceBase* i)
-  {
-  return i->typeName();
-  }
-
-void Engine::addInterface(const XInterfaceBase *i)
+void Engine::addInterface(const InterfaceBase *i)
   {
   xForeach(EngineInterface *eng, g_engine->engines)
     {
@@ -79,7 +83,7 @@ void Engine::addInterface(const XInterfaceBase *i)
     }
   }
 
-void Engine::removeInterface(const XInterfaceBase *i)
+void Engine::removeInterface(const InterfaceBase *i)
   {
   xForeach(EngineInterface *eng, g_engine->engines)
     {
@@ -91,6 +95,22 @@ Engine::Walker Engine::interfaces()
   {
   Engine::Walker wlk = { g_engine->engines, g_engine->engines + InterfaceCount };
   return wlk;
+  }
+
+xsize Engine::getIndex(EngineInterface *in)
+  {
+  xsize index = 0;
+  xForeach(EngineInterface *eng, g_engine->engines)
+    {
+    if(eng == in)
+      {
+      return index;
+      }
+    ++index;
+    }
+
+  xAssertFail();
+  return X_SIZE_SENTINEL;
   }
 
 void Engine::adjustAmountOfExternalAllocatedMemory(int in)
@@ -114,6 +134,7 @@ EngineInterface *Engine::beginScope(EngineInterface *ifc)
 
 void Engine::endScope(EngineInterface *ifc, EngineInterface *oldIfc)
   {
+  (void)ifc;
   g_engine->currentInterface = oldIfc;
   }
 
