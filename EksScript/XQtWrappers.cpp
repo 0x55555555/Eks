@@ -64,17 +64,15 @@ template <typename T> void setupBindings(Interface<T> *templ)
 
 template <> void setupBindings<QPointF>(Interface<QPointF> *templ)
   {
-  typedef QPointF CLASS;
-
   static ClassDef<3,2,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptCopyConstructor,
-      XScriptConstructor("", float, float),
+      templ->defaultConstructor(),
+      templ->copyConstructor(),
+      templ->constructor<QPointF*(float, float)>(),
     },
     {
-      XScriptPropertyDef(qreal, "x", x, setX),
-      XScriptPropertyDef(qreal, "y", y, setY),
+      templ->property<qreal, &QPointF::x, &QPointF::setX>("x"),
+      templ->property<qreal, &QPointF::y, &QPointF::setY>("y"),
     }
   };
 
@@ -83,17 +81,15 @@ template <> void setupBindings<QPointF>(Interface<QPointF> *templ)
 
 template <> void setupBindings<QPoint>(Interface<QPoint> *templ)
   {
-  typedef QPoint CLASS;
-
   static ClassDef<3,2,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptCopyConstructor,
-      XScriptConstructor("", int, int),
+      templ->defaultConstructor(),
+      templ->copyConstructor(),
+      templ->constructor<QPoint*(int, int)>(),
     },
     {
-      XScriptPropertyDef(int, "x", x, setX),
-      XScriptPropertyDef(int, "y", y, setY),
+      templ->property<int, &QPoint::x, &QPoint::setX>("x"),
+      templ->property<int, &QPoint::y, &QPoint::setY>("y"),
     }
   };
 
@@ -102,16 +98,14 @@ template <> void setupBindings<QPoint>(Interface<QPoint> *templ)
 
 template <> void setupBindings<QSizeF>(Interface<QSizeF> *templ)
   {
-  typedef QSizeF CLASS;
-
   static ClassDef<2,2,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptCopyConstructor,
+      templ->defaultConstructor(),
+      templ->copyConstructor(),
     },
     {
-      XScriptPropertyDef(qreal, "width", width, setWidth),
-      XScriptPropertyDef(qreal, "height", height, setHeight),
+      templ->property<qreal, &QSizeF::width, &QSizeF::setWidth>("width"),
+      templ->property<qreal, &QSizeF::height, &QSizeF::setHeight>("height"),
     }
   };
 
@@ -120,16 +114,14 @@ template <> void setupBindings<QSizeF>(Interface<QSizeF> *templ)
 
 template <> void setupBindings<QSize>(Interface<QSize> *templ)
   {
-  typedef QSize CLASS;
-
   static ClassDef<2,2,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptCopyConstructor,
+      templ->defaultConstructor(),
+      templ->copyConstructor(),
     },
     {
-      XScriptPropertyDef(int, "width", width, setWidth),
-      XScriptPropertyDef(int, "height", height, setHeight),
+      templ->property<int, &QSize::width, &QSize::setWidth>("width"),
+      templ->property<int, &QSize::height, &QSize::setHeight>("height"),
     }
   };
 
@@ -138,19 +130,17 @@ template <> void setupBindings<QSize>(Interface<QSize> *templ)
 
 template <> void setupBindings<QRectF>(Interface<QRectF> *templ)
   {
-  typedef QRectF CLASS;
-
   static ClassDef<2,5,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptCopyConstructor,
+      templ->defaultConstructor(),
+      templ->copyConstructor(),
     },
     {
-      XScriptPropertyDef(qreal, "width", left, setLeft),
-      XScriptPropertyDef(qreal, "right", right, setRight),
-      XScriptPropertyDef(qreal, "top", top, setTop),
-      XScriptPropertyDef(qreal, "bottom", bottom, setBottom),
-      XScriptPropertyDefExplicit(const QPointF &, QPointF, "topLeft", topLeft, setTopLeft),
+      templ->property<qreal, &QRectF::left, &QRectF::setLeft>("left"),
+      templ->property<qreal, &QRectF::right, &QRectF::setRight>("right"),
+      templ->property<qreal, &QRectF::top, &QRectF::setTop>("top"),
+      templ->property<qreal, &QRectF::bottom, &QRectF::setBottom>("bottom"),
+      templ->property<QPointF, const QPointF &, &QRectF::topLeft, &QRectF::setTopLeft>("topLeft"),
     }
   };
 
@@ -159,19 +149,17 @@ template <> void setupBindings<QRectF>(Interface<QRectF> *templ)
 
 template <> void setupBindings<QRect>(Interface<QRect> *templ)
   {
-  typedef QRect CLASS;
-
   static ClassDef<2,5,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptCopyConstructor,
+      templ->defaultConstructor(),
+      templ->copyConstructor(),
     },
     {
-      XScriptPropertyDef(int, "width", left, setLeft),
-      XScriptPropertyDef(int, "right", right, setRight),
-      XScriptPropertyDef(int, "top", top, setTop),
-      XScriptPropertyDef(int, "bottom", bottom, setBottom),
-      XScriptPropertyDefExplicit(const QPoint &, QPoint, "topLeft", topLeft, setTopLeft),
+      templ->property<int, &QRect::left, &QRect::setLeft>("left"),
+      templ->property<int, &QRect::right, &QRect::setRight>("right"),
+      templ->property<int, &QRect::top, &QRect::setTop>("top"),
+      templ->property<int, &QRect::bottom, &QRect::setBottom>("bottom"),
+      templ->property<QPoint, const QPoint &, &QRect::topLeft, &QRect::setTopLeft>("topLeft"),
     }
   };
 
@@ -180,12 +168,10 @@ template <> void setupBindings<QRect>(Interface<QRect> *templ)
 
 template <> void setupBindings<QFile>(Interface<QFile> *templ)
   {
-  typedef QFile CLASS;
-
   static ClassDef<3,0,0> cls = {
     {
-      XScriptDefaultConstructor,
-      XScriptConstructor("fromFilename", const QString &),
+      templ->defaultConstructor(),
+      templ->constructor<QFile*(const QString&)>("fromFilename"),
     }
   };
 
@@ -194,13 +180,13 @@ template <> void setupBindings<QFile>(Interface<QFile> *templ)
 
 template <> void setupBindings<QIODevice>(Interface<QIODevice> *templ)
   {
-  typedef QIODevice CLASS;
+  typedef MethodToInCa<QIODevice, qint64(const QByteArray &), &QIODevice::write> WriteType;
 
   static ClassDef<0,0,3> cls = {
     {
-      XScriptMethod("open", bool(QIODevice::OpenMode), open),
-      XScriptMethod("write", qint64(const QByteArray &), write),
-      XScriptMethod("close", void(), close)
+    templ->method<bool(QIODevice::OpenMode), &QIODevice::open>("open"),
+    templ->method<WriteType>("write"),
+    templ->method<void(), &QIODevice::close>("close")
     }
   };
 

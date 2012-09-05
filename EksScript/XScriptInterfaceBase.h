@@ -46,22 +46,6 @@ struct ConstructorDef
   xuint8 argCount;
   };
 
-#define XScriptConstructor(name, ...) \
-{ name, \
-0, \
-CtorFunctionWrapper<CLASS, CLASS*(__VA_ARGS__), Interface<CLASS>::weak_dtor>::CallDart, \
-CtorFunctionWrapper<CLASS, CLASS*(__VA_ARGS__), Interface<CLASS>::weak_dtor>::Arity }
-
-
-#define XScriptNativeConstructor \
-{ "_internal", \
-  0, \
-  XScript::CtorNativeWrap<T, XInterface<T>::weak_dtor>::CallDart, \
-  1 }
-
-#define XScriptDefaultConstructor XScriptConstructor("")
-#define XScriptCopyConstructor XScriptConstructor("", const CLASS&)
-
 struct FunctionDef
   {
   const char *name;
@@ -71,22 +55,6 @@ struct FunctionDef
   bool isStatic;
   };
 
-#define XScriptMethod(name, sig, fn) \
-{ name, \
-XScript::MethodToInCa<CLASS, sig, &CLASS::fn>::Call,\
-XScript::MethodToInCa<CLASS, sig, &CLASS::fn>::CallDart, \
-XScript::MethodToInCa<CLASS, sig, &CLASS::fn>::Arity, \
-false \
-}
-
-#define XScriptConstMethod(name, sig, fn) \
-{ name, \
-XScript::ConstMethodToInCa<CLASS, sig, &CLASS::fn>::Call,\
-XScript::ConstMethodToInCa<CLASS, sig, &CLASS::fn>::CallDart, \
-XScript::ConstMethodToInCa<CLASS, sig, &CLASS::fn>::Arity, \
-false \
-}
-
 struct PropertyDef
   {
   const char *name;
@@ -95,15 +63,6 @@ struct PropertyDef
   FunctionDart getterDart;
   FunctionDart setterDart;
   };
-
-#define XScriptPropertyDefExplicit(setType, getType, name, get, set) \
-{ name, \
-XScript::XConstMethodToGetter<CLASS, getType (), &CLASS::get>::Get, \
-XScript::XMethodToSetter<CLASS, setType, &CLASS::set>::Set, \
-XScript::XConstMethodToGetter<CLASS, getType (), &CLASS::get>::GetDart, \
-XScript::XMethodToSetter<CLASS, setType, &CLASS::set>::SetDart }
-
-#define XScriptPropertyDef(type, name, get, set) XScriptPropertyDefExplicit(type, type, name, get, set)
 
 template <xsize CCount,
           xsize PCount,
@@ -145,6 +104,28 @@ template <xsize CCount> struct ClassDef<CCount, 0, 0>
     functions = 0
     };
   };
+
+template <xsize PCount,
+          xsize FCount> struct ClassDef<0, PCount, FCount>
+  {
+  PropertyDef properties[PCount];
+  FunctionDef functions[FCount];
+  enum
+    {
+    constructors = 0,
+    };
+  };
+
+template <xsize PCount> struct ClassDef<0, PCount, 0>
+  {
+  PropertyDef properties[PCount];
+  enum
+    {
+    constructors = 0,
+    functions = 0,
+    };
+  };
+
 
 template <xsize FCount> struct ClassDef<0, 0, FCount>
   {

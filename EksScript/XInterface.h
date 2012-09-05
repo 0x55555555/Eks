@@ -29,109 +29,200 @@ public:
     set(name, XScriptConvert::to(val));
     }
 
-  /*using InterfaceBase::addConstructor;
-  using InterfaceBase::addProperty;
-  using InterfaceBase::addFunction;
-
-  void addDefaultConstructor()
+  ConstructorDef defaultConstructor() X_CONST_EXPR
     {
-    addConstructor<T *()>();
+    return constructor<T *()>();
     }
 
-  void addCopyConstructor()
+  ConstructorDef copyConstructor() X_CONST_EXPR
     {
-    addConstructor<T *(const T&)>();
+    return constructor<T *(const T&)>();
     }
 
-  void addNativeConvertConstructor()
+  ConstructorDef nativeConstructor() X_CONST_EXPR
     {
-    addConstructor("_internal", 1, 1, 0, XScript::CtorNativeWrap<T, XInterface<T>::weak_dtor>::CallDart);
+    ConstructorDef d =
+      {
+      "_internal",
+      0,
+      CtorNativeWrap<T, Interface<T>::weak_dtor>::CallDart,
+      1
+      };
+
+    return d;
     }
 
   template <typename TYPE>
-    void addConstructor(const char *name="")
-  {
-    typedef XScript::CtorFunctionWrapper<T, TYPE, XInterface<T>::weak_dtor> Wrapper;
+      ConstructorDef constructor(const char *name="") X_CONST_EXPR
+    {
+    typedef CtorFunctionWrapper<T, TYPE, Interface<T>::weak_dtor> Wrapper;
 
-    XScript::FunctionDart ctorDart = Wrapper::CallDart;
+#ifdef X_SCRIPT_ENGINE_ENABLE_JAVSCRIPT
+### err, js ctors?
+#endif
 
-    addConstructor(name, 1, Wrapper::Arity, 0, ctorDart);
-  }
+    ConstructorDef d =
+      { name,
+      0,
+      Wrapper::CallDart,
+      Wrapper::Arity
+      };
+
+    return d;
+    }
+  template <typename TYPE,
+            typename XConstMethodSignature<T, TYPE ()>::FunctionType GETTERMETHOD,
+            typename XMethodSignature<T, void (TYPE)>::FunctionType SETTERMETHOD>
+  static PropertyDef property(const char *name) X_CONST_EXPR
+    {
+    return property<TYPE, TYPE, GETTERMETHOD, SETTERMETHOD>(name);
+    }
 
   template <typename GETTYPE,
-    typename SETTYPE,
-    typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD,
-    typename XMethodSignature<T, void (SETTYPE)>::FunctionType SETTERMETHOD>
-    void addProperty(const char *name)
-  {
-    typedef XScript::XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
-    typedef XScript::XMethodToSetter<T, SETTYPE, SETTERMETHOD> Setter;
+            typename SETTYPE,
+            typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD,
+            typename XMethodSignature<T, void (SETTYPE)>::FunctionType SETTERMETHOD>
+  static PropertyDef property(const char *name) X_CONST_EXPR
+    {
+    typedef XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
+    typedef XMethodToSetter<T, SETTYPE, SETTERMETHOD> Setter;
 
-    XInterfaceBase::addProperty(name, Getter::Get, Getter::GetDart, Setter::Set, Setter::SetDart);
-  }
+    PropertyDef d =
+      {
+      name,
+      Getter::Get,
+      Setter::Set,
+      Getter::GetDart,
+      Setter::SetDart
+      };
+
+    return d;
+    }
+
+  template <typename Getter,
+            typename Setter>
+  static PropertyDef property(const char *name) X_CONST_EXPR
+    {
+    PropertyDef d =
+      {
+      name,
+      Getter::Get,
+      Setter::Set,
+      Getter::GetDart,
+      Setter::SetDart
+      };
+
+    return d;
+    }
+
+  template <typename Getter>
+  static PropertyDef property(const char *name) X_CONST_EXPR
+    {
+    PropertyDef d =
+      {
+      name,
+      Getter::Get,
+      0,
+      Getter::GetDart,
+      0
+      };
+
+    return d;
+    }
 
   template <typename GETTYPE,
             typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
-  void addProperty(const char *name)
+  static PropertyDef property(const char *name) X_CONST_EXPR
     {
-    typedef XScript::XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
+    typedef XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    XInterfaceBase::addProperty(name, Getter::Get, Getter::GetDart, 0, 0);
+    PropertyDef d =
+      {
+      name,
+      Getter::Get,
+      0,
+      Getter::GetDart,
+      0
+      };
+
+    return d;
     }
 
   template <typename GETTYPE,
             typename XMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
-  void addAccessProperty(const char *name)
+  static PropertyDef accessProperty(const char *name) X_CONST_EXPR
     {
-    typedef XScript::XMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
+    typedef XMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    XInterfaceBase::addProperty(name, Getter::Get, Getter::GetDart, 0, 0);
+    PropertyDef d =
+      {
+      name,
+      Getter::Get,
+      0,
+      Getter::GetDart,
+      0
+      };
+
+    return d;
     }
 
   template <typename SIG,
             typename XMethodSignature<T, SIG>::FunctionType METHOD>
-  void addMethod(const char *name)
+  static FunctionDef method(const char *name) X_CONST_EXPR
     {
-    typedef XScript::MethodToInCa<T, SIG, METHOD> FunctionType;
+    typedef MethodToInCa<T, SIG, METHOD> FunctionType;
 
-    // +1 for this
-    XInterfaceBase::addFunction(name, 1, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
+    return method<FunctionType>(name);
     }
 
   template <typename SIG,
             typename XConstMethodSignature<T, SIG>::FunctionType METHOD>
-  void addConstMethod(const char *name)
+  static FunctionDef constMethod(const char *name) X_CONST_EXPR
     {
-    typedef XScript::ConstMethodToInCa<T, SIG, METHOD> FunctionType;
+    typedef ConstMethodToInCa<T, SIG, METHOD> FunctionType;
 
-    // +1 for this
-    XInterfaceBase::addFunction(name, 1, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
+    return method<FunctionType>(name);
     }
 
-  template <typename SIG,
-            typename XFunctionSignature<SIG>::FunctionType METHOD>
-  void addStaticMethod(const char *name)
+  template <typename FunctionType>
+  static FunctionDef method(const char *name) X_CONST_EXPR
     {
-    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
+    FunctionDef d =
+      {
+      name,
+      FunctionType::Call,
+      FunctionType::CallDart,
+      FunctionType::Arity,
+      false
+      };
 
-    XInterfaceBase::addFunction(name, 0, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
+    return d;
     }
 
-  template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (xsize i)>::FunctionType METHOD>
-  void setIndexAccessor()
-    {
-    IndexedGetter fn = XScript::XMethodToIndexedGetter<T, RETTYPE (xsize i), METHOD>::Get;
+//  template <typename SIG,
+//            typename XFunctionSignature<SIG>::FunctionType METHOD>
+//  void addStaticMethod(const char *name)
+//    {
+//    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
 
-    XInterfaceBase::setIndexAccessor(fn);
-    }
+//    XInterfaceBase::addFunction(name, 0, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
+//    }
 
-  template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (const QString &name)>::FunctionType METHOD>
-  void setNamedAccessor()
-    {
-    NamedGetter fn = XScript::XMethodToNamedGetter<T, RETTYPE (const QString &name), METHOD>::Get;
+//  template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (xsize i)>::FunctionType METHOD>
+//  void setIndexAccessor()
+//    {
+//    IndexedGetter fn = XScript::XMethodToIndexedGetter<T, RETTYPE (xsize i), METHOD>::Get;
 
-    XInterfaceBase::setNamedAccessor(fn);
-    }*/
+//    XInterfaceBase::setIndexAccessor(fn);
+//    }
+
+//  template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (const QString &name)>::FunctionType METHOD>
+//  void setNamedAccessor()
+//    {
+//    NamedGetter fn = XScript::XMethodToNamedGetter<T, RETTYPE (const QString &name), METHOD>::Get;
+
+//    XInterfaceBase::setNamedAccessor(fn);
+//    }
 
   /**
      Destroys the given object by disconnecting its associated

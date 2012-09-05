@@ -229,12 +229,10 @@ void QObjectWrapper::initiate()
 
   // QWidget
     {
-    typedef QWidget CLASS;
-
     FunctionDef extraWidgetFunctions[] =
     {
-      XScriptConstMethod("mapTo", QPoint (QWidget*, const QPoint&), mapTo),
-      XScriptConstMethod("mapToGlobal", QPoint (const QPoint&), mapToGlobal),
+      widget->constMethod<QPoint (QWidget*, const QPoint&), &QWidget::mapTo>("mapTo"),
+      widget->constMethod<QPoint (const QPoint&), &QWidget::mapToGlobal>("mapToGlobal"),
     };
 
     buildInterface(widget, &QWidget::staticMetaObject, extraWidgetFunctions, X_ARRAY_COUNT(extraWidgetFunctions));
@@ -979,7 +977,7 @@ void QObjectWrapper::buildInterface(
     xsize extraFnCount)
   {/*
 
-  ClassDef<1,0,0> qobjectdesc = {
+  static ClassDef<1,0,0> qobjectdesc = {
     {
       XScriptNativeConstructor
     },
