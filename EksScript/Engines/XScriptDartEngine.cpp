@@ -33,7 +33,20 @@ template <typename T> Dart_Handle& getDartHandle(const T *obj)
     Dart_Handle ptr;
     };
 
-  xCompileTimeAssert(sizeof(T) == sizeof(Dart_Handle));
+  xCompileTimeAssert(sizeof(T) == sizeof(Internal));
+
+  return ((Internal*)(obj))->ptr;
+  }
+
+Dart_Handle& getDartHandle(const Source *obj)
+  {
+  struct Internal
+    {
+    Dart_Handle ptr;
+    EngineInterface *_engine;
+    };
+
+  xCompileTimeAssert(sizeof(Source) == sizeof(Internal));
 
   return ((Internal*)(obj))->ptr;
   }
@@ -202,7 +215,7 @@ Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc)
   return lib;
 }
 
-QMap<QString, Dart_Handle> _libs;
+QMap<QString, QString> _libs;
 Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url)
 {
   if (!Dart_IsLibrary(library)) {
@@ -221,7 +234,9 @@ Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url
   {
     QString strUrl = Convert::from<QString>(fromHandle<Value>(url));
     xAssert(_libs.find(strUrl) != _libs.end());
-    Dart_Handle source = _libs[strUrl];
+
+    Value srcVal(_libs[strUrl]);
+    Dart_Handle source = getDartHandle(&srcVal);
     importLibrary = loadLibrary(url, source);
   }
 
@@ -256,6 +271,11 @@ public:
     {
     Dart_ExitScope();
     Dart_ShutdownIsolate();
+    }
+
+  bool supportsExtension(const QString &ext)
+    {
+    return ext == "dart";
     }
 
   bool loadSource(Source *src, const QString &key, const QString &data)
@@ -328,8 +348,8 @@ public:
 
       // plus one for this.
       QString nativeName = addDartNativeLookup(typeName, "_ctor_" + shortName, 1 + ctor.argCount, (Dart_NativeFunction)ctor.functionDart);
-      functionSource += name + "(" + callArgs + ") {" + nativeName + "(" + callArgs + "); } \n";
-      functionSource += "void " + nativeName + "(" + callArgs + ") native \"" + nativeName + "\";\n";
+      functionSource += name + "(" + callArgs + ") {" + nativeName + "(" + callArgs + "); } \n" +
+        "void " + nativeName + "(" + callArgs + ") native \"" + nativeName + "\";\n";
       }
 
     for(xuint8  p = 0; p < i->propertyCount(); ++p)
@@ -384,8 +404,7 @@ public:
     QString url = getDartUrl(i);
     functionSource = "#library(\"" + url + "\");\n" + functionSource;
 
-    Value val = Convert::to(functionSource);
-    _libs[url] = getDartHandle(&val);
+    _libs[url] = functionSource;
     }
 
   void removeInterface(const InterfaceBase *ifc)
@@ -485,14 +504,19 @@ public:
       }
     }
 
+  void newValue(Value *v, const Value *obj) X_OVERRIDE
+    {
+    getDartHandle(v) = getDartHandle(obj);
+    }
+
   void newValue(Value *v, const Object *obj) X_OVERRIDE
     {
-    getDartHandle(v) = getDartHandle(&obj);
+    getDartHandle(v) = getDartHandle(obj);
     }
 
   void newValue(Value *v, const Function *obj) X_OVERRIDE
     {
-    getDartHandle(v) = getDartHandle(&obj);
+    getDartHandle(v) = getDartHandle(obj);
     }
 
   void newValue(Value *v, void* val) X_OVERRIDE

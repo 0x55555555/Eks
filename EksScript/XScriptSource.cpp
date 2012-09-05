@@ -11,6 +11,10 @@ namespace XScript
 
 Source::Source(QFile *file)
   {
+  _interface = Engine::findInterface(file);
+  xAssert(_interface);
+
+  EngineScope b(_interface);
   currentInterface()->loadSource(this, file->fileName(), QString::fromUtf8(file->readAll()));
   }
 
@@ -25,6 +29,8 @@ SourceError::SourceError() : _hasError(false)
 
 Value Source::run(SourceError *error)
   {
+  EngineScope  b(_interface);
+
   Value ret;
   currentInterface()->runSource(&ret, this, error);
 

@@ -4,6 +4,7 @@
 #include "XScriptGlobal.h"
 #include "QVariant"
 
+class QFile;
 
 namespace XScript
 {
@@ -25,6 +26,8 @@ class EngineInterface
   {
 public:
   virtual ~EngineInterface() { }
+
+  virtual bool supportsExtension(const QString &) = 0;
 
   virtual bool loadSource(Source *src, const QString &key, const QString &data) = 0;
   virtual void runSource(Value *result, const Source *src, SourceError *err) = 0;
@@ -51,6 +54,7 @@ public:
   virtual void newValue(Value* val, QVariantMap &i) = 0;
   virtual void newValue(Value* val, QVariantList &i) = 0;
   virtual void newValue(Value* val, QStringList &i) = 0;
+  virtual void newValue(Value* val, const Value *i) = 0;
   virtual void newValue(Value* val, const Object *i) = 0;
   virtual void newValue(Value* val, const Function *i) = 0;
 
@@ -150,6 +154,9 @@ public:
   static void addInterface(const InterfaceBase *i);
   static void removeInterface(const InterfaceBase *i);
 
+  static EngineInterface *findInterface(const QFile *);
+  static EngineInterface *findInterface(const QString &extension);
+
   class Walker
     {
   public:
@@ -165,6 +172,17 @@ public:
 private:
   Engine();
   ~Engine();
+  };
+
+class EngineScope
+  {
+public:
+  EngineScope(EngineInterface *ifc);
+  ~EngineScope();
+
+private:
+  EngineInterface *_currentInterface;
+  EngineInterface *_oldInterface;
   };
 
 }

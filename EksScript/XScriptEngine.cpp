@@ -5,6 +5,8 @@
 #include "XConvertToScript.h"
 #include "XQObjectWrapper.h"
 #include "XQtWrappers.h"
+#include "QFile"
+#include "QFileInfo"
 
 namespace XScript
 {
@@ -21,6 +23,8 @@ struct StaticEngine
   {
   StaticEngine(bool debugging)
     {
+    currentInterface = 0;
+    
     (void)debugging;
     xsize idx = 0;
 
@@ -79,6 +83,7 @@ void Engine::addInterface(const InterfaceBase *i)
   {
   xForeach(EngineInterface *eng, g_engine->engines)
     {
+    EngineScope s(eng);
     eng->addInterface(i);
     }
   }
@@ -87,8 +92,27 @@ void Engine::removeInterface(const InterfaceBase *i)
   {
   xForeach(EngineInterface *eng, g_engine->engines)
     {
+    EngineScope s(eng);
     eng->removeInterface(i);
     }
+  }
+
+EngineInterface *Engine::findInterface(const QFile *f)
+  {
+  QFileInfo info(*f);
+  return findInterface(info.suffix());
+  }
+
+EngineInterface *Engine::findInterface(const QString &extension)
+  {
+  xForeach(EngineInterface *eng, g_engine->engines)
+    {
+    if(eng->supportsExtension(extension))
+      {
+      return eng;
+      }
+    }
+  return 0;
   }
 
 Engine::Walker Engine::interfaces()
@@ -138,4 +162,14 @@ void Engine::endScope(EngineInterface *ifc, EngineInterface *oldIfc)
   g_engine->currentInterface = oldIfc;
   }
 
+EngineScope::EngineScope(EngineInterface* eng) : _currentInterface(eng)
+  {
+  xAssert(_currentInterface);
+  _oldInterface = Engine::beginScope(_currentInterface);
+  }
+
+EngineScope::~EngineScope()
+  {
+  Engine::endScope(_currentInterface, _oldInterface);
+  }
 }

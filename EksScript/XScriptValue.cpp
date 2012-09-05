@@ -366,15 +366,8 @@ void Callback::call(Value *result, xsize argCount, Value *args, bool *error, QSt
     }
   }
 
-CallbackScope::CallbackScope(Callback& callback) : _currentInterface(callback.engineInterface())
+CallbackScope::CallbackScope(Callback& callback) : EngineScope(callback.engineInterface())
   {
-  xAssert(_currentInterface);
-  _oldInterface = Engine::beginScope(_currentInterface);
-  }
-
-CallbackScope::~CallbackScope()
-  {
-  Engine::endScope(_currentInterface, _oldInterface);
   }
 
 }

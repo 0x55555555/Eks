@@ -11,6 +11,7 @@ namespace XScript
 {
 
 class Value;
+class EngineInterface;
 
 class EKSSCRIPT_EXPORT SourceError
   {
@@ -35,6 +36,8 @@ public:
 
 private:
   void *_impl;
+
+  EngineInterface* _interface;
   };
 
 }

@@ -3,6 +3,7 @@
 
 #include "XProperty"
 #include "XScriptGlobal.h"
+#include "XScriptEngine.h"
 
 class QVariant;
 
@@ -107,14 +108,9 @@ private:
   PersistentValue _function;
   };
 
-class CallbackScope
+class CallbackScope : public EngineScope
   {
   CallbackScope(Callback& callback);
-  ~CallbackScope();
-
-private:
-  EngineInterface *_currentInterface;
-  EngineInterface *_oldInterface;
   };
 }
 

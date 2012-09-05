@@ -41,7 +41,7 @@ template <typename T> struct QMetaTypeIdOrInvalid<T, true>
 struct ConstructorDef
   {
   const char *name;
-  Function functionV8;
+  FunctionJS functionV8;
   FunctionDart functionDart;
   xuint8 argCount;
   };

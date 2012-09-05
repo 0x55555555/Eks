@@ -444,6 +444,11 @@ public:
     context.Dispose();
     }
 
+  bool supportsExtension(const QString &ext)
+    {
+    return ext == "js";
+    }
+
   void throwError(Value *ret, const QString &err) X_OVERRIDE
     {
     v8::Handle<v8::String> string = v8::String::New(err.toUtf8().data());
