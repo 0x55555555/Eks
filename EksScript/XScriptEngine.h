@@ -174,7 +174,7 @@ private:
   ~Engine();
   };
 
-class EngineScope
+class EKSSCRIPT_EXPORT EngineScope
   {
 public:
   EngineScope(EngineInterface *ifc);

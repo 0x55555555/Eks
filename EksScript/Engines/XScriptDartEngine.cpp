@@ -42,8 +42,8 @@ Dart_Handle& getDartHandle(const Source *obj)
   {
   struct Internal
     {
-    Dart_Handle ptr;
     EngineInterface *_engine;
+    Dart_Handle ptr;
     };
 
   xCompileTimeAssert(sizeof(Source) == sizeof(Internal));
@@ -113,7 +113,7 @@ Object DartArgumentsWithThis::calleeThis()
 namespace XScript
 {
 
-#define WRAPPER_NAME "NativeWrapper"
+#define WRAPPER_NAME "NATIVE_WRAPPER__"
 
 const int NumEventHandlerFields = 2;
 
@@ -131,18 +131,6 @@ inline void printError(Dart_Handle han)
 QString getDartUrl(const InterfaceBase* i)
   {
   return i->typeName();
-  }
-
-
-QString getDartSource(const InterfaceBase *ifc, const QString &parentName)
-  {
-  xAssertFail(); // source is wrong.
-  QString source = "class " + ifc->typeName() +
-                   " extends " + parentName + " {\n" +
-                   //ifc->functionSource() +
-                   "}";
-
-  return source;
   }
 
 #if 0
@@ -201,21 +189,40 @@ QString addDartNativeLookup(const QString &typeName, const QString &functionName
   return fullName;
 }
 
-Dart_Handle loadLibrary(Dart_Handle url, Dart_Handle libSrc)
+QMap<QString, QString> _libs;
+Dart_Handle loadLibrary(Dart_Handle url)
 {
-  Dart_Handle lib = Dart_LoadLibrary(url, libSrc);
+  QString strUrl = Convert::from<QString>(fromHandle<Value>(url));
+
+  QString source;
+  if(strUrl == WRAPPER_NAME)
+    {
+    source = "#library(\"" WRAPPER_NAME "\");\n";
+    }
+  else
+    {
+    xAssert(_libs.find(strUrl) != _libs.end());
+    source = _libs[strUrl];
+    }
+
+  Value srcVal(source);
+  Dart_Handle dartSource = getDartHandle(&srcVal);
+
+  Dart_Handle lib = Dart_LoadLibrary(url, dartSource);
 
   CHECK_HANDLE(lib)
   Dart_SetNativeResolver(lib, Resolve);
 
-  Dart_CreateNativeWrapperClass(lib,
-    Dart_NewString(WRAPPER_NAME),
-    NumEventHandlerFields);
+  if(strUrl == WRAPPER_NAME)
+    {
+    Dart_CreateNativeWrapperClass(lib,
+      Dart_NewString(WRAPPER_NAME),
+      NumEventHandlerFields);
+    }
 
   return lib;
 }
 
-QMap<QString, QString> _libs;
 Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url)
 {
   if (!Dart_IsLibrary(library)) {
@@ -232,12 +239,7 @@ Dart_Handle tagHandler(Dart_LibraryTag tag, Dart_Handle library, Dart_Handle url
   Dart_Handle importLibrary = Dart_LookupLibrary(url);
   if (Dart_IsError(importLibrary))
   {
-    QString strUrl = Convert::from<QString>(fromHandle<Value>(url));
-    xAssert(_libs.find(strUrl) != _libs.end());
-
-    Value srcVal(_libs[strUrl]);
-    Dart_Handle source = getDartHandle(&srcVal);
-    importLibrary = loadLibrary(url, source);
+    importLibrary = loadLibrary(url);
   }
 
   if (!Dart_IsError(importLibrary) && (tag == kImportTag))
@@ -356,16 +358,22 @@ public:
       {
       const PropertyDef &prop = i->property(p);
 
-      xAssertFail();
-
       QString name = prop.name;
       if(prop.getterDart)
         {
-        functionSource += "Dynamic get " + name + "() => null;\n";
+        // 1 argument (this)
+        QString resolvedName = addDartNativeLookup(typeName, name, 1, (Dart_NativeFunction)prop.getterDart);
+
+        functionSource += "Dynamic get " + name + "() => _get" + name + "();\n"
+                          "Dynamic _get" + name + "() native \"" + resolvedName + "\";\n";
         }
       if(prop.setterDart)
         {
-        functionSource += "set " + name + "(var a) => null;\n";
+        // 1 argument (this and value)
+        QString resolvedName = addDartNativeLookup(typeName, name, 2, (Dart_NativeFunction)prop.setterDart);
+
+        functionSource += "set " + name + "(var a) => _set" + name + "(a);\n"
+                          "Dynamic _set" + name + "(var a) native \"" + resolvedName + "\";\n";
         }
       }
 
@@ -384,11 +392,11 @@ public:
         }
 
       const char* leadIn = "Dynamic ";
-      xsize extraArgs = 0;
+      xsize extraArgs = 1;
       if(fn.isStatic)
         {
-        leadIn = "static Dynamic";
-        extraArgs = 1;
+        leadIn = "static Dynamic ";
+        extraArgs = 0;
         }
 
       QString name = fn.name;
@@ -396,13 +404,21 @@ public:
       functionSource += leadIn + name + "(" + callArgs + ") native \"" + resolvedName + "\";\n";
       }
 
+    
+    functionSource = "class " + i->typeName() +
+      " extends " + parentName + " {\n" +
+      functionSource +
+      "}";
+
     if(i->parent())
       {
       functionSource = "#import(\"" + parentName + "\");\n" + functionSource;
       }
 
     QString url = getDartUrl(i);
-    functionSource = "#library(\"" + url + "\");\n" + functionSource;
+    functionSource = "#library(\"" + url + "\");\n" 
+                     "#import(\"" WRAPPER_NAME "\");\n" + 
+                      functionSource;
 
     _libs[url] = functionSource;
     }

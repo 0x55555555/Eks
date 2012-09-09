@@ -103,7 +103,10 @@ struct XSignature<RV (T::*)(XScript::internal::DartArguments const &) const>
 
 */
 template <typename FunctionSig>
-struct XFunctionSignature : XSignature< FunctionSig > { };
+struct XFunctionSignature : XSignature< FunctionSig >
+  {
+  typedef void(*FunctionType)(const XScript::Value&);
+  };
 
 /** @class XMethodSignature
    Base (unimplemented) signature for XMethodSignature

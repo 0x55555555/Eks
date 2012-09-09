@@ -10,16 +10,23 @@
 #include "XConvertToScript.h"
 #include <type_traits>
 
+#ifdef Q_CC_MSVC
+#pragma warning( push )
+#pragma warning( disable : 4101 )
+#endif
+
 namespace XScript
 {
 class EKSSCRIPT_EXPORT Unlock
   {
 public:
+#if 0
   Unlock();
   ~Unlock();
 
 private:
   void *_impl;
+#endif
   };
 
 namespace Detail
@@ -686,7 +693,7 @@ struct FunctionToInCa : XFunctionPtr<Sig,Func>, InCa
 template <typename Sig,
           typename XFunctionSignature<Sig>::FunctionType Func,
           bool UnlockV8 = XSignatureIsUnlockable< XFunctionSignature<Sig> >::Value >
-struct FunctionToInCaVoid : XFunctionPtr<Sig,Func>, InCa
+struct FunctionToInCaVoid : XFunctionPtr<Sig,Func>
   {
   typedef XFunctionSignature<Sig> SignatureType;
   enum { Arity = sl::Arity<SignatureType>::Value };
@@ -1891,5 +1898,9 @@ public:
 #undef FOAWARDER_DEF
 } // namespace
 
+
+#ifdef Q_CC_MSVC
+#pragma warning( pop )
+#endif
 
 #endif // XFUNCTIONS_H

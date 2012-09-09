@@ -98,7 +98,8 @@ int QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void
     QList<QByteArray> types = snd.parameterTypes();
 
 
-    Function::Scope scope;
+    xAssertFail();
+    //Function::Scope scope; // function scope per engine...
 
     int argCount = types.size();
     QVarLengthArray<Value, 9> args(argCount);

@@ -27,6 +27,10 @@ public:
 
 class EKSSCRIPT_EXPORT Source
   {
+XProperties:
+  XROProperty(EngineInterface *, engineInterface);
+
+
 public:
   Source(QFile *file);
   Source(const QString &filename, const QString &data);
@@ -36,8 +40,6 @@ public:
 
 private:
   void *_impl;
-
-  EngineInterface* _interface;
   };
 
 }

@@ -193,20 +193,35 @@ public:
       FunctionType::Call,
       FunctionType::CallDart,
       FunctionType::Arity,
-      false
+      false // not static method
       };
 
     return d;
     }
 
-//  template <typename SIG,
-//            typename XFunctionSignature<SIG>::FunctionType METHOD>
-//  void addStaticMethod(const char *name)
-//    {
-//    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
+  template <typename FunctionType>
+  static FunctionDef function(const char *name) X_CONST_EXPR
+    {
+    FunctionDef d =
+      {
+      name,
+      FunctionType::Call,
+      FunctionType::CallDart,
+      FunctionType::Arity,
+      true // is static method
+      };
 
-//    XInterfaceBase::addFunction(name, 0, FunctionType::Arity, FunctionType::Call, FunctionType::CallDart);
-//    }
+    return d;
+    }
+
+  template <typename SIG,
+            typename XFunctionSignature<SIG>::FunctionType METHOD>
+  static FunctionDef staticMethod(const char *name)
+    {
+    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
+
+    return function<FunctionType>(name);
+    }
 
 //  template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (xsize i)>::FunctionType METHOD>
 //  void setIndexAccessor()

@@ -64,15 +64,15 @@ template <typename JST> struct JSToNativeAbstract
     }
   };
 
-//template <typename T> struct JSToNative<Value>
-//  {
-//  typedef v8::Handle<T> ResultType;
+template <> struct JSToNative<const Value &>
+  {
+  typedef Value ResultType;
 
-//  ResultType operator()( Value const & h ) const
-//    {
-//    return h;
-//    }
-//  };
+  ResultType operator()( const Value &h ) const
+    {
+    return h;
+    }
+  };
 
 //template <typename T> struct JSToNative<v8::Handle<T> const &> : JSToNative< v8::Handle<T> > {};
 //template <typename T> struct JSToNative<v8::Handle<T> &> : JSToNative< v8::Handle<T> > {};

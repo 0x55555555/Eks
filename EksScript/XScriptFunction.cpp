@@ -3,10 +3,16 @@
 #include "XScriptObject.h"
 #include "XScriptException.h"
 #include "XScriptEngine.h"
+#include "XScriptSource.h"
 #include "XAssert"
 
 namespace XScript
 {
+
+FunctionScope::FunctionScope(Source &src) : EngineScope(src.engineInterface())
+  {
+  currentInterface()->beginFunctionScope(this);
+  }
 
 /*Function::Function(Function fn)
   {

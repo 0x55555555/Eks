@@ -10,14 +10,17 @@ namespace XScript
 class Object;
 class Value;
 class Arguments;
+class Source;
 
-class FunctionScope
+class EKSSCRIPT_EXPORT FunctionScope : public EngineScope
   {
 public:
-  FunctionScope()
+  FunctionScope(EngineInterface *ifc) : EngineScope(ifc)
     {
     currentInterface()->beginFunctionScope(this);
     }
+
+  FunctionScope(Source &);
 
   ~FunctionScope()
     {

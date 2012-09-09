@@ -1,3 +1,8 @@
+#ifdef Q_CC_MSVC
+#pragma warning( push )
+#pragma warning( disable : 4101 )
+#endif
+
 namespace Detail {
 template <typename Sig, bool UnlockV8>
 struct FunctionForwarder<1,Sig,UnlockV8>
@@ -2605,4 +2610,8 @@ struct CtorForwarderProxy<Sig,10>
   };
 
 }
+#endif
+
+#ifdef Q_CC_MSVC
+#pragma warning( pop )
 #endif
