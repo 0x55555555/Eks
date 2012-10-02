@@ -18,6 +18,10 @@
 *.opensdf
 *.user
 *.a
+*.o
+moc_*.cpp
+qrc_*.cpp
+*.pro.user*
 *.Debug
 *.Release
 ipch/
@@ -25,4 +29,3 @@ Win32/
 debug/
 release/
 generated-debug/
-generated-release/

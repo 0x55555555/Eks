@@ -650,7 +650,7 @@ public:
               ? 0
               : obj.internalField(TypeIdFieldIndex);
 
-#define TYPE_DEBUG
+//#define TYPE_DEBUG
 #ifdef TYPE_DEBUG
         const char *ptr = QMetaType::typeName((int)tid);
         const char *ptr2 = QMetaType::typeName((int)TypeID);
