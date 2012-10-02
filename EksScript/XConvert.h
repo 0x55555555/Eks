@@ -18,8 +18,14 @@ template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
   if(!*in)
   {
     static char o[sizeof(T)];
+    union
+      {
+      char *c;
+      T *t;
+      } u;
+    u.c = o;
     valid = false;
-    return *(T*)o;
+    return *u.t;
   }
   return **in;
 }
