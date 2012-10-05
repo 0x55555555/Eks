@@ -15,32 +15,67 @@ template <typename Sig> struct XSignature;
     and use sl::Arity instead.
 */
 template <typename RV>
-struct XSignature<RV (XScriptArguments const &)>
+struct XSignature<RV (XScript::internal::JSArguments const &)>
 {
     typedef RV ReturnType;
-    typedef RV (*FunctionType)(XScriptArguments const &);
+    typedef RV (*FunctionType)(XScript::internal::JSArguments const &);
     typedef void Context;
-    typedef XScriptArguments const & Head;
+    typedef XScript::internal::JSArguments const & Head;
     typedef XSignature<RV ()> Tail;
 };
 
 template <typename RV>
-struct XSignature<RV (*)(XScriptArguments const &)> : XSignature<RV (XScriptArguments const &)>
+struct XSignature<RV (*)(XScript::internal::JSArguments const &)>
+  : XSignature<RV (XScript::internal::JSArguments const &)>
 {};
 
 template <typename T, typename RV>
-struct XSignature<RV (T::*)(XScriptArguments const &)> : XSignature<RV (XScriptArguments const &)>
+struct XSignature<RV (T::*)(XScript::internal::JSArguments const &)>
+  : XSignature<RV (XScript::internal::JSArguments const &)>
 {
     typedef T Context;
-    typedef RV (Context::*FunctionType)(XScriptArguments const &);
+    typedef RV (Context::*FunctionType)(XScript::internal::JSArguments const &);
 };
 
 
 template <typename T, typename RV>
-struct XSignature<RV (T::*)(XScriptArguments const &) const> : XSignature<RV (XScriptArguments const &)>
+struct XSignature<RV (T::*)(XScript::internal::JSArguments const &) const>
+  : XSignature<RV (XScript::internal::JSArguments const &)>
 {
     typedef T const Context;
-    typedef RV (Context::*FunctionType)(XScriptArguments const &) const;
+    typedef RV (Context::*FunctionType)(XScript::internal::JSArguments const &) const;
+};
+
+template <typename RV>
+struct XSignature<RV (XScript::internal::DartArguments const &)>
+{
+    typedef RV ReturnType;
+    typedef RV (*FunctionType)(XScript::internal::DartArguments const &);
+    typedef void Context;
+    typedef XScript::internal::DartArguments const & Head;
+    typedef XSignature<RV ()> Tail;
+};
+
+template <typename RV>
+struct XSignature<RV (*)(XScript::internal::DartArguments const &)>
+  : XSignature<RV (XScript::internal::DartArguments const &)>
+{};
+
+template <typename T, typename RV>
+struct XSignature<RV (T::*)(XScript::internal::DartArguments const &)>
+  : XSignature<RV (XScript::internal::DartArguments const &)>
+{
+    typedef T Context;
+    typedef RV (Context::*FunctionType)(XScript::internal::DartArguments const &);
+};
+
+
+template <typename T, typename RV>
+struct XSignature<RV (T::*)(XScript::internal::DartArguments const &) const>
+  : XSignature<RV (XScript::internal::DartArguments const &)>
+{
+    typedef T const Context;
+    typedef RV (Context::*FunctionType)(XScript::internal::DartArguments const &) const;
 };
 
 
@@ -68,7 +103,10 @@ struct XSignature<RV (T::*)(XScriptArguments const &) const> : XSignature<RV (XS
 
 */
 template <typename FunctionSig>
-struct XFunctionSignature : XSignature< FunctionSig > {};
+struct XFunctionSignature : XSignature< FunctionSig >
+  {
+  typedef void(*FunctionType)(const XScript::Value&);
+  };
 
 /** @class XMethodSignature
    Base (unimplemented) signature for XMethodSignature

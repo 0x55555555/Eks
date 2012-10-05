@@ -9,7 +9,10 @@
 #include "XScriptObject.h"
 #include <stdexcept>
 
-namespace XScriptConvert
+namespace XScript
+{
+
+namespace Convert
 {
 
 namespace internal
@@ -21,9 +24,9 @@ template <typename JST> struct JSToNative<JST const *> : JSToNative<JST> {};
 
 template <typename JST> struct JSToNative<JST &>
   {
-  typedef typename XScriptTypeInfo<JST>::Type &ResultType;
+  typedef typename TypeInfo<JST>::Type &ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     typedef JSToNative<JST*> Cast;
     typedef typename Cast::ResultType NH;
@@ -39,11 +42,11 @@ template <typename JST> struct JSToNative<JST &>
     }
   };
 
-template <typename JST> struct JSToNative<JST const &>
+template <typename JST> struct JSToNative<const JST &>
   {
-  typedef typename XScriptTypeInfo<JST>::Type const &ResultType;
+  typedef typename const TypeInfo<JST>::Type &ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     typedef JSToNative<JST &> Cast;
     typedef typename Cast::ResultType NH;
@@ -53,23 +56,23 @@ template <typename JST> struct JSToNative<JST const &>
 
 template <typename JST> struct JSToNativeAbstract
   {
-  typedef typename XScriptTypeInfo<JST>::NativeHandle ResultType;
+  typedef typename TypeInfo<JST>::NativeHandle ResultType;
 
-  ResultType operator()( XScriptValue const & ) const
+  ResultType operator()( Value const & ) const
     {
     return 0;
     }
   };
 
-//template <typename T> struct JSToNative<XScriptValue>
-//  {
-//  typedef v8::Handle<T> ResultType;
+template <> struct JSToNative<const Value &>
+  {
+  typedef Value ResultType;
 
-//  ResultType operator()( XScriptValue const & h ) const
-//    {
-//    return h;
-//    }
-//  };
+  ResultType operator()( const Value &h ) const
+    {
+    return h;
+    }
+  };
 
 //template <typename T> struct JSToNative<v8::Handle<T> const &> : JSToNative< v8::Handle<T> > {};
 //template <typename T> struct JSToNative<v8::Handle<T> &> : JSToNative< v8::Handle<T> > {};
@@ -115,27 +118,27 @@ template <> struct JSToNative<v8::Handle<v8::Function> &> : JSToNative<v8::Handl
 template <> struct JSToNative<v8::Handle<v8::Function> const &> : JSToNative<v8::Handle<v8::Function> > {};
 */
 
-template <> struct JSToNative<XScriptFunction>
+template <> struct JSToNative<Function>
   {
-  typedef XScriptFunction ResultType;
+  typedef Function ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
-    return XScriptFunction(h);
+    return Function(h);
     }
   };
-template <> struct JSToNative<XScriptFunction const &> : JSToNative<XScriptFunction> {};
+template <> struct JSToNative<Function const &> : JSToNative<Function> {};
 
-template <> struct JSToNative<XScriptObject>
+template <> struct JSToNative<Object>
   {
-  typedef XScriptObject ResultType;
+  typedef Object ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
-    return XScriptObject(h);
+    return Object(h);
     }
   };
-template <> struct JSToNative<XScriptObject const &> : JSToNative<XScriptObject> {};
+template <> struct JSToNative<Object const &> : JSToNative<Object> {};
 
 template <> struct JSToNative<void>
   {
@@ -150,28 +153,28 @@ template <> struct JSToNative<void>
 
 namespace internal
 {
-template <typename Ret, Ret (XScriptValue::*ToA)() const> struct JSToNativePODType
+template <typename Ret, Ret (Value::*ToA)() const> struct JSToNativePODType
   {
   typedef Ret ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     return (h.*ToA)();
     }
   };
 
 template <typename ExtType> struct JSToNativeExternalType
-    : JSToNativePODType<ExtType, &XScriptValue::toExternal>
+    : JSToNativePODType<ExtType, &Value::toExternal>
   {
   };
 
 template <typename IntType> struct JSToNativeIntegerType
-    : JSToNativePODType<IntType, &XScriptValue::toInteger>
+    : JSToNativePODType<IntType, &Value::toInteger>
   {
   };
 
 template <typename NumType> struct JSToNativeNumberType
-    : JSToNativePODType<NumType, &XScriptValue::toNumber>
+    : JSToNativePODType<NumType, &Value::toNumber>
   {
   };
 }
@@ -194,7 +197,7 @@ template <> struct JSToNative<bool>
   {
   typedef bool ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     return h.toBoolean();
     }
@@ -204,7 +207,7 @@ template <> struct JSToNative<QString>
   {
   typedef QString ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     return h.toString();
     }
@@ -218,7 +221,7 @@ template <> struct JSToNative<QByteArray>
   {
   typedef QByteArray ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     return h.toString().toUtf8();
     }
@@ -232,7 +235,7 @@ template <> struct JSToNative<QVariant>
   {
   typedef QVariant ResultType;
 
-  ResultType operator()(XScriptValue const &h) const
+  ResultType operator()(Value const &h) const
     {
     return h.toVariant();
     }
@@ -265,129 +268,25 @@ template <> struct JSToNative< XIfElse<
   };
 }
 
-template <typename NT> typename internal::JSToNative<NT>::ResultType from(XScriptValue const &h)
+template <typename NT> typename internal::JSToNative<NT>::ResultType from(Value const &h)
   {
   typedef internal::JSToNative<NT> F;
   return F()( h );
   }
 
-/**
-       ArgCaster is a thin wrapper around CastFromJS(), and primarily
-       exists to give us a way to convert JS values to (char const *)
-       for purposes of passing them to native functions. The main
-       difference between this type and JSToNative<T> is that this
-       interface explicitly allows for the conversion to be stored by
-       an instance of this type. That allows us to get more lifetime
-       out of converted values in certain cases (namely (char const*)).
+}
 
-       The default implementation is suitable for all cases which
-       JSToNative<T> supports, but specializations can handle some of
-       the corner cases which JSToNative cannot (e.g. (char const *)).
-
-       Added 20091121.
-    */
-template <typename T>
-struct ArgCaster
+template <typename T> T *Object::castTo()
   {
-  typedef typename XScriptConvert::internal::JSToNative<T>::ResultType ResultType;
-  /**
-           Default impl simply returns XScriptConvert::from<T>(v).
-           Specializations are allowed to store the result of the
-           conversion, as long as they release it when the destruct.
-           See XScriptConvert::ArgCaster<char const *> for an example of that.
-        */
-  static ResultType toNative( XScriptValue const & v )
-    {
-    return XScriptConvert::from<T>( v );
-    }
-  /**
-            To eventually be used for some internal optimizations.
-        */
-  enum { HasConstOp = 1 };
-  };
-/**
-       Specialization for (char const *). The value returned from
-       ToNative() is guaranteed to be valid as long as the ArgCaster
-       object is alive or until ToNative() is called again (which will
-       almost certainly change the pointer). Holding a pointer to the
-       ToNative() return value after the ArgCaster is destroyed will
-       lead to undefined behaviour. Likewise, fetching a pointer, then
-       calling ToNative() a second time, will invalidate the first
-       pointer.
+  return Convert::from<T>(*this);
+  }
 
-       BEWARE OF THESE LIMITATIONS:
-
-       1) This will only work properly for nul-terminated strings,
-       and not binary data!
-
-       2) Do not use this to pass (char const *) as a function
-       parameter if that function will hold a copy of the pointer
-       after it returns (as opposed to copying/consuming the
-       pointed-to-data before it returns) OR if it returns the
-       pointer passed to it. Returning is a specific corner-case
-       of "holding a copy" for which we cannot guaranty the lifetime
-       at the function-binding level.
-
-       3) Do not use the same ArgCaster object to convert multiple
-       arguments, as each call to ToNative() will invalidate the
-       pointer returned by previous calls.
-
-       4) The to-string conversion uses whatever encoding
-       JSToNative<std::string> uses.
-
-       Violating any of those leads to undefined behaviour, and
-       very possibly memory corruption for cases 2 or 3.
-    */
-template <> struct ArgCaster<char const *>
+template <typename T> const T *Object::castTo() const
   {
-private:
-  /**
-            Reminder to self: we cannot use v8::String::Utf8Value
-            here because at the point the bindings call ToNative(),
-            v8 might have been unlocked, at which point dereferencing
-            the Utf8Value becomes illegal.
-        */
-  std::string val;
-  typedef char Type;
-public:
-  typedef Type const * ResultType;
-  /**
-           Returns the toString() value of v unless:
-
-           - v.IsEmpty()
-           - v->IsNull()
-           - v->IsUndefined()
-
-           In which cases it returns 0.
-
-           The returned value is valid until:
-
-           - ToNative() is called again.
-           - This object is destructed.
-        */
-  static ResultType toNative( XScriptValue const & )
-    {/*
-    typedef XScriptConvert::internal::JSToNative<std::string> C;
-    if( !v.isValid() )
-      {
-      return 0;
-      }
-    this->val = C()( v );*/
-    xAssertFail();
-    return "";//this->val.c_str();
-    }
-  };
+  return Convert::from<T>(*this);
+  }
 
 }
 
-template <typename T> T *XScriptObject::castTo()
-  {
-  return XScriptConvert::from<T>(*this);
-  }
-
-template <typename T> const T *XScriptObject::castTo() const
-  {
-  return XScriptConvert::from<T>(*this);
-  }
 
 #endif // XCONVERTFROMSCRIPT_H

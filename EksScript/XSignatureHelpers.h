@@ -2,6 +2,7 @@
 #define XSIGNATUREHELPERS_H
 
 #include "XSignature.h"
+#include "XTemplateHelpers"
 #include "XTemplateMetaHelpers.h"
 
 namespace sl
@@ -86,13 +87,11 @@ namespace sl
   struct Arity
   {
     enum {
-      Value = ((1==Length<SigT>::Value)
-              && (0==Index<XScriptArguments const &,SigT>::Value))
-              ? -1
-              : Length<SigT>::Value
+      Value = Length<SigT>::Value
     };
   };
 
+#if 0
   /**
       This metafunction evaluates to true if SigT appears to be
       "InvocationCallback-like" (returns any type and takes one
@@ -132,14 +131,8 @@ namespace sl
   template <typename SigT>
   struct IsConstMethod : XBoolVal< XIsConst< typename SigT::Context >::Value && IsMethod<SigT>::Value > {};
 
+#endif
 }
-
-/**
-   A metatemplate who's Type member resolves to IF if Cond is
-   true, or ELSE if Cond is false. Its Value member evaluates
-   to 1 or 0, accordingly.
-*/
-template <bool Cond, typename IF, typename ELSE> struct XIfElse : sl::At< Cond ? 0 : 1, XSignature<void (IF,ELSE)> > {};
 
 
 #endif // XSIGNATUREHELPERS_H

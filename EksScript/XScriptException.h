@@ -4,10 +4,11 @@
 #include "XScriptGlobal.h"
 #include "QString"
 
-class XScriptValue;
+namespace XScript
+{
+class Value;
 
-EKSSCRIPT_EXPORT XScriptValue TossAsError( const QString &err );
-EKSSCRIPT_EXPORT XScriptValue Toss(const QString &msg);
+EKSSCRIPT_EXPORT Value toss(const QString &msg);
 
 struct MissingThisException
   {
@@ -23,5 +24,6 @@ protected:
 public:
   QString const &Buffer() const { return msg; }
   };
+}
 
 #endif // XSCRIPTEXCEPTION_H

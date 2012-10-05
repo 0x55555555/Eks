@@ -24,8 +24,7 @@ struct XAccessorGetterType
   /**
             The v8::AccessorGetter() interface.
         */
-  static XScriptValue Get(XScriptValue property, const XAccessorInfo &info);
-  //{ return Toss(StringBuffer()<<"Property '"<<property<<"' getter is unspecialized!");}
+  static Value Get(Value property, const internal::JSAccessorInfo &info);
   };
 
 /**
@@ -41,7 +40,7 @@ struct XAccessorGetterType
 struct XAccessorSetterType
   {
   /** The v8::AccessorSetter() interface. */
-  static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo& info);
+  static void Set(Value property, Value value, const internal::JSAccessorInfo& info);
   };
 
 typedef XAccessorGetterType Getter;
@@ -58,11 +57,11 @@ struct Accessors : XAccessorGetterType, XAccessorSetterType {};
         templating contexts. e.g. this can be useful if we want to
         wrap a custom v8::AccessorGetter in a GetterCatcher.
     */
-template <XInterfaceBase::Getter G>
+template <XScript::GetterFn G>
 struct GetterToGetter : XAccessorGetterType
   {
   /** Implements the v8::AccessorGetter() interface. */
-  inline static XScriptValue Get(XScriptValue property, const XAccessorInfo &info)
+  inline static Value Get(Value property, const internal::JSAccessorInfo &info)
     {
     return G(property, info);
     }
@@ -74,11 +73,11 @@ struct GetterToGetter : XAccessorGetterType
         templating contexts. e.g. this can be useful if we want to
         wrap a custom v8::AccessorSetter in a SetterCatcher.
     */
-template <XInterfaceBase::Setter S>
+template <XScript::SetterFn S>
 struct SetterToSetter : XAccessorSetterType
   {
   /** Implements the v8::AccessorSetter() interface. */
-  inline static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo& info)
+  inline static void Set(Value property, Value value, const internal::JSAccessorInfo& info)
     {
     S(property, value, info);
     }
@@ -97,7 +96,7 @@ template <typename PropertyType, PropertyType * const SharedVar>
 struct VarToGetter : XAccessorGetterType
   {
   /** Implements the v8::AccessorGetter() interface. */
-  inline static XScriptValue Get(XScriptValue property, const XAccessorInfo &info)
+  inline static Value Get(Value property, const internal::JSAccessorInfo &info)
     {
     return CastToJS( *SharedVar );
     }
@@ -109,7 +108,7 @@ struct VarToGetter : XAccessorGetterType
        SharedVar must be pointer to a static variable and must not
        be NULL.
 
-       (*SharedVar = XScriptConvert::from<PropertyType>()) must be legal.
+       (*SharedVar = Convert::from<PropertyType>()) must be legal.
 
        Reminder: this is not included in the StaticVarToGetter
        template so that we can avoid either the Get or Set
@@ -121,9 +120,9 @@ template <typename PropertyType, PropertyType * const SharedVar>
 struct VarToSetter : XAccessorSetterType
   {
   /** Implements the v8::AccessorSetter() interface. */
-  inline static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo& info)
+  inline static void Set(Value property, Value value, const internal::JSAccessorInfo& info)
     {
-    *SharedVar = XScriptConvert::from<PropertyType>( value );
+    *SharedVar = Convert::from<PropertyType>( value );
     }
   };
 
@@ -142,26 +141,26 @@ struct VarToAccessors : VarToGetter<PropertyType,SharedVar>,
 
        Requirements:
 
-       - T must be convertible to (T*) via XScriptConvert::from<T>().
+       - T must be convertible to (T*) via Convert::from<T>().
        - MemVar must be an accessible member of T.
        - PropertyType must be convertible via CastToJS<PropertyType>().
 
        If the underlying native 'this' object cannot be found (that
-       is, if XScriptConvert::from<T>() fails) then this routine will
+       is, if Convert::from<T>() fails) then this routine will
        trigger a JS exception.
     */
 template <typename T, typename PropertyType, PropertyType T::*MemVar>
 struct MemberToGetter : XAccessorGetterType
   {
   /** Implements the v8::AccessorGetter() interface. */
-  inline static XScriptValue Get(XScriptValue property, const XAccessorInfo &info)
+  inline static Value Get(Value property, const internal::JSAccessorInfo &info)
     {
-    typedef typename XScriptTypeInfo<T>::Type Type;
-    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
-    NativeHandle self = XScriptConvert::from<T>( info.calleeThis() );
+    typedef typename TypeInfo<T>::Type Type;
+    typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
+    NativeHandle self = Convert::from<T>( info.calleeThis() );
     return ( ! self )
-        ? Toss( "Native member property getter '#' could not access native 'this' object!" )
-        : XScriptConvert::to( (self->*MemVar) );
+        ? toss( "Native member property getter '#' could not access native 'this' object!" )
+        : Convert::to( (self->*MemVar) );
     }
   };
 
@@ -170,7 +169,7 @@ struct MemberToGetter : XAccessorGetterType
 
        Requirements:
 
-       - T must be convertible to (T*) via XScriptConvert::from<T>().
+       - T must be convertible to (T*) via Convert::from<T>().
        - PropertyType must be convertible via CastToJS<PropertyType>().
        - MemVar must be an accessible member of T.
 
@@ -181,13 +180,13 @@ template <typename T, typename PropertyType, PropertyType T::*MemVar>
 struct MemberToSetter : XAccessorSetterType
   {
   /** Implements the v8::AccessorSetter() interface. */
-  inline static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo& info)
+  inline static void Set(Value property, Value value, const internal::JSAccessorInfo& info)
     {
-    typedef typename XScriptTypeInfo<T>::Type Type;
-    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
-    NativeHandle self = XScriptConvert::from<T>( info.calleeThis() );
-    if( self ) self->*MemVar = XScriptConvert::from<PropertyType>( value );
-    else Toss( "Native member property setter '#' could not access native 'this' object!" );
+    typedef typename TypeInfo<T>::Type Type;
+    typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
+    NativeHandle self = Convert::from<T>( info.calleeThis() );
+    if( self ) self->*MemVar = Convert::from<PropertyType>( value );
+    else toss( "Native member property setter '#' could not access native 'this' object!" );
     }
   };
 
@@ -212,9 +211,9 @@ struct MemberToAccessors : MemberToGetter<T,PropertyType,MemVar>,
     */
 struct ThrowingSetter : XAccessorSetterType
   {
-  inline static void Set(XScriptValue property, XScriptValue, const XAccessorInfo &)
+  inline static void Set(Value property, Value, const internal::JSAccessorInfo &)
     {
-    //Toss(QString("Native member property setter '%1' is configured to throw an exception when modifying this read-only member!").arg(XScriptConvert::from<QString>(property)));
+    //toss(QString("Native member property setter '%1' is configured to throw an exception when modifying this read-only member!").arg(Convert::from<QString>(property)));
     }
   };
 
@@ -234,7 +233,7 @@ struct ThrowingSetter : XAccessorSetterType
 template <typename Sig, typename XFunctionSignature<Sig>::FunctionType Getter>
 struct FunctionToGetter : XAccessorGetterType
   {
-  inline static XScriptValue Get( XScriptValue property, const XAccessorInfo & info )
+  inline static Value Get( Value property, const internal::JSAccessorInfo & info )
     {
     return CastToJS( (*Getter)() );
     }
@@ -267,10 +266,10 @@ struct FunctionToGetter : XAccessorGetterType
 template <typename Sig, typename XFunctionSignature<Sig>::FunctionType Func>
 struct FunctionToSetter : XAccessorSetterType
   {
-  inline static void Set( XScriptValue property, XScriptValue value, const XAccessorInfo &info)
+  inline static void Set( Value property, Value value, const internal::JSAccessorInfo &info)
     {
     typedef XFunctionSignature<Sig> FT;
-    XScriptConvert::ArgCaster<typename sl::At<0,FT>::Type> ac;
+    Convert::ArgCaster<typename sl::At<0,FT>::Type> ac;
     (*Func)( ac.toNative( value ) );
     }
   };
@@ -291,27 +290,27 @@ struct FunctionToSetter : XAccessorSetterType
 template <typename T, typename Sig, typename XMethodSignature<T,Sig>::FunctionType Getter>
 struct XMethodToGetter : XAccessorGetterType
   {
-  typedef typename XScriptTypeInfo<T>::Type Type;
-  typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
+  typedef typename TypeInfo<T>::Type Type;
+  typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
 
-  inline static XScriptValue Get( XScriptValue property, const XAccessorInfo & info )
+  inline static Value Get( Value property, const internal::JSAccessorInfo & info )
     {
-    NativeHandle self = XScriptConvert::from<T>( info.calleeThis() );
+    NativeHandle self = Convert::from<T>( info.calleeThis() );
     return self
-        ? XScriptConvert::to( (self->*Getter)() )
-        : Toss( QString("Native member property getter '%1' could not access native This object!").arg(XScriptConvert::from<QString>(property)) );
+        ? Convert::to( (self->*Getter)() )
+        : toss( QString("Native member property getter '%1' could not access native This object!").arg(Convert::from<QString>(property)) );
     }
-  inline static void GetDart(XScriptDartArguments argv)
+  inline static void GetDart(internal::DartArguments argv)
     {
-    XScriptDartArgumentsWithThis args(argv);
+    internal::DartArgumentsWithThis args(argv);
     xAssert(args.length() == 0);
-    NativeHandle const self = XScriptConvert::from<T>( args.calleeThis() );
+    NativeHandle const self = Convert::from<T>( args.calleeThis() );
     if(!self)
       {
-      Toss(QString("Native member property getter '%1' could not access native This object!"));
+      toss(QString("Native member property getter '%1' could not access native This object!"));
       }
 
-    argv.setReturnValue(XScriptConvert::to( (self->*Getter)() ));
+    argv.setReturnValue(Convert::to( (self->*Getter)() ));
     }
   };
 
@@ -321,55 +320,54 @@ struct XMethodToGetter : XAccessorGetterType
 template <typename T, typename Sig, typename XConstMethodSignature<T,Sig>::FunctionType Getter>
 struct XConstMethodToGetter : XAccessorGetterType
   {
-  typedef typename XScriptTypeInfo<T>::Type Type;
-  typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
+  typedef typename TypeInfo<T>::Type Type;
+  typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
 
-  inline static XScriptValue Get( XScriptValue property, const XAccessorInfo & info )
+  inline static Value Get( Value property, const internal::JSAccessorInfo & info )
     {
-    NativeHandle const self = XScriptConvert::from<T>( info.calleeThis() );
+    NativeHandle const self = Convert::from<T>( info.calleeThis() );
     return self
-        ? XScriptConvert::to( (self->*Getter)() )
-        : Toss(QString("Native member property getter '%1' could not access native This object!").arg(XScriptConvert::from<QString>(property)));
+        ? Convert::to( (self->*Getter)() )
+        : toss(QString("Native member property getter '%1' could not access native This object!").arg(Convert::from<QString>(property)));
     }
-  inline static void GetDart( XScriptDartArguments argv )
+  inline static void GetDart( internal::DartArguments argv )
     {
-    XScriptDartArgumentsWithThis args(argv);
+    internal::DartArgumentsWithThis args(argv);
     xAssert(args.length() == 0);
-    NativeHandle const self = XScriptConvert::from<T>( args.calleeThis() );
+    NativeHandle const self = Convert::from<T>( args.calleeThis() );
     if(!self)
       {
-      Toss(QString("Native member property getter '%1' could not access native This object!"));
+      toss(QString("Native member property getter '%1' could not access native This object!"));
       }
 
-    argv.setReturnValue(XScriptConvert::to( (self->*Getter)() ));
+    argv.setReturnValue(Convert::to( (self->*Getter)() ));
     }
   };
 
 template <typename T, typename InputArg, typename XMethodSignature<T,void (InputArg)>::FunctionType Setter>
 struct XMethodToSetter : XAccessorSetterType
   {
-  typedef typename XScriptTypeInfo<T>::Type Type;
-  typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
+  typedef typename TypeInfo<T>::Type Type;
+  typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
 
-  static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo &info)
+  static void Set(Value property, Value value, const internal::JSAccessorInfo &info)
     {
-    NativeHandle self = XScriptConvert::from<NativeHandle>( info.calleeThis() );
+    NativeHandle self = Convert::from<NativeHandle>( info.calleeThis() );
     if( ! self )
       {
-      Toss( QString("Native member property setter '%1' could not access native This object!").arg(XScriptConvert::from<QString>(property)) );
+      toss( QString("Native member property setter '%1' could not access native This object!").arg(Convert::from<QString>(property)) );
       }
     else
       {
-      typedef typename XScriptTypeInfo<InputArg>::NativeHandle NativeHandle;
-      typedef XSignature<void (NativeHandle)> Sig;
-      typedef typename sl::At< 0, Sig >::Type ArgT;
-      typename XScriptConvert::ArgCaster<ArgT>::ResultType handle = XScriptConvert::ArgCaster<ArgT>::toNative( value );
+      typedef typename TypeInfo<InputArg>::NativeHandle NativeHandle;
+      typedef typename Convert::internal::JSToNative<InputArg>::ResultType Result;
+      Result handle = Convert::from<InputArg>( value );
 
       bool valid = true;
-      InputArg in = XScriptConvert::match<InputArg, typename XScriptConvert::ArgCaster<ArgT>::ResultType>(&handle, valid);
+      InputArg in = Convert::match<InputArg>(&handle, valid);
       if(!valid)
         {
-        Toss(QString("Native member property setter '%1' could convert input argument!").arg(XScriptConvert::from<QString>(property) ));
+        toss(QString("Native member property setter '%1' could convert input argument!").arg(Convert::from<QString>(property) ));
         }
       else
         {
@@ -378,27 +376,26 @@ struct XMethodToSetter : XAccessorSetterType
       }
     }
 
-  static void SetDart(XScriptDartArguments argv)
+  static void SetDart(internal::DartArguments argv)
     {
-    XScriptDartArgumentsWithThis args(argv);
+    internal::DartArgumentsWithThis args(argv);
     xAssert(args.length() == 1);
-    NativeHandle self = XScriptConvert::from<NativeHandle>( args.calleeThis() );
+    NativeHandle self = Convert::from<NativeHandle>( args.calleeThis() );
     if(!self)
       {
-      Toss( QString("Native member property setter '%1' could not access native This object!") );
+      toss( QString("Native member property setter '%1' could not access native This object!") );
       }
     else
       {
-      typedef typename XScriptTypeInfo<InputArg>::NativeHandle NativeHandle;
-      typedef XSignature<void (NativeHandle)> Sig;
-      typedef typename sl::At< 0, Sig >::Type ArgT;
-      typename XScriptConvert::ArgCaster<ArgT>::ResultType handle = XScriptConvert::ArgCaster<ArgT>::toNative( args.at(0) );
+      typedef typename TypeInfo<InputArg>::NativeHandle NativeHandle;
+      typedef typename Convert::internal::JSToNative<InputArg>::ResultType Result;
+      Result handle = Convert::from<InputArg>( args.at(0) );
 
       bool valid = true;
-      InputArg in = XScriptConvert::match<InputArg, typename XScriptConvert::ArgCaster<ArgT>::ResultType>(&handle, valid);
+      InputArg in = Convert::match<InputArg>(&handle, valid);
       if(!valid)
         {
-        Toss(QString("Native member property setter '%1' could convert input argument!") );
+        toss(QString("Native member property setter '%1' could convert input argument!") );
         }
       else
         {
@@ -411,7 +408,7 @@ struct XMethodToSetter : XAccessorSetterType
 template <typename Ftor, typename Sig>
 struct XFunctorToGetter
   {
-  inline static XScriptValue Get( XScriptValue property, const XAccessorInfo & info )
+  inline static Value Get( Value property, const internal::JSAccessorInfo & info )
     {
     //const static Ftor f();
     return CastToJS(Ftor()());
@@ -421,10 +418,10 @@ struct XFunctorToGetter
 template <typename Ftor, typename Sig>
 struct XFunctorToSetter
   {
-  inline static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo &info)
+  inline static void Set(Value property, Value value, const internal::JSAccessorInfo &info)
     {
     typedef typename sl::At< 0, XSignature<Sig> >::Type ArgT;
-    XScriptConvert::ArgCaster<ArgT> ac;
+    Convert::ArgCaster<ArgT> ac;
     Ftor()( ac.toNative( value ) );
     }
   };
@@ -442,7 +439,7 @@ template < typename ExceptionT,
            >
 struct XSetterCatcher : XAccessorSetterType
   {
-  static void Set(XScriptValue property, XScriptValue value, const XAccessorInfo &info)
+  static void Set(Value property, Value value, const internal::JSAccessorInfo &info)
     {
     try
     {
@@ -450,16 +447,16 @@ struct XSetterCatcher : XAccessorSetterType
     }
     catch( ExceptionT const & e2 )
     {
-      Toss((e2.*Getter)());
+      toss((e2.*Getter)());
       }
     catch( ExceptionT const * e2 )
     {
-      Toss((e2->*Getter)());
+      toss((e2->*Getter)());
       }
     catch(...)
     {
     if( PropagateOtherExceptions ) throw;
-    else Toss("Unknown native exception thrown!");
+    else toss("Unknown native exception thrown!");
     }
     }
   };
@@ -497,7 +494,7 @@ template < typename ExceptionT,
            >
 struct XGetterCatcher : XAccessorGetterType
   {
-  static XScriptValue Get( XScriptValue property, const XAccessorInfo & info )
+  static Value Get( Value property, const internal::JSAccessorInfo & info )
     {
     try
     {
@@ -505,16 +502,16 @@ struct XGetterCatcher : XAccessorGetterType
     }
     catch( ExceptionT const & e2 )
     {
-      return Toss(CastToJS((e2.*Getter)()));
+      return toss(CastToJS((e2.*Getter)()));
       }
     catch( ExceptionT const * e2 )
     {
-      return Toss(CastToJS((e2->*Getter)()));
+      return toss(CastToJS((e2->*Getter)()));
       }
     catch(...)
     {
     if( PropagateOtherExceptions ) throw;
-    else return Toss("Unknown native exception thrown!");
+    else return toss("Unknown native exception thrown!");
     }
     }
   };
@@ -542,26 +539,26 @@ PropagateOtherExceptions
 template <typename T, typename Sig, typename XMethodSignature<T,Sig>::FunctionType Getter>
 struct XMethodToIndexedGetter : XAccessorGetterType
   {
-  inline static XScriptValue Get( xuint32 property, const XAccessorInfo &info )
+  inline static Value Get( xuint32 property, const internal::JSAccessorInfo &info )
     {
-    typedef typename XScriptTypeInfo<T>::Type Type;
-    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
-    NativeHandle self = XScriptConvert::from<T>( info.calleeThis() );
+    typedef typename TypeInfo<T>::Type Type;
+    typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
+    NativeHandle self = Convert::from<T>( info.calleeThis() );
     if(self)
       {
-      return XScriptConvert::to( (self->*Getter)(property) );
+      return Convert::to( (self->*Getter)(property) );
       }
-    return XScriptValue::empty();
+    return Value::empty();
     }
-  inline static void GetDart(XScriptDartArguments argv)
+  inline static void GetDart(internal::DartArguments argv)
     {
-    XScriptDartArgumentsWithThis args(argv);
-    typedef typename XScriptTypeInfo<T>::Type Type;
-    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
-    NativeHandle self = XScriptConvert::from<T>( args.calleeThis() );
+    internal::DartArgumentsWithThis args(argv);
+    typedef typename TypeInfo<T>::Type Type;
+    typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
+    NativeHandle self = Convert::from<T>( args.calleeThis() );
     if(self)
       {
-      argv.setReturnValue(XScriptConvert::to( (self->*Getter)(XScriptConvert::from<xuint32>(args.at(0))) ));
+      argv.setReturnValue(Convert::to( (self->*Getter)(Convert::from<xuint32>(args.at(0))) ));
       }
     }
   };
@@ -569,20 +566,20 @@ struct XMethodToIndexedGetter : XAccessorGetterType
 template <typename T, typename Sig, typename XMethodSignature<T,Sig>::FunctionType Getter>
 struct XMethodToNamedGetter : XAccessorGetterType
   {
-  inline static XScriptValue Get( XScriptValue property, const XAccessorInfo &info )
+  inline static Value Get( Value property, const internal::JSAccessorInfo &info )
     {
-    typedef typename XScriptTypeInfo<T>::Type Type;
-    typedef typename XScriptConvert::internal::JSToNative<T>::ResultType NativeHandle;
-    NativeHandle self = XScriptConvert::from<T>( info.calleeThis() );
+    typedef typename TypeInfo<T>::Type Type;
+    typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
+    NativeHandle self = Convert::from<T>( info.calleeThis() );
     if(self)
       {
-      typename XMethodSignature<T,Sig>::ReturnType rt = (self->*Getter)(XScriptConvert::from<QString>(property));
+      typename XMethodSignature<T,Sig>::ReturnType rt = (self->*Getter)(Convert::from<QString>(property));
       if(rt)
         {
-        return XScriptConvert::to(rt);
+        return Convert::to(rt);
         }
       }
-    return XScriptValue::empty();
+    return Value::empty();
     }
   };
 
@@ -617,7 +614,7 @@ private:
   struct NullSetter
     {
     /** The v8::AccessorSetter() interface. */
-    static void Set(XScriptValue, XScriptValue, const XAccessorInfo &)
+    static void Set(Value, Value, const internal::JSAccessorInfo &)
       {
       }
     };

@@ -5,7 +5,10 @@
 #include "XConvertToScript.h"
 #include "XScriptObject.h"
 
-namespace XScriptConvert
+namespace XScript
+{
+
+namespace Convert
 {
 
 namespace internal
@@ -15,7 +18,7 @@ template <>struct JSToNative<std::string>
   {
   typedef std::string ResultType;
 
-  ResultType operator()( XScriptValue const & ) const
+  ResultType operator()( Value const & ) const
     {
     /*static const std::string emptyString;
     v8::String::Utf8Value const utf8String( h );
@@ -33,23 +36,23 @@ template <> struct JSToNative<std::string const &> : public JSToNative<std::stri
 
 template <> struct NativeToJS<std::string>
   {
-  XScriptValue operator()(std::string const &v) const
+  Value operator()(std::string const &v) const
     {
-    return XScriptValue(QString::fromStdString(v));
+    return Value(QString::fromStdString(v));
     }
   };
 
 
 template <typename ListT> struct NativeToJSList
   {
-  XScriptValue operator()( ListT const & li ) const
+  Value operator()( ListT const & li ) const
     {
     typedef typename ListT::const_iterator IT;
     IT it = li.begin();
-    XScriptValue rv = XScriptValue::newArray();
+    Value rv = Value::newArray();
     for( int i = 0; li.end() != it; ++it, ++i )
       {
-      rv.set(i, XScriptConvert::to(*it));
+      rv.set(i, Convert::to(*it));
       }
     return rv;
     }
@@ -58,10 +61,12 @@ template <typename ListT> struct NativeToJSList
 template <typename T> struct NativeToJS<std::list<T> > : NativeToJSList< std::list<T> > {};
 template <typename T> struct NativeToJS<std::vector<T> > : NativeToJSList< std::vector<T> > {};
 template <typename T> struct NativeToJS<QVector<T> > : NativeToJSList< QVector<T> > {};
+template <typename T> struct NativeToJS<QList<T> > : NativeToJSList< QList<T> > {};
+template <> struct NativeToJS<QStringList> : NativeToJSList<QStringList> {};
 
 template <typename MapT> struct NativeToJSLookup
   {
-  XScriptValue operator()(MapT const &li) const
+  Value operator()(MapT const &li) const
     {
     typedef typename MapT::const_iterator IT;
     IT it( li.begin() );
@@ -80,7 +85,7 @@ template <typename ListT, typename ValueType = typename ListT::value_type> struc
   {
   typedef ListT ResultType;
 
-  ResultType operator()( XScriptValue jv ) const
+  ResultType operator()( Value jv ) const
     {
     typedef ValueType VALT;
     ListT li;
@@ -139,6 +144,9 @@ struct JSToNative_map
 #endif
 
 }
+
+}
+
 }
 
 #endif // XCONVERTSCRIPTSTL_H

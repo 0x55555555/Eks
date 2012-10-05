@@ -1,3 +1,8 @@
+#ifdef Q_CC_MSVC
+#pragma warning( push )
+#pragma warning( disable : 4101 )
+#endif
+
 namespace Detail {
 template <typename Sig, bool UnlockV8>
 struct FunctionForwarder<1,Sig,UnlockV8>
@@ -117,7 +122,7 @@ struct CtorForwarderProxy<Sig,1>
       {
       ArgumentUnpacker1<Sig, ArgsType> args(argv);
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(args.arg0());
       }
     }
@@ -241,7 +246,7 @@ struct CtorForwarderProxy<Sig,2>
       {
       ArgumentUnpacker2<Sig, ArgsType> args(argv);
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(args.arg0(), args.arg1());
       }
     }
@@ -366,7 +371,7 @@ struct CtorForwarderProxy<Sig,3>
       {
       ArgumentUnpacker3<Sig, ArgsType> args(argv);
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(args.arg0(), args.arg1(), args.arg2());
       }
     }
@@ -390,7 +395,8 @@ struct FunctionForwarder<4,Sig,UnlockV8> :
                                args.arg2(),
                                args.arg3());
     }
-  static XScriptValue Call( FunctionType func, XScriptArguments const & argv )
+  template <typename ArgsType>
+      static Value Call( FunctionType func, ArgsType const & argv )
     {
     return CastToJS( CallNative( func, argv ) );
     }
@@ -514,7 +520,7 @@ struct CtorForwarderProxy<Sig,4>
       {
       ArgumentUnpacker4<Sig, ArgsType> args(argv);
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(args.arg0(),
                       args.arg1(),
                       args.arg2(),
@@ -666,7 +672,7 @@ struct CtorForwarderProxy<Sig,5>
       {
       ArgumentUnpacker5<Sig, ArgsType> args(argv);
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(args.arg0(),
                       args.arg1(),
                       args.arg2(),
@@ -1015,7 +1021,7 @@ struct CtorForwarderProxy<Sig,6>
       AC4 ac4; A4 arg4(ac4.toNative(argv[4]));
       AC5 ac5; A5 arg5(ac5.toNative(argv[5]));
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(  arg0, arg1, arg2, arg3, arg4, arg5 );
       }
     }
@@ -1379,7 +1385,7 @@ struct CtorForwarderProxy<Sig,7>
       AC5 ac5; A5 arg5(ac5.toNative(argv[5]));
       AC6 ac6; A6 arg6(ac6.toNative(argv[6]));
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(  arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
       }
     }
@@ -1764,7 +1770,7 @@ struct CtorForwarderProxy<Sig,8>
       AC6 ac6; A6 arg6(ac6.toNative(argv[6]));
       AC7 ac7; A7 arg7(ac7.toNative(argv[7]));
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(  arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 );
       }
     }
@@ -2170,7 +2176,7 @@ struct CtorForwarderProxy<Sig,9>
       AC7 ac7; A7 arg7(ac7.toNative(argv[7]));
       AC8 ac8; A8 arg8(ac8.toNative(argv[8]));
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(  arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 );
       }
     }
@@ -2597,11 +2603,15 @@ struct CtorForwarderProxy<Sig,10>
       AC8 ac8; A8 arg8(ac8.toNative(argv[8]));
       AC9 ac9; A9 arg9(ac9.toNative(argv[9]));
 
-      typedef typename XScriptTypeInfo<ReturnType>::Type Type;
+      typedef typename TypeInfo<ReturnType>::Type Type;
       return new Type(  arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 );
       }
     }
   };
 
 }
+#endif
+
+#ifdef Q_CC_MSVC
+#pragma warning( pop )
 #endif
