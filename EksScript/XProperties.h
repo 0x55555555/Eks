@@ -269,8 +269,7 @@ struct FunctionToSetter : XAccessorSetterType
   inline static void Set( Value property, Value value, const internal::JSAccessorInfo &info)
     {
     typedef XFunctionSignature<Sig> FT;
-    Convert::ArgCaster<typename sl::At<0,FT>::Type> ac;
-    (*Func)( ac.toNative( value ) );
+    (*Func)( Convert::from<typename sl::At<0,FT>::Type>( value ) );
     }
   };
 
@@ -421,8 +420,7 @@ struct XFunctorToSetter
   inline static void Set(Value property, Value value, const internal::JSAccessorInfo &info)
     {
     typedef typename sl::At< 0, XSignature<Sig> >::Type ArgT;
-    Convert::ArgCaster<ArgT> ac;
-    Ftor()( ac.toNative( value ) );
+    Ftor()( Convert::from<ArgT>( value ) );
     }
   };
 
@@ -548,7 +546,7 @@ struct XMethodToIndexedGetter : XAccessorGetterType
       {
       return Convert::to( (self->*Getter)(property) );
       }
-    return Value::empty();
+    return Value::newEmpty();
     }
   inline static void GetDart(internal::DartArguments argv)
     {
@@ -579,7 +577,7 @@ struct XMethodToNamedGetter : XAccessorGetterType
         return Convert::to(rt);
         }
       }
-    return Value::empty();
+    return Value::newEmpty();
     }
   };
 

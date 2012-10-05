@@ -51,9 +51,9 @@ public:
   virtual void newValue(Value* val, double i) = 0;
   virtual void newValue(Value* val, const QString& i) = 0;
   virtual void newValue(Value* val, void *i) = 0;
-  virtual void newValue(Value* val, QVariantMap &i) = 0;
-  virtual void newValue(Value* val, QVariantList &i) = 0;
-  virtual void newValue(Value* val, QStringList &i) = 0;
+  virtual void newValue(Value* val, const QVariantMap &i) = 0;
+  virtual void newValue(Value* val, const QVariantList &i) = 0;
+  virtual void newValue(Value* val, const QStringList &i) = 0;
   virtual void newValue(Value* val, const Value *i) = 0;
   virtual void newValue(Value* val, const Object *i) = 0;
   virtual void newValue(Value* val, const Function *i) = 0;

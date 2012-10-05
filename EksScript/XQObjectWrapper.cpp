@@ -8,6 +8,8 @@
 # define X_TYPE_DEBUG
 #endif
 
+Q_DECLARE_METATYPE(QObjectList)
+
 namespace XScript
 {
 
@@ -178,8 +180,6 @@ int QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void
 
   return -1;
   }
-
-Q_DECLARE_METATYPE(QObjectList)
 
 QObjectWrapper::QObjectWrapper()
   {
@@ -601,8 +601,8 @@ struct Utils
 
   static Value signal(Value, const internal::JSAccessorInfo& info)
     {
-    QObject *ths = Convert::from<QObject>(info.calleeThis());
-    int id = Convert::from<int>(info.data());
+    //QObject *ths = Convert::from<QObject>(info.calleeThis());
+    //int id = Convert::from<int>(info.data());
 
     xAssertFail();
 #if 0
@@ -683,7 +683,7 @@ struct Utils
 
   static Value method(const internal::JSArguments& args)
     {
-    QObject *ths = Convert::from<QObject>(args.calleeThis());
+    //QObject *ths = Convert::from<QObject>(args.calleeThis());
     xAssertFail();
 #if 0
     v8::Local<v8::Value> idVal = args.Callee()->Get(0);
@@ -968,6 +968,7 @@ struct Utils
 
     return fromHandle(Utils::methodCall(object, id, *conv.aOut));
 #endif
+    return Value();
     }
   };
 

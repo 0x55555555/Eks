@@ -16,30 +16,30 @@ public:
 
   void wrapInstance(Object object, T *native) const
     {
-    XInterfaceBase::wrapInstance(object, (void*)native);
+    InterfaceBase::wrapInstance(object, (void*)native);
     }
 
   void unwrapInstance(Object object) const
     {
-    return XInterfaceBase::unwrapInstance(object);
+    return InterfaceBase::unwrapInstance(object);
     }
 
   template <typename ValueT> inline void set(char const *name, ValueT val)
     {
-    set(name, XScriptConvert::to(val));
+    set(name, Convert::to(val));
     }
 
-  ConstructorDef defaultConstructor() X_CONST_EXPR
+  X_CONST_EXPR ConstructorDef defaultConstructor()
     {
     return constructor<T *()>();
     }
 
-  ConstructorDef copyConstructor() X_CONST_EXPR
+  X_CONST_EXPR ConstructorDef copyConstructor()
     {
     return constructor<T *(const T&)>();
     }
 
-  ConstructorDef nativeConstructor() X_CONST_EXPR
+  X_CONST_EXPR ConstructorDef nativeConstructor()
     {
     ConstructorDef d =
       {
@@ -53,7 +53,7 @@ public:
     }
 
   template <typename TYPE>
-      ConstructorDef constructor(const char *name="") X_CONST_EXPR
+      X_CONST_EXPR ConstructorDef constructor(const char *name="")
     {
     typedef CtorFunctionWrapper<T, TYPE, Interface<T>::weak_dtor> Wrapper;
 
@@ -61,19 +61,18 @@ public:
 ### err, js ctors?
 #endif
 
-    ConstructorDef d =
-      { name,
+    return ConstructorDef {
+      name,
       0,
       Wrapper::CallDart,
       Wrapper::Arity
       };
-
-    return d;
     }
+
   template <typename TYPE,
             typename XConstMethodSignature<T, TYPE ()>::FunctionType GETTERMETHOD,
             typename XMethodSignature<T, void (TYPE)>::FunctionType SETTERMETHOD>
-  static PropertyDef property(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static PropertyDef property(const char *name)
     {
     return property<TYPE, TYPE, GETTERMETHOD, SETTERMETHOD>(name);
     }
@@ -82,93 +81,78 @@ public:
             typename SETTYPE,
             typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD,
             typename XMethodSignature<T, void (SETTYPE)>::FunctionType SETTERMETHOD>
-  static PropertyDef property(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static PropertyDef property(const char *name)
     {
     typedef XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
     typedef XMethodToSetter<T, SETTYPE, SETTERMETHOD> Setter;
 
-    PropertyDef d =
-      {
+    return PropertyDef {
       name,
       Getter::Get,
       Setter::Set,
       Getter::GetDart,
       Setter::SetDart
       };
-
-    return d;
     }
 
   template <typename Getter,
             typename Setter>
-  static PropertyDef property(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static PropertyDef property(const char *name)
     {
-    PropertyDef d =
-      {
+    return PropertyDef {
       name,
       Getter::Get,
       Setter::Set,
       Getter::GetDart,
       Setter::SetDart
       };
-
-    return d;
     }
 
   template <typename Getter>
-  static PropertyDef property(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static PropertyDef property(const char *name)
     {
-    PropertyDef d =
-      {
+    return PropertyDef {
       name,
       Getter::Get,
       0,
       Getter::GetDart,
       0
       };
-
-    return d;
     }
 
   template <typename GETTYPE,
             typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
-  static PropertyDef property(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static PropertyDef property(const char *name)
     {
     typedef XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    PropertyDef d =
-      {
+    return PropertyDef {
       name,
       Getter::Get,
       0,
       Getter::GetDart,
       0
       };
-
-    return d;
     }
 
   template <typename GETTYPE,
             typename XMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
-  static PropertyDef accessProperty(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static PropertyDef accessProperty(const char *name)
     {
     typedef XMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    PropertyDef d =
-      {
+    return PropertyDef {
       name,
       Getter::Get,
       0,
       Getter::GetDart,
       0
       };
-
-    return d;
     }
 
   template <typename SIG,
             typename XMethodSignature<T, SIG>::FunctionType METHOD>
-  static FunctionDef method(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static FunctionDef method(const char *name)
     {
     typedef MethodToInCa<T, SIG, METHOD> FunctionType;
 
@@ -177,7 +161,7 @@ public:
 
   template <typename SIG,
             typename XConstMethodSignature<T, SIG>::FunctionType METHOD>
-  static FunctionDef constMethod(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static FunctionDef constMethod(const char *name)
     {
     typedef ConstMethodToInCa<T, SIG, METHOD> FunctionType;
 
@@ -185,38 +169,32 @@ public:
     }
 
   template <typename FunctionType>
-  static FunctionDef method(const char *name) X_CONST_EXPR
+      X_CONST_EXPR static FunctionDef method(const char *name)
     {
-    FunctionDef d =
-      {
+    return FunctionDef {
       name,
       FunctionType::Call,
       FunctionType::CallDart,
       FunctionType::Arity,
       false // not static method
       };
-
-    return d;
     }
 
   template <typename FunctionType>
-  static FunctionDef function(const char *name) X_CONST_EXPR
+      static FunctionDef function(const char *name)
     {
-    FunctionDef d =
-      {
+    return FunctionDef {
       name,
       FunctionType::Call,
       FunctionType::CallDart,
       FunctionType::Arity,
       true // is static method
       };
-
-    return d;
     }
 
   template <typename SIG,
             typename XFunctionSignature<SIG>::FunctionType METHOD>
-  static FunctionDef staticMethod(const char *name)
+      X_CONST_EXPR static FunctionDef staticMethod(const char *name)
     {
     typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
 
@@ -566,7 +544,7 @@ private:
       nobj = Factory::Create( self, argv );
       if( ! nobj )
         {
-        return XScriptConvert::to<std::exception>(std::runtime_error("Native constructor failed."));
+        return toss("Native contructor failed");
         }
 
       typedef typename TypeInfo<T>::NativeHandle NativeHandle;

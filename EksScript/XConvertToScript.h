@@ -159,9 +159,6 @@ template <> struct NativeToJS<std::exception>
     }
   };
 
-template <> struct NativeToJS<std::runtime_error> : NativeToJS<std::exception> {};
-template <> struct NativeToJS<std::range_error> : NativeToJS<std::exception> {};
-template <> struct NativeToJS<std::logic_error> : NativeToJS<std::exception> {};
 
 }
 

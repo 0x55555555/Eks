@@ -673,17 +673,17 @@ public:
     internal->_object = v8::Number::New(x);
     }
 
-  void newValue(Value*, QVariantMap &) X_OVERRIDE
+  void newValue(Value*, const QVariantMap &) X_OVERRIDE
     {
     xAssertFail();
     }
 
-  void newValue(Value*, QVariantList &) X_OVERRIDE
+  void newValue(Value*, const QVariantList &) X_OVERRIDE
     {
     xAssertFail();
     }
 
-  void newValue(Value*, QStringList &) X_OVERRIDE
+  void newValue(Value*, const QStringList &) X_OVERRIDE
     {
     xAssertFail();
     }

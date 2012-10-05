@@ -125,13 +125,13 @@ template <typename T, typename Sig> struct XFunctionForwarderHelper : XFunctionS
 
   static Value Call( FunctionType func, internal::JSArguments const & argv )
     {
-    return XScriptConvert::to( T::CallNative( func, argv ) );
+    return Convert::to( T::CallNative( func, argv ) );
     }
 
   static void Call( FunctionType func, internal::DartArguments &argv )
     {
     internal::DartArgumentsNoThis args(argv);
-    argv.setReturnValue(XScriptConvert::to(T::CallNative( func, args )));
+    argv.setReturnValue(Convert::to(T::CallNative( func, args )));
     }
   };
 
@@ -467,6 +467,11 @@ template <typename T, int Arity_, typename Sig,
 struct XMethodForwarder;
 
 
+#ifdef Q_CC_MINGW
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
 template <typename T, typename Sig, bool UnlockV8>
 struct XMethodForwarder<T, 0, Sig, UnlockV8>
     : XMethodForwarderHelper<XMethodForwarder<T, 0, Sig, UnlockV8>, XMethodSignature<T,Sig>>
@@ -500,6 +505,11 @@ struct XMethodForwarderVoid<T,0,Sig, UnlockV8>
     return (ReturnType)(self.*func)();
     }
   };
+
+#ifdef Q_CC_MINGW
+#pragma GCC diagnostic pop
+#endif
+
 
 /**
         Internal impl for XConstMethodForwarder.
@@ -653,7 +663,7 @@ namespace Detail {
 template <typename Sig,
           typename XFunctionSignature<Sig>::FunctionType Func,
           bool UnlockV8 = XSignatureIsUnlockable< XFunctionSignature<Sig> >::Value >
-struct FunctionToInCa : XFunctionPtr<Sig,Func>, InCa
+struct FunctionToInCa : XFunctionPtr<Sig,Func>
   {
   typedef XFunctionSignature<Sig> SignatureType;
   enum { Arity = sl::Arity<SignatureType>::Value };
@@ -828,7 +838,7 @@ template <typename T,
           typename XConstMethodSignature<T,Sig>::FunctionType Func,
           bool UnlockV8 = XSignatureIsUnlockable< XConstMethodSignature<T,Sig> >::Value
           >
-struct ConstMethodToInCaVoid : XConstMethodPtr<T,Sig,Func>, InCa
+struct ConstMethodToInCaVoid : XConstMethodPtr<T,Sig,Func>
   {
   typedef XConstMethodPtr<T, Sig, Func> SignatureType;
   typedef XConstMethodForwarderVoid< T, sl::Arity<SignatureType>::Value, Sig, UnlockV8 > Proxy;
@@ -1001,7 +1011,7 @@ struct FunctorToInCaSelector<void,Ftor,Sig,UnlockV8> : XConstMethodForwarderVoid
 template <typename Ftor, typename Sig,
           bool UnlockV8 = XSignatureIsUnlockable< XMethodSignature<Ftor,Sig> >::Value
           >
-struct FunctorToInCa : InCa
+struct FunctorToInCa
   {
   inline static Value Call( internal::JSArguments const & argv )
     {
@@ -1019,7 +1029,7 @@ struct FunctorToInCa : InCa
 template <typename Ftor, typename Sig,
           bool UnlockV8 = XSignatureIsUnlockable< XMethodSignature<Ftor,Sig> >::Value
           >
-struct FunctorToInCaVoid : InCa
+struct FunctorToInCaVoid
   {
   inline static Value Call( internal::JSArguments const & argv )
     {
@@ -1350,7 +1360,7 @@ template < int Arity,
            typename InCaT,
            typename Fallback = InCaToInCa< Detail::tossArgCountError<Arity> >
            >
-struct ArityDispatch : InCa
+struct ArityDispatch
   {
   /**
        When called, if (Artity==-1) or if (Arity==args.Length()) then
@@ -1446,7 +1456,7 @@ template < typename ExceptionT,
            typename InCaT,
            bool PropagateOtherExceptions = false
            >
-struct InCaCatcher : InCa
+struct InCaCatcher
   {
   /**
         Returns ICB(args), converting any exceptions of type (ExceptionT
@@ -1532,7 +1542,7 @@ namespace Detail {
         dispatchers.
     */
 template <typename InCaT>
-struct OverloadCallHelper : InCa
+struct OverloadCallHelper
   {
   inline static Value Call( internal::JSArguments const & argv )
     {
@@ -1588,7 +1598,7 @@ struct OverloadCallHelper<XNilType>
    is all done at compile-time.
 */
 template <typename FwdList>
-struct ArityDispatchList : InCa
+struct ArityDispatchList
   {
   /**
        Tries to dispatch argv to one of the bound functions defined
@@ -1769,7 +1779,7 @@ struct InCaLikeConstMethod : ConstMethodToInCa< T, RV (internal::JSArguments con
     ignored (i.e. not dynamically-allocated resources).
 */
 template <typename InCaT, typename InitFunctor>
-struct OneTimeInitInCa : InCa
+struct OneTimeInitInCa
   {
   /**
         The first time this function is called it runs

@@ -70,10 +70,10 @@ template <typename MapT> struct NativeToJSLookup
     {
     typedef typename MapT::const_iterator IT;
     IT it( li.begin() );
-    XScriptObject rv = XScriptObject::newObject();
+    Object rv = Object::newMap();
     for( int i = 0; li.end() != it; ++it, ++i )
       {
-      rv.set( (*it).first, XScriptConvert::to( (*it).second ) );
+      rv.set( (*it).first, Convert::to( (*it).second ) );
       }
     return rv;
     }
@@ -93,7 +93,7 @@ template <typename ListT, typename ValueType = typename ListT::value_type> struc
     uint32_t ndx = 0;
     for( xsize i = 0; i < jv.length(); ++i )
       {
-      li.push_back( XScriptConvert::from<VALT>( jv.at(i)) );
+      li.push_back( Convert::from<VALT>( jv.at(i)) );
       }
     return li;
     }

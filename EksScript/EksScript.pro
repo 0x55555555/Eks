@@ -52,14 +52,16 @@ HEADERS += XScriptGlobal.h \
     XScriptDefinitions.h \
     XScriptInterfaceBase.h
 
-LIBS += -lQtV8 -lEksCore
+LIBS += -lEksCore # -lQtV8
 
-INCLUDEPATH += $$ROOT/Eks/EksCore $$ROOT/Eks/EksScript/qtjsbackend/src/3rdparty/v8/include
+INCLUDEPATH += $$ROOT/Eks/EksCore # $$ROOT/Eks/EksScript/qtjsbackend/src/3rdparty/v8/include
 
-win32-msvc2010 {
-  DEFINES += X_DART
-  LIBS += -L./dart/ -llibdart_builtin -llibdart_withcore -llibdart_lib_withcore -llibdouble_conversion -llibdart_vm -llibjscre
-}
+#define X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
+
+#win32-msvc2010 {
+#  DEFINES += X_SCRIPT_ENGINE_ENABLE_DART
+#  LIBS += -L./dart/ -llibdart_builtin -llibdart_withcore -llibdart_lib_withcore -llibdouble_conversion -llibdart_vm -llibjscre
+#}
 
 OTHER_FILES += \
     License.txt

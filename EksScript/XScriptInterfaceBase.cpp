@@ -40,13 +40,13 @@ InterfaceBase::InterfaceBase(int typeId,
     _toScript(tScr),
     _fromScript(fScr),
     _parent(parent),
+    _constructorCount(0),
+    _propertyCount(0),
+    _functionCount(0),
     _isSealed(false),
     _constructors(0),
     _properties(0),
-    _functions(0),
-    _constructorCount(0),
-    _propertyCount(0),
-    _functionCount(0)
+    _functions(0)
   {
   xAssert(_typeName.length());
   }
@@ -113,17 +113,6 @@ void InterfaceBase::seal()
   {
   _isSealed = true;
   }
-
-#ifndef X_DART
-XScriptFunction InterfaceBase::constructorFunction() const
-  {
-  // In my experience, if GetFunction() is called BEFORE setting up
-  // the Prototype object, v8 gets very unhappy (class member lookups don't work?).
-  _isSealed = true;
-
-  return fromFunction((*constructor(_constructor))->GetFunction());
-  }
-#endif
 
 void InterfaceBase::wrapInstance(Object *scObj, void *object) const
   {

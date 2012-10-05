@@ -9,11 +9,6 @@
 # define EKSSCRIPT_EXPORT X_DECL_IMPORT
 #endif
 
-//#define X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
-#ifdef Q_CC_MSVC
-# define X_SCRIPT_ENGINE_ENABLE_DART
-#endif
-
 namespace XScript
 {
 
