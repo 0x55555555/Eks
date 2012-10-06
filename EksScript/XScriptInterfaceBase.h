@@ -248,6 +248,72 @@ public:
     return _functions[index];
     }
 
+  // generating defs
+
+  template <typename Getter,
+            typename Setter>
+      X_CONST_EXPR static PropertyDef property(const char *name)
+    {
+    return PropertyDef {
+      name,
+      Getter::Get,
+      Setter::Set,
+      Getter::GetDart,
+      Setter::SetDart
+      };
+    }
+
+  template <typename Getter>
+      X_CONST_EXPR static PropertyDef property(const char *name)
+    {
+    return PropertyDef {
+      name,
+      Getter::Get,
+      0,
+      Getter::GetDart,
+      0
+      };
+    }
+
+  template <typename FunctionType>
+      X_CONST_EXPR static FunctionDef method(const char *name)
+    {
+    return FunctionDef {
+      name,
+      FunctionType::Call,
+      FunctionType::CallDart,
+      FunctionType::Arity,
+      false // not static method
+      };
+    }
+
+  template <typename FunctionType>
+      static void methodX(const char *name)
+    {
+    return;
+    }
+
+  template <typename FunctionType>
+      static FunctionDef function(const char *name)
+    {
+    return FunctionDef {
+      name,
+      FunctionType::Call,
+      FunctionType::CallDart,
+      FunctionType::Arity,
+      true // is static method
+      };
+    }
+
+  template <typename SIG,
+            typename XFunctionSignature<SIG>::FunctionType METHOD>
+      X_CONST_EXPR static FunctionDef staticMethod(const char *name)
+    {
+    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
+
+    return function<FunctionType>(name);
+    }
+
 protected:
   mutable bool _isSealed;
 

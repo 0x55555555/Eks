@@ -182,10 +182,11 @@ template <> void setupBindings<QIODevice>(Interface<QIODevice> *templ)
   {
   typedef MethodToInCa<QIODevice, qint64(const QByteArray &), &QIODevice::write> WriteType;
 
+  InterfaceBase* tempB = templ;
   static ClassDef<0,0,3> cls = {
     {
     templ->method<bool(QIODevice::OpenMode), &QIODevice::open>("open"),
-    templ->method<WriteType>("write"),
+    tempB->method<WriteType>("write"),
     templ->method<void(), &QIODevice::close>("close")
     }
   };

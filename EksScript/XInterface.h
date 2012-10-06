@@ -28,7 +28,6 @@ public:
     {
     set(name, Convert::to(val));
     }
-
   X_CONST_EXPR ConstructorDef defaultConstructor()
     {
     return constructor<T *()>();
@@ -95,31 +94,6 @@ public:
       };
     }
 
-  template <typename Getter,
-            typename Setter>
-      X_CONST_EXPR static PropertyDef property(const char *name)
-    {
-    return PropertyDef {
-      name,
-      Getter::Get,
-      Setter::Set,
-      Getter::GetDart,
-      Setter::SetDart
-      };
-    }
-
-  template <typename Getter>
-      X_CONST_EXPR static PropertyDef property(const char *name)
-    {
-    return PropertyDef {
-      name,
-      Getter::Get,
-      0,
-      Getter::GetDart,
-      0
-      };
-    }
-
   template <typename GETTYPE,
             typename XConstMethodSignature<T, GETTYPE ()>::FunctionType GETTERMETHOD>
       X_CONST_EXPR static PropertyDef property(const char *name)
@@ -156,7 +130,7 @@ public:
     {
     typedef MethodToInCa<T, SIG, METHOD> FunctionType;
 
-    return method<FunctionType>(name);
+    return InterfaceBase::method<FunctionType>(name);
     }
 
   template <typename SIG,
@@ -165,40 +139,7 @@ public:
     {
     typedef ConstMethodToInCa<T, SIG, METHOD> FunctionType;
 
-    return method<FunctionType>(name);
-    }
-
-  template <typename FunctionType>
-      X_CONST_EXPR static FunctionDef method(const char *name)
-    {
-    return FunctionDef {
-      name,
-      FunctionType::Call,
-      FunctionType::CallDart,
-      FunctionType::Arity,
-      false // not static method
-      };
-    }
-
-  template <typename FunctionType>
-      static FunctionDef function(const char *name)
-    {
-    return FunctionDef {
-      name,
-      FunctionType::Call,
-      FunctionType::CallDart,
-      FunctionType::Arity,
-      true // is static method
-      };
-    }
-
-  template <typename SIG,
-            typename XFunctionSignature<SIG>::FunctionType METHOD>
-      X_CONST_EXPR static FunctionDef staticMethod(const char *name)
-    {
-    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
-
-    return function<FunctionType>(name);
+    return InterfaceBase::method<FunctionType>(name);
     }
 
 //  template <typename RETTYPE, typename XMethodSignature<T, RETTYPE (xsize i)>::FunctionType METHOD>

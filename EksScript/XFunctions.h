@@ -467,7 +467,7 @@ template <typename T, int Arity_, typename Sig,
 struct XMethodForwarder;
 
 
-#ifdef Q_CC_MINGW
+#ifdef Q_CC_GNU
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
@@ -506,7 +506,7 @@ struct XMethodForwarderVoid<T,0,Sig, UnlockV8>
     }
   };
 
-#ifdef Q_CC_MINGW
+#ifdef Q_CC_GNU
 #pragma GCC diagnostic pop
 #endif
 

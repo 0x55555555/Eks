@@ -3,7 +3,7 @@
 #pragma warning( disable : 4101 )
 #endif
 
-#ifdef Q_CC_MINGW
+#ifdef Q_CC_GNU
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
@@ -2621,6 +2621,6 @@ struct CtorForwarderProxy<Sig,10>
 #pragma warning( pop )
 #endif
 
-#ifdef Q_CC_MINGW
+#ifdef Q_CC_GNU
 #pragma GCC diagnostic pop
 #endif
