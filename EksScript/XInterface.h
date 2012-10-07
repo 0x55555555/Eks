@@ -24,6 +24,11 @@ public:
     return InterfaceBase::unwrapInstance(object);
     }
 
+  using InterfaceBase::constructor;
+  using InterfaceBase::property;
+  using InterfaceBase::method;
+  using InterfaceBase::function;
+
   template <typename ValueT> inline void set(char const *name, ValueT val)
     {
     set(name, Convert::to(val));
@@ -40,15 +45,12 @@ public:
 
   X_CONST_EXPR ConstructorDef nativeConstructor()
     {
-    ConstructorDef d =
-      {
+    return ConstructorDef(
       "_internal",
       0,
       CtorNativeWrap<T, Interface<T>::weak_dtor>::CallDart,
       1
-      };
-
-    return d;
+      );
     }
 
   template <typename TYPE>
@@ -60,12 +62,12 @@ public:
 ### err, js ctors?
 #endif
 
-    return ConstructorDef {
+    return ConstructorDef(
       name,
       0,
       Wrapper::CallDart,
       Wrapper::Arity
-      };
+      );
     }
 
   template <typename TYPE,
@@ -85,13 +87,13 @@ public:
     typedef XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
     typedef XMethodToSetter<T, SETTYPE, SETTERMETHOD> Setter;
 
-    return PropertyDef {
+    return PropertyDef(
       name,
       Getter::Get,
       Setter::Set,
       Getter::GetDart,
       Setter::SetDart
-      };
+      );
     }
 
   template <typename GETTYPE,
@@ -100,13 +102,13 @@ public:
     {
     typedef XConstMethodToGetter<T, GETTYPE (), GETTERMETHOD> Getter;
 
-    return PropertyDef {
+    return PropertyDef(
       name,
       Getter::Get,
       0,
       Getter::GetDart,
       0
-      };
+      );
     }
 
   template <typename GETTYPE,

@@ -40,6 +40,18 @@ template <typename T> struct QMetaTypeIdOrInvalid<T, true>
 
 struct ConstructorDef
   {
+  X_CONST_EXPR ConstructorDef(
+      const char *n,
+      FunctionJS v,
+      FunctionDart d,
+      xuint8 c)
+    : name(n),
+      functionV8(v),
+      functionDart(d),
+      argCount(c)
+    {
+    }
+
   const char *name;
   FunctionJS functionV8;
   FunctionDart functionDart;
@@ -48,6 +60,20 @@ struct ConstructorDef
 
 struct FunctionDef
   {
+  X_CONST_EXPR FunctionDef(
+      const char *n,
+      FunctionJS v,
+      FunctionDart d,
+      xuint8 c,
+      bool s)
+    : name(n),
+      functionV8(v),
+      functionDart(d),
+      argCount(c),
+      isStatic(s)
+    {
+    }
+
   const char *name;
   FunctionJS functionV8;
   FunctionDart functionDart;
@@ -57,6 +83,20 @@ struct FunctionDef
 
 struct PropertyDef
   {
+  X_CONST_EXPR PropertyDef (
+      const char *n,
+      GetterFn gv,
+      SetterFn sv,
+      FunctionDart gd,
+      FunctionDart sd)
+    : name(n),
+      getterV8(gv),
+      setterV8(sv),
+      getterDart(gd),
+      setterDart(sd)
+    {
+    }
+
   const char *name;
   GetterFn getterV8;
   SetterFn setterV8;
@@ -254,37 +294,37 @@ public:
             typename Setter>
       X_CONST_EXPR static PropertyDef property(const char *name)
     {
-    return PropertyDef {
+    return PropertyDef(
       name,
       Getter::Get,
       Setter::Set,
       Getter::GetDart,
       Setter::SetDart
-      };
+      );
     }
 
   template <typename Getter>
       X_CONST_EXPR static PropertyDef property(const char *name)
     {
-    return PropertyDef {
+    return PropertyDef(
       name,
       Getter::Get,
       0,
       Getter::GetDart,
       0
-      };
+      );
     }
 
   template <typename FunctionType>
       X_CONST_EXPR static FunctionDef method(const char *name)
     {
-    return FunctionDef {
+    return FunctionDef(
       name,
       FunctionType::Call,
       FunctionType::CallDart,
       FunctionType::Arity,
       false // not static method
-      };
+      );
     }
 
   template <typename FunctionType>
@@ -296,13 +336,13 @@ public:
   template <typename FunctionType>
       static FunctionDef function(const char *name)
     {
-    return FunctionDef {
+    return FunctionDef(
       name,
       FunctionType::Call,
       FunctionType::CallDart,
       FunctionType::Arity,
       true // is static method
-      };
+      );
     }
 
   template <typename SIG,

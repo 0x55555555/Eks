@@ -168,7 +168,7 @@ template <> void setupBindings<QRect>(Interface<QRect> *templ)
 
 template <> void setupBindings<QFile>(Interface<QFile> *templ)
   {
-  static ClassDef<3,0,0> cls = {
+  static ClassDef<2,0,0> cls = {
     {
       templ->defaultConstructor(),
       templ->constructor<QFile*(const QString&)>("fromFilename"),
