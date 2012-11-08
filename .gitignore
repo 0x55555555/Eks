@@ -15,6 +15,7 @@
 *.ncb
 *.suo
 *.sdf
+*.obj
 *.opensdf
 *.user
 *.a
