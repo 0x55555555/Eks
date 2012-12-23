@@ -3,38 +3,38 @@
 
 #include "XGuiGlobal"
 #include "QWidget"
-#include "XColour"
-#include "XVector3D"
+#include "Colour"
+#include "Eks::Vector3D"
 
 class QVBoxLayout;
 class QHBoxLayout;
 class QtColorTriangle;
-class XVector3DWidget;
+class Eks::Vector3DWidget;
 class XFloatWidget;
 class QGroupBox;
 
-class EKSGUI_EXPORT XColourWidget : public QWidget
+class EKSGUI_EXPORT ColourWidget : public QWidget
     {
 Q_OBJECT
 public:
-    XColourWidget( QWidget *parent = 0, const XColour &col = XColour(), bool hasAlpha=true );
+    ColourWidget( QWidget *parent = 0, const Colour &col = Colour(), bool hasAlpha=true );
 
     double alpha();
-    XColour colour();
+    Colour colour();
 
 Q_SIGNALS:
-    void colourChanged( const XColour & );
+    void colourChanged( const Colour & );
 
 public Q_SLOTS:
-    void setColour( const XColour & );
+    void setColour( const Colour & );
 
 private Q_SLOTS:
     void setAlpha(double);
-    void rgbChanged( const XVector3D & );
+    void rgbChanged( const Eks::Vector3D & );
     void pickerChanged( QColor );
 
 private:
-    XVector3DWidget *_slider;
+    Eks::Vector3DWidget *_slider;
     XFloatWidget *_alpha;
     QtColorTriangle *_picker;
     QVBoxLayout *_outerLayout;

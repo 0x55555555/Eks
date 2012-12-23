@@ -8,18 +8,20 @@ include("../../EksCore/GeneralOptions.pri")
 
 SOURCES += ../src/XFloatWidget.cpp \
     ../src/XVector2DWidget.cpp \
-    ../src/XVector3DWidget.cpp \
+    ../src/Eks::Vector3DWidget.cpp \
     ../src/XVector4DWidget.cpp \
-    ../src/XColourWidget.cpp \
-    ../src/pickerWidget/qtcolortriangle.cpp
+    ../src/ColourWidget.cpp \
+    ../src/pickerWidget/qtcolortriangle.cpp \
+    ../src/XProfileWidget.cpp
 
 HEADERS += ../XFloatWidget \
     ../XVector2DWidget \
-    ../XVector3DWidget \
+    ../Eks::Vector3DWidget \
     ../XVector4DWidget \
-    ../XColourWidget \
+    ../ColourWidget \
     ../src/pickerWidget/qtcolortriangle.h \
-    ../XGuiGlobal
+    ../XGuiGlobal \
+    ../XProfileWidget
 
 LIBS += -lEksCore
 
