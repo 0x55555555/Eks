@@ -50,7 +50,7 @@ Value::Value(float x)
   currentInterface()->newValue(this, x);
   }
 
-Value::Value(const QString &str)
+Value::Value(const Eks::String &str)
   {
   currentInterface()->newValue(this, str);
   }
@@ -227,9 +227,9 @@ bool Value::toBoolean() const
   return currentInterface()->toBoolean(this);
   }
 
-QString Value::toString() const
+Eks::String Value::toString() const
   {
-  QString out;
+  Eks::String out;
   currentInterface()->toString(&out, this);
   return out;
   }
@@ -250,7 +250,7 @@ QVariant Value::toVariant(int typeHint) const
     }
   else if(typeHint == QVariant::String || isString())
     {
-    return toString();
+    return toString().toQString();
     }
   else if (typeHint == qMetaTypeId<Object>())
     {

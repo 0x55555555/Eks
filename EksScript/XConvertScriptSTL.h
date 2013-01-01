@@ -38,7 +38,7 @@ template <> struct NativeToJS<std::string>
   {
   Value operator()(std::string const &v) const
     {
-    return Value(QString::fromStdString(v));
+    return Value(Eks::String(v));
     }
   };
 

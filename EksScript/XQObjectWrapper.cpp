@@ -3,6 +3,7 @@
 #include "QMetaProperty"
 #include "QVarLengthArray"
 #include "XFunctions.h"
+#include "QtCore/QDebug"
 
 #ifdef X_DEBUG
 # define X_TYPE_DEBUG
@@ -232,7 +233,7 @@ void QObjectWrapper::initiate()
     {
     FunctionDef extraWidgetFunctions[] =
     {
-      widget->constMethod<QPoint (QWidget*, const QPoint&), &QWidget::mapTo>("mapTo"),
+      widget->constMethod<QPoint (const QWidget*, const QPoint&), &QWidget::mapTo>("mapTo"),
       widget->constMethod<QPoint (const QPoint&), &QWidget::mapToGlobal>("mapToGlobal"),
     };
 
@@ -407,7 +408,7 @@ struct CallArgument
       }
     else if (callType == QMetaType::QString)
       {
-      qstringPtr = new (&allocData) QString(Convert::from<QString>(value));
+      qstringPtr = new (&allocData) QString(Convert::from<Eks::String>(value).toQString());
       type = callType;
     }
     else if (callType == QMetaType::QObjectStar)
@@ -415,7 +416,7 @@ struct CallArgument
       qobjectPtr = Convert::from<QObject>(value);
       type = callType;
     }
-    else if (callType == QMetaType::QWidgetStar)
+    else if (callType == qMetaTypeId<QWidget*>())
     {
       qobjectPtr = Convert::from<QWidget>(value);
       type = callType;
@@ -697,14 +698,14 @@ struct Utils
     {
     QMetaMethod method = ths->metaObject()->method(id);
 #ifdef X_TYPE_DEBUG
-    const char *name = method.signature();
+    QByteArray name = method.methodSignature();
     (void)name;
 #endif
     QList<QByteArray> types = method.parameterTypes();
     int length = args.length();
     if(length < types.size())
       {
-      return toss(QString("Too few arguments to method ") + method.signature());
+      return toss(QString("Too few arguments to method ") + QString::fromLocal8Bit(method.methodSignature()));
       }
     length = qMin(length, types.size());
 

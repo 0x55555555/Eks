@@ -1,14 +1,14 @@
 #include "XProfileWidget"
-#include "QTreeWidget"
-#include "QListWidget"
-#include "QVBoxLayout"
-#include "QHeaderView"
-#include "QPushButton"
 #include "XProfiler"
-#include "QCheckBox"
-#include "QStackedLayout"
-#include "QMenu"
-#include "QDebug"
+#include "QtWidgets/QTreeWidget"
+#include "QtWidgets/QListWidget"
+#include "QtWidgets/QVBoxLayout"
+#include "QtWidgets/QHeaderView"
+#include "QtWidgets/QPushButton"
+#include "QtWidgets/QCheckBox"
+#include "QtWidgets/QStackedLayout"
+#include "QtWidgets/QMenu"
+#include "QtCore/QDebug"
 
 class Item : public QTreeWidgetItem
   {
@@ -84,14 +84,14 @@ XProfilerWidget::XProfilerWidget(QWidget *parent) : QWidget(parent)
 
 void XProfilerWidget::clear()
   {
-  XProfiler::clearResults();
+  Eks::Profiler::clearResults();
   update();
   }
 
 void XProfilerWidget::chooseFilter()
   {
   QList <xuint32> types;
-  findAllTypes(XProfiler::rootContext(), types);
+  findAllTypes(Eks::Profiler::rootContext(), types);
 
   QMenu menu;
 
@@ -99,7 +99,7 @@ void XProfilerWidget::chooseFilter()
     {
     if(t != X_UINT32_SENTINEL)
       {
-      QAction* act = menu.addAction(XProfiler::stringForContext(t));
+      QAction* act = menu.addAction(Eks::Profiler::stringForContext(t));
       act->setCheckable(true);
       act->setData(t);
       act->setChecked(!_filteredTypes.contains(t));
@@ -132,20 +132,20 @@ void XProfilerWidget::update()
   if(_showTree->isChecked())
     {
     _tree->setSortingEnabled(false);
-    populateTreeFromContext(XProfiler::rootContext());
+    populateTreeFromContext(Eks::Profiler::rootContext());
     _stackedLayout->setCurrentWidget(_tree);
     _tree->setSortingEnabled(true);
     }
   else
     {
     _list->setSortingEnabled(false);
-    populateListFromContext(XProfiler::rootContext());
+    populateListFromContext(Eks::Profiler::rootContext());
     _stackedLayout->setCurrentWidget(_list);
     _list->setSortingEnabled(true);
     }
   }
 
-void XProfilerWidget::populateTreeFromContext(const XProfiler::ProfilingContext* ctx, QTreeWidgetItem* parent)
+void XProfilerWidget::populateTreeFromContext(const Eks::Profiler::ProfilingContext* ctx, QTreeWidgetItem* parent)
   {
   if(ctx && !_filteredTypes.contains(ctx->context()))
     {
@@ -164,7 +164,7 @@ void XProfilerWidget::populateTreeFromContext(const XProfiler::ProfilingContext*
         }
       }
 
-    XProfiler::ProfilingContext* child=ctx->firstChild();
+    Eks::Profiler::ProfilingContext* child=ctx->firstChild();
     while(child)
       {
       populateTreeFromContext(child, item);
@@ -173,7 +173,7 @@ void XProfilerWidget::populateTreeFromContext(const XProfiler::ProfilingContext*
     }
   }
 
-void XProfilerWidget::populateListFromContext(const XProfiler::ProfilingContext* ctx)
+void XProfilerWidget::populateListFromContext(const Eks::Profiler::ProfilingContext* ctx)
   {
   QHash<const char *, XTimeStatistics> items;
   populateHashFromContext(ctx, items);
@@ -190,13 +190,13 @@ void XProfilerWidget::populateListFromContext(const XProfiler::ProfilingContext*
     }
   }
 
-void XProfilerWidget::populateHashFromContext(const XProfiler::ProfilingContext* ctx, QHash<const char *, XTimeStatistics> &hash) const
+void XProfilerWidget::populateHashFromContext(const Eks::Profiler::ProfilingContext* ctx, QHash<const char *, XTimeStatistics> &hash) const
   {
   if(ctx && !_filteredTypes.contains(ctx->context()))
     {
     hash[ctx->message()].append(ctx->timeStats());
 
-    XProfiler::ProfilingContext* child=ctx->firstChild();
+    Eks::Profiler::ProfilingContext* child=ctx->firstChild();
     while(child)
       {
       populateHashFromContext(child, hash);
@@ -205,14 +205,14 @@ void XProfilerWidget::populateHashFromContext(const XProfiler::ProfilingContext*
     }
   }
 
-void XProfilerWidget::findAllTypes(const XProfiler::ProfilingContext *ctx, QList <xuint32> &types) const
+void XProfilerWidget::findAllTypes(const Eks::Profiler::ProfilingContext *ctx, QList <xuint32> &types) const
   {
   if(!types.contains(ctx->context()))
     {
     types << ctx->context();
     }
 
-  XProfiler::ProfilingContext* child=ctx->firstChild();
+  Eks::Profiler::ProfilingContext* child=ctx->firstChild();
   while(child)
     {
     findAllTypes(child, types);

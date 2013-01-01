@@ -2,18 +2,18 @@
 #define VECTOR3DWIDGET_H
 
 #include "XGuiGlobal"
-#include "QWidget"
-#include "Eks::Vector3D"
+#include "QtWidgets/QWidget"
+#include "XMathVector"
 
 class QVBoxLayout;
 class XFloatWidget;
 
-class EKSGUI_EXPORT Eks::Vector3DWidget : public QWidget
+class EKSGUI_EXPORT XVector3DWidget : public QWidget
     {
 Q_OBJECT
 public:
-    Eks::Vector3DWidget( QWidget *parent = 0, Eks::Vector3D val=Eks::Vector3D::Zero(), QStringList labels=QStringList());
-    Eks::Vector3DWidget( Eks::Vector3D val, Eks::Vector3D min, Eks::Vector3D max, QStringList labels=QStringList(), QWidget *parent = 0);
+    XVector3DWidget( QWidget *parent = 0, Eks::Vector3D val=Eks::Vector3D::Zero(), QStringList labels=QStringList());
+    XVector3DWidget( Eks::Vector3D val, Eks::Vector3D min, Eks::Vector3D max, QStringList labels=QStringList(), QWidget *parent = 0);
 
     void setMaximum( Eks::Vector3D );
     Eks::Vector3D maximum() const;

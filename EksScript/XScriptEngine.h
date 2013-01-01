@@ -6,6 +6,11 @@
 
 class QFile;
 
+namespace Eks
+{
+class String;
+}
+
 namespace XScript
 {
 class Source;
@@ -49,7 +54,7 @@ public:
   virtual void newValue(Value* val, xuint64 i) = 0;
   virtual void newValue(Value* val, float i) = 0;
   virtual void newValue(Value* val, double i) = 0;
-  virtual void newValue(Value* val, const QString& i) = 0;
+  virtual void newValue(Value* val, const Eks::String& i) = 0;
   virtual void newValue(Value* val, void *i) = 0;
   virtual void newValue(Value* val, const QVariantMap &i) = 0;
   virtual void newValue(Value* val, const QVariantList &i) = 0;
@@ -74,7 +79,7 @@ public:
   virtual bool toBoolean(const Value *val) = 0;
   virtual double toNumber(const Value *val) = 0;
   virtual xint64 toInteger(const Value *val) = 0;
-  virtual void toString(QString *, const Value *val) = 0;
+  virtual void toString(Eks::String *, const Value *val) = 0;
   virtual void toMap(QVariantMap *, const Value *val) = 0;
   virtual void toList(QVariantList *, const Value *val) = 0;
   virtual void *toExternal(const Value *val) = 0;

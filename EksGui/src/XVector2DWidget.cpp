@@ -1,13 +1,13 @@
 #include "XVector2DWidget"
-#include "QVBoxLayout"
 #include "XFloatWidget"
-#include "QLabel"
+#include "QtWidgets/QVBoxLayout"
+#include "QtWidgets/QLabel"
+#include "QtGui/QKeyEvent"
 
 #include "cmath"
 
-#include "QKeyEvent"
 
-XVector2DWidget::XVector2DWidget( QWidget *parent, XVector2D val, QStringList labels) : QWidget( parent ),
+XVector2DWidget::XVector2DWidget( QWidget *parent, Eks::Vector2D val, QStringList labels) : QWidget( parent ),
         _x( new XFloatWidget( val.x(), -HUGE_VAL, HUGE_VAL, this ) ),
         _y( new XFloatWidget( val.y(), -HUGE_VAL, HUGE_VAL, this ) ),
         _setting( false )
@@ -33,7 +33,7 @@ XVector2DWidget::XVector2DWidget( QWidget *parent, XVector2D val, QStringList la
     connect( _y, SIGNAL(valueChanged(double)), this, SLOT(setValues()) );
     }
 
-XVector2DWidget::XVector2DWidget( XVector2D val, XVector2D min, XVector2D max, QStringList labels, QWidget *parent ) : QWidget( parent ),
+XVector2DWidget::XVector2DWidget( Eks::Vector2D val, Eks::Vector2D min, Eks::Vector2D max, QStringList labels, QWidget *parent ) : QWidget( parent ),
         _x( new XFloatWidget( val.x(), min.x(), max.x(), this ) ),
         _y( new XFloatWidget( val.y(), min.y(), max.y(), this ) ),
         _setting( false )
@@ -70,39 +70,39 @@ void XVector2DWidget::setReadOnly(bool t)
     _y->setReadOnly(t);
     }
 
-void XVector2DWidget::setMaximum( XVector2D in )
+void XVector2DWidget::setMaximum( Eks::Vector2D in )
     {
     _x->setMaximum( in.x() );
     _y->setMaximum( in.y() );
     }
 
-XVector2D XVector2DWidget::maximum() const
+Eks::Vector2D XVector2DWidget::maximum() const
     {
-    return XVector2D( _x->maximum(), _y->maximum() );
+    return Eks::Vector2D( _x->maximum(), _y->maximum() );
     }
 
-void XVector2DWidget::setMinimum( XVector2D in )
+void XVector2DWidget::setMinimum( Eks::Vector2D in )
     {
     _x->setMinimum( in.x() );
     _y->setMinimum( in.y() );
     }
 
-XVector2D XVector2DWidget::minimum() const
+Eks::Vector2D XVector2DWidget::minimum() const
     {
-    return XVector2D( _x->minimum(), _y->minimum() );
+    return Eks::Vector2D( _x->minimum(), _y->minimum() );
     }
 
-XVector2D XVector2DWidget::range() const
+Eks::Vector2D XVector2DWidget::range() const
     {
     return maximum() - minimum();
     }
 
-XVector2D XVector2DWidget::value() const
+Eks::Vector2D XVector2DWidget::value() const
     {
-    return XVector2D( _x->value(), _y->value() );
+    return Eks::Vector2D( _x->value(), _y->value() );
     }
 
-void XVector2DWidget::setValue( XVector2D in )
+void XVector2DWidget::setValue( Eks::Vector2D in )
     {
     if( !_setting )
         {
@@ -116,7 +116,7 @@ void XVector2DWidget::setValue( XVector2D in )
 
 void XVector2DWidget::setValues()
     {
-    setValue( XVector2D( _x->value(), _y->value() ) );
+    setValue( Eks::Vector2D( _x->value(), _y->value() ) );
     }
 
 void XVector2DWidget::keyPressEvent( QKeyEvent *event )

@@ -15,7 +15,7 @@ template <> struct JSToNative<QIODevice::OpenMode>
 
   ResultType operator()(Value const &h) const
     {
-    QString n = Convert::from<QString>(h);
+    Eks::String n = Convert::from<Eks::String>(h);
     if(n == "write")
       {
       return QIODevice::WriteOnly;
@@ -182,11 +182,10 @@ template <> void setupBindings<QIODevice>(Interface<QIODevice> *templ)
   {
   typedef MethodToInCa<QIODevice, qint64(const QByteArray &), &QIODevice::write> WriteType;
 
-  InterfaceBase* tempB = templ;
   static ClassDef<0,0,3> cls = {
     {
     templ->method<bool(QIODevice::OpenMode), &QIODevice::open>("open"),
-    tempB->method<WriteType>("write"),
+    InterfaceBase::method<WriteType>("write"),
     templ->method<void(), &QIODevice::close>("close")
     }
   };

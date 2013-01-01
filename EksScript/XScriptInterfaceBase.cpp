@@ -6,7 +6,7 @@ namespace XScript
 {
 InterfaceBase::InterfaceBase(xsize typeID,
                xsize nonPointerTypeID,
-               const QString &typeName,
+               const Eks::String &typeName,
                const InterfaceBase *parent)
   : _typeName(typeName),
     _typeId(typeID),
@@ -28,7 +28,7 @@ InterfaceBase::InterfaceBase(int typeId,
                                int nonPointerTypeId,
                                int baseTypeId,
                                int baseNonPointerTypeId,
-                               const QString &typeName,
+                               const Eks::String &typeName,
                                const InterfaceBase *parent,
                                ToScriptFn tScr,
                                FromScriptFn fScr)
@@ -336,7 +336,7 @@ void *InterfaceBase::prototype()
   }
 */
 
-XUnorderedMap<int, InterfaceBase*> _interfaces;
+Eks::UnorderedMap<int, InterfaceBase*> _interfaces;
 void registerInterface(int id, int nonPtrId, InterfaceBase *interface)
   {
   xAssert(!_interfaces.contains(id));

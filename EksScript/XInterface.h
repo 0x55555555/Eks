@@ -220,7 +220,7 @@ public:
 
 #endif
 
-  static Interface *create(const QString &name)
+  static Interface *create(const Eks::String &name)
     {
     xsize id = (xsize)qMetaTypeId<T*>();
     xsize nonPointerId = (xsize)internal::QMetaTypeIdOrInvalid<T>::id();
@@ -233,7 +233,7 @@ public:
     }
 
   template <typename PARENT, typename BASE>
-  static Interface *createWithParent(const QString &name, const Interface<PARENT> *constParent, const Interface<BASE> *constBase)
+  static Interface *createWithParent(const Eks::String &name, const Interface<PARENT> *constParent, const Interface<BASE> *constBase)
     {
     xsize baseId = constBase->typeId();
     xsize baseNonPointerId = (xsize)constBase->nonPointerTypeId();
@@ -271,7 +271,7 @@ public:
     xsize nonPointerTypeId,
     xsize baseTypeId,
     xsize baseNonPointerTypeId,
-    const QString &name,
+    const Eks::String &name,
     const InterfaceBase* parent)
     : InterfaceBase(typeId, nonPointerTypeId, baseTypeId, baseNonPointerTypeId,
                                 name,
@@ -389,7 +389,7 @@ public:
 private:
   typedef XScript::ClassCreator_Factory<T> Factory;
 
-  static Interface &instance(const QString &name, xsize id, xsize nonPointerId, xsize baseId, xsize baseNonPointerId, const InterfaceBase* parent)
+  static Interface &instance(const Eks::String &name, xsize id, xsize nonPointerId, xsize baseId, xsize baseNonPointerId, const InterfaceBase* parent)
     {
     static Interface bob(id, nonPointerId, baseId, baseNonPointerId,name, parent);
     return bob;

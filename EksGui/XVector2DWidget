@@ -2,8 +2,8 @@
 #define VECTOR2DWIDGET_H
 
 #include "XGuiGlobal"
-#include "QWidget"
-#include "XVector2D"
+#include "QtWidgets/QWidget"
+#include "XMathVector"
 
 class QVBoxLayout;
 class XFloatWidget;
@@ -12,23 +12,23 @@ class EKSGUI_EXPORT XVector2DWidget : public QWidget
     {
 Q_OBJECT
 public:
-    XVector2DWidget( QWidget *parent = 0, XVector2D val=XVector2D::Zero(), QStringList labels=QStringList() );
-    XVector2DWidget( XVector2D val, XVector2D min, XVector2D max, QStringList labels=QStringList(), QWidget *parent = 0);
+    XVector2DWidget( QWidget *parent = 0, Eks::Vector2D val=Eks::Vector2D::Zero(), QStringList labels=QStringList() );
+    XVector2DWidget( Eks::Vector2D val, Eks::Vector2D min, Eks::Vector2D max, QStringList labels=QStringList(), QWidget *parent = 0);
 
-    void setMaximum( XVector2D );
-    XVector2D maximum() const;
-    void setMinimum( XVector2D );
-    XVector2D minimum() const;
-    XVector2D range() const;
-    XVector2D value() const;
+    void setMaximum( Eks::Vector2D );
+    Eks::Vector2D maximum() const;
+    void setMinimum( Eks::Vector2D );
+    Eks::Vector2D minimum() const;
+    Eks::Vector2D range() const;
+    Eks::Vector2D value() const;
 
     bool isReadOnly() const;
 
 Q_SIGNALS:
-    void valueChanged( XVector2D );
+    void valueChanged( Eks::Vector2D );
 
 public Q_SLOTS:
-    void setValue( XVector2D );
+    void setValue( Eks::Vector2D );
     void setReadOnly(bool);
 
 protected:

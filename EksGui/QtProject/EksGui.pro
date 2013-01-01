@@ -4,21 +4,33 @@
 TARGET = EksGui
 TEMPLATE = lib
 
+QT += widgets
+
 include("../../EksCore/GeneralOptions.pri")
+
+# moc files are embedded here to prevent error under qt 5 and msvc2012
 
 SOURCES += ../src/XFloatWidget.cpp \
     ../src/XVector2DWidget.cpp \
-    ../src/Eks::Vector3DWidget.cpp \
+    ../src/XVector3DWidget.cpp \
     ../src/XVector4DWidget.cpp \
-    ../src/ColourWidget.cpp \
+    ../src/XColourWidget.cpp \
     ../src/pickerWidget/qtcolortriangle.cpp \
-    ../src/XProfileWidget.cpp
+    ../src/XProfileWidget.cpp \
+    moc_XVector4DWidget.cpp \
+    moc_XVector3DWidget.cpp \
+    moc_XVector2DWidget.cpp \
+    moc_XProfileWidget.cpp \
+    moc_XFloatWidget.cpp \
+    moc_XColourWidget.cpp \
+    moc_qtcolortriangle.cpp
 
-HEADERS += ../XFloatWidget \
+OTHER_FILES += \
+    ../XFloatWidget \
     ../XVector2DWidget \
-    ../Eks::Vector3DWidget \
+    ../XVector3DWidget \
     ../XVector4DWidget \
-    ../ColourWidget \
+    ../XColourWidget \
     ../src/pickerWidget/qtcolortriangle.h \
     ../XGuiGlobal \
     ../XProfileWidget

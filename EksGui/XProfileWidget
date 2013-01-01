@@ -1,9 +1,9 @@
 #ifndef XPROFILEWIDGET_H
 #define XPROFILEWIDGET_H
 
-#include "QObject"
-#include "QWidget"
-#include "XProfiler"
+#include "XGuiGlobal"
+#include "QtCore/QObject"
+#include "QtWidgets/QWidget"
 
 class QTreeWidget;
 class QListWidget;
@@ -12,9 +12,18 @@ class QCheckBox;
 class QStackedLayout;
 class QAction;
 
-class EKSCORE_EXPORT XProfilerWidget : public QWidget
+class XTimeStatistics;
+
+namespace Eks
+{
+class Profiler;
+class ProfilerProfilingContext;
+}
+
+class EKSGUI_EXPORT XProfilerWidget : public QWidget
   {
   Q_OBJECT
+
 public:
   XProfilerWidget(QWidget *parent = 0);
 
@@ -25,12 +34,12 @@ private Q_SLOTS:
   void setFilter(QAction*);
 
 private:
-  void populateTreeFromContext(const Profiler::ProfilingContext*, QTreeWidgetItem* parent = 0);
-  void populateListFromContext(const Profiler::ProfilingContext*);
+  void populateTreeFromContext(const Eks::ProfilerProfilingContext*, QTreeWidgetItem* parent = 0);
+  void populateListFromContext(const Eks::ProfilerProfilingContext*);
 
-  void populateHashFromContext(const Profiler::ProfilingContext*, QHash<const char *, XTimeStatistics> &) const;
+  void populateHashFromContext(const Eks::ProfilerProfilingContext*, QHash<const char *, XTimeStatistics> &) const;
 
-  void findAllTypes(const Profiler::ProfilingContext*, QList <xuint32> &) const;
+  void findAllTypes(const Eks::ProfilerProfilingContext*, QList <xuint32> &) const;
 
   QList <xuint32> _filteredTypes;
   QTreeWidget *_tree;

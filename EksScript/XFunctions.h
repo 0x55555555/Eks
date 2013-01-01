@@ -1850,10 +1850,14 @@ struct NativeToJS< ToInCaVoid<T, Sig, Func> > : NativeToJS_InCa_Base {};
 template <typename Type, typename ArgsType> class ArgumentUnpacker
   {
 public:
-  typedef typename std::remove_reference<Type>::type StoredType;
+  typedef typename XScript::Convert::internal::JSToNative<Type>::ResultType ResultType;
+  typedef typename std::remove_reference<ResultType>::type StoredNonRefType;
+  typedef typename std::remove_const<StoredNonRefType>::type StoredType;
 
-  ArgumentUnpacker(const ArgsType &v, xsize idx) : val(Convert::from<Type>(v.at(idx)))
+  ArgumentUnpacker(const ArgsType &v, xsize idx)// : val(std::move())
     {
+    ResultType t = Convert::from<Type>(v.at(idx));
+    val = std::move(t);
     }
 
   StoredType& operator()() { return val; }
