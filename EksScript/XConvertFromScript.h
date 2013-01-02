@@ -24,7 +24,9 @@ template <typename JST> struct JSToNative<JST const *> : JSToNative<JST> {};
 
 template <typename JST> struct JSToNative<JST &>
   {
-  typedef typename JSToNative<JST>::ResultType &ResultType;
+  typedef typename JSToNative<JST>::ResultType BaseResultType;
+  typedef typename std::remove_pointer<BaseResultType>::type NoPointer;
+  typedef NoPointer &ResultType;
 
   ResultType operator()(Value const &h) const
     {
@@ -215,6 +217,16 @@ template <typename C, xsize P, typename A> struct JSToNative<const Eks::StringBa
 template <typename C, xsize P, typename A> struct JSToNative<Eks::StringBase<C, P, A> >
   {
   typedef Eks::StringBase<C, P, A> ResultType;
+
+  ResultType operator()(Value const &h) const
+    {
+    return h.toString();
+    }
+  };
+
+template <> struct JSToNative<Eks::String>
+  {
+  typedef Eks::String ResultType;
 
   ResultType operator()(Value const &h) const
     {
