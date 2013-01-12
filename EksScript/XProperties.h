@@ -211,7 +211,7 @@ struct MemberToAccessors : MemberToGetter<T,PropertyType,MemVar>,
     */
 struct ThrowingSetter : XAccessorSetterType
   {
-  inline static void Set(Value property, Value, const internal::JSAccessorInfo &)
+  inline static void Set(Value, Value, const internal::JSAccessorInfo &)
     {
     //toss(QString("Native member property setter '%1' is configured to throw an exception when modifying this read-only member!").arg(Convert::from<QString>(property)));
     }
