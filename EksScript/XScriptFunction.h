@@ -3,7 +3,7 @@
 
 #include "XScriptGlobal.h"
 #include "XScriptEngine.h"
-#include "QMetaType"
+#include "QtCore/QMetaType"
 
 namespace XScript
 {

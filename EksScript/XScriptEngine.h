@@ -2,9 +2,13 @@
 #define XSCRIPTENGINE_H
 
 #include "XScriptGlobal.h"
-#include "QVariant"
 
+class QVariant;
 class QFile;
+class QString;
+
+template <typename K, typename V> class QMap;
+template <typename K> class QList;
 
 namespace Eks
 {
@@ -56,9 +60,9 @@ public:
   virtual void newValue(Value* val, double i) = 0;
   virtual void newValue(Value* val, const Eks::String& i) = 0;
   virtual void newValue(Value* val, void *i) = 0;
-  virtual void newValue(Value* val, const QVariantMap &i) = 0;
-  virtual void newValue(Value* val, const QVariantList &i) = 0;
-  virtual void newValue(Value* val, const QStringList &i) = 0;
+  virtual void newValue(Value* val, const QMap<QString, QVariant> &i) = 0;
+  virtual void newValue(Value* val, const QList<QVariant> &i) = 0;
+  virtual void newValue(Value* val, const QList<QString> &i) = 0;
   virtual void newValue(Value* val, const Value *i) = 0;
   virtual void newValue(Value* val, const Object *i) = 0;
   virtual void newValue(Value* val, const Function *i) = 0;
@@ -80,8 +84,8 @@ public:
   virtual double toNumber(const Value *val) = 0;
   virtual xint64 toInteger(const Value *val) = 0;
   virtual void toString(Eks::String *, const Value *val) = 0;
-  virtual void toMap(QVariantMap *, const Value *val) = 0;
-  virtual void toList(QVariantList *, const Value *val) = 0;
+  virtual void toMap(QMap<QString, QVariant> *, const Value *val) = 0;
+  virtual void toList(QList<QVariant> *, const Value *val) = 0;
   virtual void *toExternal(const Value *val) = 0;
 
   virtual xsize length(const Value *val) = 0;

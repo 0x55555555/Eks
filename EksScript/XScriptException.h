@@ -2,7 +2,7 @@
 #define XSCRIPTEXCEPTION_H
 
 #include "XScriptGlobal.h"
-#include "QString"
+#include "QtCore/QString"
 
 namespace XScript
 {

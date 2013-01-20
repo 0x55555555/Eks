@@ -62,6 +62,7 @@ template <typename T> struct NativeToJS<std::list<T> > : NativeToJSList< std::li
 template <typename T> struct NativeToJS<std::vector<T> > : NativeToJSList< std::vector<T> > {};
 template <typename T> struct NativeToJS<QVector<T> > : NativeToJSList< QVector<T> > {};
 template <typename T> struct NativeToJS<QList<T> > : NativeToJSList< QList<T> > {};
+template <typename T> struct NativeToJS<Eks::Vector<T> > : NativeToJSList< Eks::Vector<T> > {};
 template <> struct NativeToJS<QStringList> : NativeToJSList<QStringList> {};
 
 template <typename MapT> struct NativeToJSLookup
