@@ -211,7 +211,7 @@ struct MemberToAccessors : MemberToGetter<T,PropertyType,MemVar>,
     */
 struct ThrowingSetter : XAccessorSetterType
   {
-  inline static void Set(Value property, Value, const internal::JSAccessorInfo &)
+  inline static void Set(Value, Value, const internal::JSAccessorInfo &)
     {
     //toss(QString("Native member property setter '%1' is configured to throw an exception when modifying this read-only member!").arg(Convert::from<QString>(property)));
     }
@@ -363,7 +363,7 @@ struct XMethodToSetter : XAccessorSetterType
       Result handle = Convert::from<InputArg>( value );
 
       bool valid = true;
-      InputArg in = Convert::match<InputArg>(&handle, valid);
+      InputArg in = Convert::TypeMatcher<InputArg, Result>::match(&handle, valid);
       if(!valid)
         {
         toss(QString("Native member property setter '%1' could convert input argument!").arg(Convert::from<QString>(property) ));
@@ -391,7 +391,7 @@ struct XMethodToSetter : XAccessorSetterType
       Result handle = Convert::from<InputArg>( args.at(0) );
 
       bool valid = true;
-      InputArg in = Convert::match<InputArg>(&handle, valid);
+      InputArg in = Convert::TypeMatcher<InputArg, Result>::match(&handle, valid);
       if(!valid)
         {
         toss(QString("Native member property setter '%1' could convert input argument!") );

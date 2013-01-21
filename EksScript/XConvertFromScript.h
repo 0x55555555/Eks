@@ -46,7 +46,8 @@ template <typename JST> struct JSToNative<JST &>
 
 template <typename JST> struct JSToNative<const JST &>
   {
-  typedef typename const JSToNative<JST &>::ResultType ResultType;
+  typedef typename JSToNative<JST &>::ResultType BaseResultType;
+  typedef const BaseResultType ResultType;
 
   ResultType operator()(Value const &h) const
     {

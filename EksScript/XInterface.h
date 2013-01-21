@@ -323,7 +323,7 @@ public:
 #if 1 /* i believe this problem was fixed. If you are reading this b/c
   you followed an assert() message, please report this as a bug.
   */
-      assert( 0 && "weak_dtor() got no native object!");
+      xAssert( 0 && "weak_dtor() got no native object!");
 #endif
       return;
       }
@@ -584,7 +584,8 @@ template <typename T, typename BASE> struct NativeToJSConvertableTypeInherited
   X_SCRIPTABLE_BUILD_CONSTRUCTABLE_TYPEDEF(type##Ctors, type, __VA_ARGS__)
 
 #define X_SCRIPTABLE_MATCHERS(type) \
-  template <> inline const type& match<const type&, type*>(type **in, bool& valid) { return ptrMatcher<type>(in, valid); }
+  template <> class TypeMatcher<const type&, type *> { public: \
+  static const type& match(type **in, bool &valid) { return ptrMatcher<type>(in, valid); } };
 
 #define X_SCRIPTABLE_TYPE_BASE(type)  \
   namespace XScript { namespace Convert { namespace internal { \

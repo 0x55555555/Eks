@@ -33,11 +33,40 @@ template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
   return **in;
   }
 
-template <typename Out, typename In> Out match(In *in, bool &valid)
+template <typename Out, typename In> class TypeMatcher
   {
-  valid = true;
-  return Out(*in);
-  }
+public:
+  };
+
+template <typename T> class TypeMatcher<const T &, T *>
+  {
+public:
+  static const T &match(T **in, bool &valid)
+    {
+    valid = true;
+    return Out(*in);
+    }
+  };
+
+template <typename T> class TypeMatcher<const T *, T *>
+  {
+public:
+  static const T *match(T **in, bool &valid)
+    {
+    valid = true;
+    return *in;
+    }
+  };
+
+template <typename T> class TypeMatcher<T *, T *>
+  {
+public:
+  static T *match(T **in, bool &valid)
+    {
+    valid = true;
+    return *in;
+    }
+  };
 
 namespace internal
 {
