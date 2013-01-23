@@ -16,7 +16,7 @@ template <typename T, typename U> T *castFromBase(U *ptr)
   return dynamic_cast<T*>(ptr);
   }
 
-template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
+template <typename T> inline T &ptrMatcher(T **in, bool& valid)
   {
   if(!*in)
     {
@@ -36,32 +36,8 @@ template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
 template <typename Out, typename In> class TypeMatcher
   {
 public:
-  };
-
-template <typename T> class TypeMatcher<const T &, T *>
-  {
-public:
-  static const T &match(T **in, bool &valid)
-    {
-    valid = true;
-    return Out(*in);
-    }
-  };
-
-template <typename T> class TypeMatcher<const T *, T *>
-  {
-public:
-  static const T *match(T **in, bool &valid)
-    {
-    valid = true;
-    return *in;
-    }
-  };
-
-template <typename T> class TypeMatcher<T *, T *>
-  {
-public:
-  static T *match(T **in, bool &valid)
+  typedef typename std::remove_reference<In>::type NoRef;
+  static Out match(NoRef *in, bool &valid)
     {
     valid = true;
     return *in;

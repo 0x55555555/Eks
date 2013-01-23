@@ -1,6 +1,7 @@
 #ifndef XCONVERTSCRIPTSTL_H
 #define XCONVERTSCRIPTSTL_H
 
+#include <vector>
 #include "XConvertFromScript.h"
 #include "XConvertToScript.h"
 #include "XScriptObject.h"
