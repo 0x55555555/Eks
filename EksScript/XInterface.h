@@ -222,8 +222,8 @@ public:
 
   static Interface *create(const Eks::String &name)
     {
-    xsize id = (xsize)qMetaTypeId<T*>();
-    xsize nonPointerId = (xsize)internal::QMetaTypeIdOrInvalid<T>::id();
+    int id = qMetaTypeId<T*>();
+    int nonPointerId = internal::QMetaTypeIdOrInvalid<T>::id();
 
     Interface &bob = instance(name, id, nonPointerId, id, nonPointerId, 0);
     registerInterface(&bob);
@@ -235,11 +235,11 @@ public:
   template <typename PARENT, typename BASE>
   static Interface *createWithParent(const Eks::String &name, const Interface<PARENT> *constParent, const Interface<BASE> *constBase)
     {
-    xsize baseId = constBase->typeId();
-    xsize baseNonPointerId = (xsize)constBase->nonPointerTypeId();
+    int baseId = constBase->typeId();
+    int baseNonPointerId = (xsize)constBase->nonPointerTypeId();
 
-    xsize id = qMetaTypeId<T*>();
-    xsize nonPointerId = internal::QMetaTypeIdOrInvalid<T>::id();
+    int id = qMetaTypeId<T*>();
+    int nonPointerId = internal::QMetaTypeIdOrInvalid<T>::id();
 
     xAssert(baseId != id);
     xAssert(nonPointerId == 0 || nonPointerId != baseNonPointerId);
@@ -267,10 +267,10 @@ public:
     return bob;
     }
 
-  Interface(xsize typeId,
-    xsize nonPointerTypeId,
-    xsize baseTypeId,
-    xsize baseNonPointerTypeId,
+  Interface(int typeId,
+    int nonPointerTypeId,
+    int baseTypeId,
+    int baseNonPointerTypeId,
     const Eks::String &name,
     const InterfaceBase* parent)
     : InterfaceBase(typeId, nonPointerTypeId, baseTypeId, baseNonPointerTypeId,
@@ -389,7 +389,7 @@ public:
 private:
   typedef XScript::ClassCreator_Factory<T> Factory;
 
-  static Interface &instance(const Eks::String &name, xsize id, xsize nonPointerId, xsize baseId, xsize baseNonPointerId, const InterfaceBase* parent)
+  static Interface &instance(const Eks::String &name, int id, int nonPointerId, int baseId, int baseNonPointerId, const InterfaceBase* parent)
     {
     static Interface bob(id, nonPointerId, baseId, baseNonPointerId,name, parent);
     return bob;

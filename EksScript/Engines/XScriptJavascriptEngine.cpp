@@ -1026,7 +1026,7 @@ public:
   void call(const Function *fn,
             Value *out,
             const Object &self,
-            int argc,
+            xsize argc,
             const Value *args,
             bool *error,
             QString *message) X_OVERRIDE

@@ -220,8 +220,8 @@ public:
                  ToScriptFn convertTo=0,
                  FromScriptFn convertFrom=0);
 
-  InterfaceBase(xsize typeID,
-                 xsize nonPointerTypeID,
+  InterfaceBase(int typeID,
+                 int nonPointerTypeID,
                  const Eks::String &typeName,
                  const InterfaceBase *parent);
   ~InterfaceBase();

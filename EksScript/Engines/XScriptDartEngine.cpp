@@ -404,7 +404,7 @@ public:
       functionSource += leadIn + name + "(" + callArgs + ") native \"" + resolvedName + "\";\n";
       }
 
-    
+
     functionSource = "class " + i->typeName() +
       " extends " + parentName + " {\n" +
       functionSource +
@@ -416,8 +416,8 @@ public:
       }
 
     QString url = getDartUrl(i);
-    functionSource = "#library(\"" + url + "\");\n" 
-                     "#import(\"" WRAPPER_NAME "\");\n" + 
+    functionSource = "#library(\"" + url + "\");\n"
+                     "#import(\"" WRAPPER_NAME "\");\n" +
                       functionSource;
 
     _libs[url] = functionSource;
@@ -771,7 +771,7 @@ public:
   void call(const Function *,
             Value *,
             const Object &,
-            int,
+            xsize,
             const Value *,
             bool *,
             QString *)

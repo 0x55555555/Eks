@@ -256,7 +256,7 @@ template <> struct JSToNative<QByteArray>
   ResultType operator()(Value const &h) const
     {
     Eks::String s = h.toString();
-    return QByteArray(s.data(), s.length());
+    return QByteArray(s.data(), (int)s.length());
     }
   };
 

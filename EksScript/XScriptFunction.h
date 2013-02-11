@@ -46,7 +46,7 @@ public:
 
   bool isValid() const;
 
-  void callWithTryCatch(Value *result, const Object &thisObject, int argc, const Value args[], bool *error, QString *) const;
+  void callWithTryCatch(Value *result, const Object &thisObject, xsize argc, const Value args[], bool *error, QString *) const;
   //XScriptValue call(const XScriptObject &thisObject, int argc, const XScriptValue args[]) const;
   //void callAsConstructor(Value *result, const Arguments&);
 

@@ -596,11 +596,11 @@ private:
 
 struct Utils
   {
-  static void signalDart(internal::DartArguments args)
+  static void signalDart(internal::DartArguments X_UNUSED(args))
     {
     }
 
-  static Value signal(Value, const internal::JSAccessorInfo& info)
+  static Value signal(Value, const internal::JSAccessorInfo& X_UNUSED(info))
     {
     //QObject *ths = Convert::from<QObject>(info.calleeThis());
     //int id = Convert::from<int>(info.data());
@@ -634,7 +634,7 @@ struct Utils
     return Value();
     }
 
-  static void readDart(internal::DartArguments args)
+  static void readDart(internal::DartArguments X_UNUSED(args))
     {
     xAssertFail();
     }
@@ -660,7 +660,7 @@ struct Utils
     return Value(value);
     }
 
-  static void writeDart(internal::DartArguments args)
+  static void writeDart(internal::DartArguments X_UNUSED(args))
     {
     xAssertFail();
     }
@@ -677,12 +677,12 @@ struct Utils
     ths->metaObject()->property(id).write(ths, value.toVariant());
     }
 
-  static void methodDart(internal::DartArguments args)
+  static void methodDart(internal::DartArguments X_UNUSED(args))
     {
     xAssertFail();
     }
 
-  static Value method(const internal::JSArguments& args)
+  static Value method(const internal::JSArguments& X_UNUSED(args))
     {
     //QObject *ths = Convert::from<QObject>(args.calleeThis());
     xAssertFail();
@@ -702,7 +702,7 @@ struct Utils
     (void)name;
 #endif
     QList<QByteArray> types = method.parameterTypes();
-    int length = args.length();
+    int length = (int)args.length();
     if(length < types.size())
       {
       return toss(QString("Too few arguments to method ") + QString::fromLocal8Bit(method.methodSignature()));
@@ -949,7 +949,7 @@ struct Utils
     }
 #endif
 
-  static Value emitSignal(internal::JSArguments const &xArgs)
+  static Value emitSignal(internal::JSArguments const &X_UNUSED(xArgs))
     {
 #if 0
     v8::Handle<v8::Object> calleeThis = getV8Internal(xArgs.callee());
@@ -974,10 +974,10 @@ struct Utils
   };
 
 void QObjectWrapper::buildInterface(
-    InterfaceBase *interface,
-    const QMetaObject *metaObject,
-    FunctionDef* extraFns,
-    xsize extraFnCount)
+    InterfaceBase *X_UNUSED(interface),
+    const QMetaObject *X_UNUSED(metaObject),
+    FunctionDef* X_UNUSED(extraFns),
+    xsize X_UNUSED(extraFnCount))
   {/*
 
   static ClassDef<1,0,0> qobjectdesc = {

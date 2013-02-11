@@ -4,8 +4,8 @@
 
 namespace XScript
 {
-InterfaceBase::InterfaceBase(xsize typeID,
-               xsize nonPointerTypeID,
+InterfaceBase::InterfaceBase(int typeID,
+               int nonPointerTypeID,
                const Eks::String &typeName,
                const InterfaceBase *parent)
   : _typeName(typeName),

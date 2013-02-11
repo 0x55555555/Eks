@@ -37,7 +37,7 @@ public:
   InterfaceBase *getInterface() const
     {
     void *tid = internalField(TypeId);
-    return findInterface((xsize)tid);
+    return findInterface((int)tid);
     }
 
   Value get(const QString &) const;
