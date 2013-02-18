@@ -1,7 +1,11 @@
 #include "XDebugController.h"
 #include "QDebug"
 
-X_IMPLEMENT_DEBUG_INTERFACE(XDebugController)
+
+namespace Eks
+{
+
+X_IMPLEMENT_DEBUG_INTERFACE(DebugController)
 
 #define VERSION 1
 
@@ -44,7 +48,7 @@ QDataStream &operator>>(QDataStream& s, SetupInterface& i)
   return s >> i.id >> i.typeName;
   }
 
-XDebugController::XDebugController(bool client) : XDebugInterface()
+DebugController::DebugController(bool client)
   {
   _isClient = client;
   _maxInteface = 0;
@@ -52,14 +56,14 @@ XDebugController::XDebugController(bool client) : XDebugInterface()
 
   static Reciever recv[] =
     {
-    recieveFunction<Init, XDebugController, &XDebugController::onInit>(),
-    recieveFunction<SetupInterface, XDebugController, &XDebugController::onSetupInterface>()
+    recieveFunction<Init, DebugController, &DebugController::onInit>(),
+    recieveFunction<SetupInterface, DebugController, &DebugController::onSetupInterface>()
     };
 
   setRecievers(recv, X_ARRAY_COUNT(recv));
   }
 
-void XDebugController::onDebuggerConnected(bool client)
+void DebugController::onDebuggerConnected(bool client)
   {
   if(client)
     {
@@ -69,7 +73,7 @@ void XDebugController::onDebuggerConnected(bool client)
     }
   }
 
-void XDebugController::setupInterface(XDebugInterface *ifc)
+void DebugController::setupInterface(DebugInterface *ifc)
   {
   xAssert(ifc->interfaceID() == X_UINT32_SENTINEL);
   ifc->setInterfaceID(++_maxInteface);
@@ -80,7 +84,7 @@ void XDebugController::setupInterface(XDebugInterface *ifc)
   sendData(setup);
   }
 
-void XDebugController::onInit(const Init &i)
+void DebugController::onInit(const Init &i)
   {
   qDebug() << "Debugger Connected";
 
@@ -90,9 +94,9 @@ void XDebugController::onInit(const Init &i)
     }
   }
 
-void XDebugController::onSetupInterface(const SetupInterface &ifcDesc)
+void DebugController::onSetupInterface(const SetupInterface &ifcDesc)
   {
-  const XDebugInterfaceType *def = XDebugManager::findInterfaceType(ifcDesc.typeName);
+  const DebugInterfaceType *def = DebugManager::findInterfaceType(ifcDesc.typeName);
 
   if(!def)
     {
@@ -100,14 +104,16 @@ void XDebugController::onSetupInterface(const SetupInterface &ifcDesc)
     qCritical() << "Interface" << ifcDesc.typeName << "not registered";
     }
 
-  XDebugInterface *ifc = def->create(_isClient);
+  DebugInterface *ifc = def->create(_isClient);
   if(!ifc)
     {
     qCritical() << "Creation of interface" << def->type << "failed";
     }
 
   ifc->setInterfaceID(ifcDesc.id);
-  XDebugManager::addInterfaceLookup(ifc);
+  DebugManager::addInterfaceLookup(ifc);
 
   _createdInterfaces << ifc;
   }
+
+}

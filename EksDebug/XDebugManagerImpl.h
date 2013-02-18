@@ -10,16 +10,19 @@
 class QTcpSocket;
 class QTcpServer;
 
-class XDebugManagerImpl : private QObject
+namespace Eks
+{
+
+class DebugManagerImpl : private QObject
   {
   Q_OBJECT
 
 public:
-  XDebugManagerImpl(bool client);
-  ~XDebugManagerImpl();
+  DebugManagerImpl(bool client);
+  ~DebugManagerImpl();
 
-  XUnorderedMap<xuint32, XDebugInterface *> _interfaceMap;
-  QList<XDebugInterface *> _interfaces;
+  Eks::UnorderedMap<xuint32, DebugInterface *> _interfaceMap;
+  QList<DebugInterface *> _interfaces;
 
   QByteArray _preConnectClientData;
   QDataStream _clientStream;
@@ -27,7 +30,7 @@ public:
   QBuffer _scratchImpl;
   QDataStream _scratchBuffer;
 
-  XDebugInterface *_outputLocked;
+  DebugInterface *_outputLocked;
 
   QTcpServer *_server;
   QTcpSocket *_client;
@@ -35,16 +38,18 @@ public:
   xuint32 _readingID;
   xuint32 _bytesNeeded;
 
-  XDebugController *_controller;
+  DebugController *_controller;
 
   void flush();
   void setupClient();
-  void addInterfaceLookup(XDebugInterface *ifc);
+  void addInterfaceLookup(DebugInterface *ifc);
 
 private slots:
   void onNewConnection();
   void onDataReady();
   void onConnected();
   };
+
+}
 
 #endif // XDEBUGMANAGERIMPL_H

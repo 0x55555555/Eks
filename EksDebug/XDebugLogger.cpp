@@ -1,24 +1,28 @@
 #include "XDebugLogger.h"
+#include "QDataStream"
 #include "QDebug"
 
-QDataStream &operator<<(QDataStream &s, const XDebugLogger::LogEntry &l)
+namespace Eks
+{
+
+QDataStream &operator<<(QDataStream &s, const DebugLogger::LogEntry &l)
   {
   return s << l.level << l.entry;
   }
 
-QDataStream &operator>>(QDataStream &s, XDebugLogger::LogEntry &l)
+QDataStream &operator>>(QDataStream &s, DebugLogger::LogEntry &l)
   {
   return s >> l.level >> l.entry;
   }
 
-XDebugLogger *g_logger;
-void (*g_oldHandler)(QtMsgType, const char *);
-void handler(QtMsgType t, const char *m)
+DebugLogger *g_logger;
+QtMessageHandler g_oldHandler;
+void handler(QtMsgType t, const QMessageLogContext &c, const QString &m)
   {
   static bool inHandler = false;
   if(g_oldHandler)
     {
-    g_oldHandler(t, m);
+    g_oldHandler(t, c, m);
     }
 
   if(inHandler)
@@ -27,7 +31,7 @@ void handler(QtMsgType t, const char *m)
     }
   inHandler = true;
 
-  XDebugLogger::LogEntry e;
+  DebugLogger::LogEntry e;
   e.level = t;
   e.entry = m;
 
@@ -37,14 +41,14 @@ void handler(QtMsgType t, const char *m)
   inHandler = false;
 }
 
-X_IMPLEMENT_DEBUG_INTERFACE(XDebugLogger)
+X_IMPLEMENT_DEBUG_INTERFACE(DebugLogger)
 
-XDebugLogger::XDebugLogger(bool client)
+DebugLogger::DebugLogger(bool client)
   {
 
   static Reciever recv[] =
     {
-    recieveFunction<LogEntry, XDebugLogger, &XDebugLogger::onLogMessage>()
+    recieveFunction<LogEntry, DebugLogger, &DebugLogger::onLogMessage>()
     };
 
   setRecievers(recv, X_ARRAY_COUNT(recv));
@@ -53,27 +57,29 @@ XDebugLogger::XDebugLogger(bool client)
     {
     xAssert(!g_logger);
     g_logger = this;
-    g_oldHandler = qInstallMsgHandler(handler);
+    g_oldHandler = qInstallMessageHandler(handler);
     }
   }
 
-XDebugLogger::~XDebugLogger()
+DebugLogger::~DebugLogger()
   {
   if(g_logger)
     {
-    qInstallMsgHandler(g_oldHandler);
+    qInstallMessageHandler(g_oldHandler);
 
     g_logger = 0;
     g_oldHandler = 0;
     }
   }
 
-void XDebugLogger::emitLogMessage(const LogEntry &e)
+void DebugLogger::emitLogMessage(const LogEntry &e)
   {
   sendData(e);
   }
 
-void XDebugLogger::onLogMessage(const LogEntry &e)
+void DebugLogger::onLogMessage(const LogEntry &e)
   {
   qDebug() << e.level << e.entry;
   }
+
+}

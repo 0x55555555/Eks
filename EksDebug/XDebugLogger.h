@@ -3,12 +3,15 @@
 
 #include "XDebugInterface.h"
 
-class EKSDEBUG_EXPORT XDebugLogger : public XDebugInterface
+namespace Eks
+{
+
+class EKSDEBUG_EXPORT DebugLogger : public DebugInterface
   {
-  X_DEBUG_INTERFACE(XDebugLogger)
+  X_DEBUG_INTERFACE(DebugLogger)
 
 public:
-  ~XDebugLogger();
+  ~DebugLogger();
 
   struct LogEntry
     {
@@ -26,5 +29,7 @@ public:
 protected:
   void onLogMessage(const LogEntry &e);
   };
+
+}
 
 #endif // XDEBUGLOGGER_H

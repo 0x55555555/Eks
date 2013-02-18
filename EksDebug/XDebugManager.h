@@ -3,38 +3,42 @@
 
 #include "XDebugGlobal.h"
 
-class XDebugInterface;
-class XDebugManagerImpl;
-class XDebugInterfaceType;
 class QIODevice;
-class XDebugController;
 
-class EKSDEBUG_EXPORT XDebugManager
-  {
+namespace Eks
+{
+
 #ifdef X_ENABLE_APPLICATION_DEBUGGING
-public:
-#else
-private:
-#endif
-  XDebugManager(bool client);
+class DebugInterface;
+class DebugManagerImpl;
+class DebugInterfaceType;
+class DebugController;
+
+class EKSDEBUG_EXPORT DebugManager
+  {
+  DebugManager(bool client);
 
 public:
-  ~XDebugManager();
+  ~DebugManager();
 
-  typedef XDebugInterface *(*CreateInterfaceFunction)(bool client);
-  static const XDebugInterfaceType *findInterfaceType(const QString &);
-  static void registerInterfaceType(XDebugInterfaceType *);
-  static void registerInterface(XDebugInterface *ifc);
-  static void unregisterInterface(XDebugInterface *ifc);
-  static void addInterfaceLookup(XDebugInterface *ifc);
+  typedef DebugInterface *(*CreateInterfaceFunction)(bool client);
+  static const DebugInterfaceType *findInterfaceType(const QString &);
+  static void registerInterfaceType(DebugInterfaceType *);
+  static void registerInterface(DebugInterface *ifc);
+  static void unregisterInterface(DebugInterface *ifc);
+  static void addInterfaceLookup(DebugInterface *ifc);
 
-  static QDataStream &lockOutputStream(XDebugInterface *ifc);
+  static QDataStream &lockOutputStream(DebugInterface *ifc);
   static void unlockOutputStream();
 
 private:
-  typedef XDebugManagerImpl Impl;
+  typedef DebugManagerImpl Impl;
   Impl *_impl;
-  XDebugController *_controller;
+  DebugController *_controller;
   };
+
+#endif
+
+}
 
 #endif // XDEBUGMANAGER_H

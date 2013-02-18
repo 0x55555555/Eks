@@ -24,9 +24,11 @@ HEADERS += \
     XDebugManager.h \
     XDebugInterface.h \
     XDebugLogger.h \
-    XDebugManagerImpl.h \
     XDebugController.h
 
+OTHER_FILES += XDebugManagerImpl.h
+
+SOURCES += moc_XDebugManagerImpl.cpp
 
 LIBS += -lEksCore
 

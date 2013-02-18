@@ -1,36 +1,39 @@
 #include "XDebugInterface.h"
+#include "QDataStream"
 #include "QDebug"
 
+namespace Eks
+{
 
-XDebugInterface::OutputTunnel::OutputTunnel(XDebugInterface *ifc)
-    : _stream(XDebugManager::lockOutputStream(ifc))
+DebugInterface::OutputTunnel::OutputTunnel(DebugInterface *ifc)
+    : _stream(DebugManager::lockOutputStream(ifc))
   {
   }
 
-XDebugInterface::OutputTunnel::~OutputTunnel()
+DebugInterface::OutputTunnel::~OutputTunnel()
   {
-  XDebugManager::unlockOutputStream();
+  DebugManager::unlockOutputStream();
   }
 
-XDebugInterface::XDebugInterface() : _interfaceID(X_UINT32_SENTINEL)
+DebugInterface::DebugInterface() : _interfaceID(X_UINT32_SENTINEL)
   {
-  XDebugManager::registerInterface(this);
+  DebugManager::registerInterface(this);
   }
 
-XDebugInterface::~XDebugInterface()
+DebugInterface::~DebugInterface()
   {
-  XDebugManager::unregisterInterface(this);
+  DebugManager::unregisterInterface(this);
   }
 
-void XDebugInterface::setRecievers(const Reciever *r, xsize c)
+void DebugInterface::setRecievers(const Reciever *r, xsize c)
   {
   _recievers = r;
   _recieverCount = c;
   }
 
-void XDebugInterface::onDataRecieved(QDataStream& data)
+void DebugInterface::onDataRecieved(QDataStream& data)
   {
-  xuint8 id;
+  xuint32 id;
   data >> id;
 
   for(xsize i = 0; i < _recieverCount; ++i)
@@ -47,3 +50,5 @@ void XDebugInterface::onDataRecieved(QDataStream& data)
   xAssertFail();
   qWarning() << "Unknown message type recieved";
   }
+
+}

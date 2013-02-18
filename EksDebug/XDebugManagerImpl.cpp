@@ -4,7 +4,10 @@
 #include "QTcpServer"
 #include "QTcpSocket"
 
-XDebugManagerImpl::XDebugManagerImpl(bool client)
+namespace Eks
+{
+
+DebugManagerImpl::DebugManagerImpl(bool client)
   : _clientStream(&_preConnectClientData, QIODevice::WriteOnly),
     _scratchBuffer(&_scratchImpl),
     _client(0),
@@ -32,18 +35,18 @@ XDebugManagerImpl::XDebugManagerImpl(bool client)
     }
   }
 
-XDebugManagerImpl::~XDebugManagerImpl()
+DebugManagerImpl::~DebugManagerImpl()
   {
   _client = 0;
   _server = 0;
   }
 
-void XDebugManagerImpl::setupClient()
+void DebugManagerImpl::setupClient()
   {
   connect(_client, SIGNAL(readyRead()), this, SLOT(onDataReady()));
   }
 
-void XDebugManagerImpl::addInterfaceLookup(XDebugInterface *ifc)
+void DebugManagerImpl::addInterfaceLookup(DebugInterface *ifc)
   {
   xAssert(!_interfaceMap.contains(ifc->interfaceID()));
   xAssert(ifc->interfaceID() != X_UINT32_SENTINEL);
@@ -52,7 +55,7 @@ void XDebugManagerImpl::addInterfaceLookup(XDebugInterface *ifc)
   xAssert(_interfaces.size() == _interfaceMap.size());
   }
 
-void XDebugManagerImpl::flush()
+void DebugManagerImpl::flush()
   {
   xuint32 id = _outputLocked->interfaceID();
 
@@ -62,7 +65,7 @@ void XDebugManagerImpl::flush()
   _clientStream.writeRawData(buf, buf.length());
   }
 
-void XDebugManagerImpl::onConnected()
+void DebugManagerImpl::onConnected()
   {
   _clientStream.setDevice(_client);
   _clientStream.writeRawData(_preConnectClientData, _preConnectClientData.size());
@@ -70,10 +73,9 @@ void XDebugManagerImpl::onConnected()
   _preConnectClientData.squeeze();
   }
 
-void XDebugManagerImpl::onDataReady()
+void DebugManagerImpl::onDataReady()
   {
   xAssert(!_outputLocked);
-
 
   static const xsize HeaderSize = 8;
 
@@ -95,7 +97,7 @@ void XDebugManagerImpl::onDataReady()
       return;
       }
 
-    XDebugInterface *ifc = _interfaceMap.value(_readingID, 0);
+    DebugInterface *ifc = _interfaceMap.value(_readingID, 0);
     xAssert(ifc);
 
     ifc->onDataRecieved(_clientStream);
@@ -105,7 +107,7 @@ void XDebugManagerImpl::onDataReady()
     }
   }
 
-void XDebugManagerImpl::onNewConnection()
+void DebugManagerImpl::onNewConnection()
   {
   while(QTcpSocket *s = _server->nextPendingConnection())
     {
@@ -113,7 +115,7 @@ void XDebugManagerImpl::onNewConnection()
       {
       qCritical() << "New client detected, arp, need to wipe stuff down!";
       _client = 0;
-      xAssertFail():
+      xAssertFail();
       }
     _client = s;
 
@@ -122,3 +124,5 @@ void XDebugManagerImpl::onNewConnection()
     setupClient();
     }
   }
+
+}

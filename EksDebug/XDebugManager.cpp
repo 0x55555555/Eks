@@ -4,13 +4,16 @@
 #include "XDebugManagerImpl.h"
 #include "XAssert"
 
-XDebugInterfaceType *g_lastInterface = 0;
-XDebugManagerImpl *g_manager = 0;
-XDebugManager::XDebugManager(bool client)
+namespace Eks
+{
+
+DebugInterfaceType *g_lastInterface = 0;
+DebugManagerImpl *g_manager = 0;
+DebugManager::DebugManager(bool client)
   {
   xAssert(!g_manager);
   g_manager = new Impl(client);
-  _controller = new XDebugController(client);
+  _controller = new DebugController(client);
 
   g_manager->_controller = _controller;
   g_manager->addInterfaceLookup(_controller);
@@ -19,7 +22,7 @@ XDebugManager::XDebugManager(bool client)
   _controller->onDebuggerConnected(client);
   }
 
-XDebugManager::~XDebugManager()
+DebugManager::~DebugManager()
   {
   delete _controller;
 
@@ -28,7 +31,7 @@ XDebugManager::~XDebugManager()
   g_manager = 0;
   }
 
-const XDebugInterfaceType *XDebugManager::findInterfaceType(const QString &t)
+const DebugInterfaceType *DebugManager::findInterfaceType(const QString &t)
   {
   for(auto ifc = g_lastInterface; ifc != 0; ifc = ifc->next)
     {
@@ -41,28 +44,28 @@ const XDebugInterfaceType *XDebugManager::findInterfaceType(const QString &t)
   return 0;
   }
 
-void XDebugManager::registerInterfaceType(XDebugInterfaceType *t)
+void DebugManager::registerInterfaceType(DebugInterfaceType *t)
   {
   t->next = g_lastInterface;
   g_lastInterface = t;
   }
 
-void XDebugManager::registerInterface(XDebugInterface *ifc)
+void DebugManager::registerInterface(DebugInterface *ifc)
   {
   g_manager->_interfaces << ifc;
   }
 
-void XDebugManager::unregisterInterface(XDebugInterface *ifc)
+void DebugManager::unregisterInterface(DebugInterface *ifc)
   {
   g_manager->_interfaces.removeAll(ifc);
   }
 
-void XDebugManager::addInterfaceLookup(XDebugInterface *ifc)
+void DebugManager::addInterfaceLookup(DebugInterface *ifc)
   {
   g_manager->addInterfaceLookup(ifc);
   }
 
-QDataStream &XDebugManager::lockOutputStream(XDebugInterface *ifc)
+QDataStream &DebugManager::lockOutputStream(DebugInterface *ifc)
   {
   xAssert(!g_manager->_outputLocked);
 
@@ -74,13 +77,13 @@ QDataStream &XDebugManager::lockOutputStream(XDebugInterface *ifc)
     }
 
   g_manager->_outputLocked = ifc;
-  
+
   g_manager->_scratchImpl.buffer().clear();
   g_manager->_scratchImpl.reset();
   return g_manager->_scratchBuffer;
   }
 
-void XDebugManager::unlockOutputStream()
+void DebugManager::unlockOutputStream()
   {
   xAssert(g_manager->_outputLocked);
 
@@ -88,3 +91,5 @@ void XDebugManager::unlockOutputStream()
 
   g_manager->_outputLocked = 0;
   }
+
+}

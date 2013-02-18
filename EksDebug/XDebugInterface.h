@@ -11,7 +11,7 @@
 
 #ifdef X_ENABLE_APPLICATION_DEBUGGING
 # define X_REGISTER_INTERFACE(cls) \
-  namespace XDebugInterfaces { static XDebugInterfaceRegisterer<cls> REG_##cls(#cls); }
+  namespace DebugInterfaces { static Eks::DebugInterfaceRegisterer<cls> REG_##cls(#cls); }
 #else
 # define X_REGISTER_INTERFACE(cls)
 #endif
@@ -20,21 +20,24 @@
 #define X_IMPLEMENT_DEBUG_INTERFACE(cls) \
   X_REGISTER_INTERFACE(cls)
 
-class XDebugInterfaceType
+namespace Eks
+{
+
+class DebugInterfaceType
   {
 public:
   QString type;
-  XDebugManager::CreateInterfaceFunction create;
-  XDebugInterfaceType *next;
+  DebugManager::CreateInterfaceFunction create;
+  DebugInterfaceType *next;
   };
 
-class EKSDEBUG_EXPORT XDebugInterface
+class EKSDEBUG_EXPORT DebugInterface
   {
 XProperties:
   XProperty(xuint32, interfaceID, setInterfaceID);
 
 public:
-  ~XDebugInterface();
+  ~DebugInterface();
 
   virtual QString typeName() = 0;
 
@@ -43,7 +46,7 @@ public:
 protected:
   struct Reciever
     {
-    typedef void (*RecieveFunction)(xuint32 type, XDebugInterface* ifc, QDataStream& dataSize);
+    typedef void (*RecieveFunction)(xuint32 type, DebugInterface* ifc, QDataStream& dataSize);
 
     Reciever(xuint32 t, RecieveFunction r)
         : type(t), fn(r)
@@ -57,7 +60,7 @@ protected:
   class OutputTunnel
     {
   public:
-    OutputTunnel(XDebugInterface *ifc);
+    OutputTunnel(DebugInterface *ifc);
     ~OutputTunnel();
 
     QDataStream& stream() { return _stream; }
@@ -66,7 +69,7 @@ protected:
     QDataStream &_stream;
     };
 
-  XDebugInterface();
+  DebugInterface();
 
   void setRecievers(const Reciever*, xsize recCount);
 
@@ -80,7 +83,7 @@ protected:
                          typename CLS,
                          void (CLS::*FN)(const T& data)> Reciever recieveFunction()
     {
-    Reciever::RecieveFunction fn = XDebugInterface::recieveImpl<T, CLS, FN>;
+    Reciever::RecieveFunction fn = DebugInterface::recieveImpl<T, CLS, FN>;
     return Reciever(
       T::DebugMessageType,
       fn
@@ -89,7 +92,7 @@ protected:
 
 private:
   template <typename T, typename CLS, void (CLS::*FN)(const T& data)>
-      static void recieveImpl(xuint32 type, XDebugInterface *ifc, QDataStream &data)
+      static void recieveImpl(xuint32 type, DebugInterface *ifc, QDataStream &data)
     {
     (void)type;
 
@@ -105,24 +108,26 @@ private:
   xsize _recieverCount;
   };
 
-template <typename T> class XDebugInterfaceRegisterer
+template <typename T> class DebugInterfaceRegisterer
   {
 public:
-  XDebugInterfaceRegisterer(const char* typeName)
+  DebugInterfaceRegisterer(const char* typeName)
     {
     type.create = createFn;
     type.type = typeName;
 
-    XDebugManager::registerInterfaceType(&type);
+    DebugManager::registerInterfaceType(&type);
     }
 
 private:
-  static XDebugInterface *createFn(bool client)
+  static DebugInterface *createFn(bool client)
     {
     return new T(client);
     }
 
-  XDebugInterfaceType type;
+  DebugInterfaceType type;
   };
+
+}
 
 #endif // XDEBUGINTERFACE_H
