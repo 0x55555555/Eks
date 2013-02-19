@@ -6,8 +6,8 @@ int main(int argc, char *argv[])
   {
   QApplication a(argc, argv);
   MainWindow w;
-  XDebugManager m(false);
+  Eks::DebugManager m(false);
   w.show();
-  
+
   return a.exec();
   }

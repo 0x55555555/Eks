@@ -16,9 +16,8 @@ class DebugController;
 
 class EKSDEBUG_EXPORT DebugManager
   {
-  DebugManager(bool client);
-
 public:
+  DebugManager(bool client);
   ~DebugManager();
 
   typedef DebugInterface *(*CreateInterfaceFunction)(bool client);

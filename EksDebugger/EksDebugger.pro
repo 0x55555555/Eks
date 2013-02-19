@@ -13,10 +13,11 @@ TEMPLATE = app
 
 include("../EksCore/GeneralOptions.pri")
 
-SOURCES += main.cpp\
-        mainwindow.cpp
+SOURCES += main.cpp \
+        mainwindow.cpp \
+        moc_mainwindow.cpp
 
-HEADERS  += mainwindow.h
+OTHER_FILES += mainwindow.h
 
 FORMS    += mainwindow.ui
 
