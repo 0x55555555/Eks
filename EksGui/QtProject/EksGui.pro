@@ -16,16 +16,9 @@ SOURCES += ../src/XFloatWidget.cpp \
     ../src/XVector4DWidget.cpp \
     ../src/XColourWidget.cpp \
     ../src/pickerWidget/qtcolortriangle.cpp \
-    ../src/XProfileWidget.cpp \
-    moc_XVector4DWidget.cpp \
-    moc_XVector3DWidget.cpp \
-    moc_XVector2DWidget.cpp \
-    moc_XProfileWidget.cpp \
-    moc_XFloatWidget.cpp \
-    moc_XColourWidget.cpp \
-    moc_qtcolortriangle.cpp
+    ../src/XProfileWidget.cpp
 
-OTHER_FILES += \
+HEADERS += \
     ../XFloatWidget \
     ../XVector2DWidget \
     ../XVector3DWidget \
