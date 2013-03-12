@@ -29,6 +29,8 @@ struct StaticEngine
     xsize idx = 0;
     (void)idx;
 
+    memset(engines, 0, sizeof(engines));
+
 #ifdef X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
     engines[idx++] = createV8Interface(debugging);
 #endif
