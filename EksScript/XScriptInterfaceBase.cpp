@@ -336,17 +336,23 @@ void *InterfaceBase::prototype()
   }
 */
 
-Eks::UnorderedMap<int, InterfaceBase*> _interfaces;
+Eks::UnorderedMap<int, InterfaceBase*> &_interfaces()
+  {
+  X_HACK("Global static");
+  static Eks::UnorderedMap<int, InterfaceBase*> ifc;
+  return ifc;
+  }
+
 void registerInterface(int id, int nonPtrId, InterfaceBase *interface)
   {
-  xAssert(!_interfaces.contains(id));
-  xAssert(!_interfaces.contains(nonPtrId));
+  xAssert(!_interfaces().contains(id));
+  xAssert(!_interfaces().contains(nonPtrId));
   xAssert(id != QVariant::Invalid);
 
-  _interfaces.insert(id, interface);
+  _interfaces().insert(id, interface);
   if(nonPtrId != QVariant::Invalid)
     {
-    _interfaces.insert(nonPtrId, interface);
+    _interfaces().insert(nonPtrId, interface);
     }
   }
 
@@ -365,7 +371,7 @@ InterfaceBase *findInterface(int id)
 #endif
 
   xAssert(id != QVariant::Invalid);
-  InterfaceBase *base = _interfaces.value(id);
+  InterfaceBase *base = _interfaces().value(id);
   xAssert(!base || base->isSealed());
   return base;
   }
