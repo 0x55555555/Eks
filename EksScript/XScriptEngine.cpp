@@ -56,6 +56,8 @@ struct StaticEngine
   EngineInterface *engines[EngineAllocation];
 
   EngineInterface *currentInterface;
+
+  Eks::UnorderedMap<int, InterfaceBase*> interfaces;
   };
 
 StaticEngine *g_engine = 0;
@@ -73,6 +75,11 @@ void Engine::initiate(bool debugging)
 
 void Engine::terminate()
   {
+  xForeach(auto &a, g_engine->interfaces)
+    {
+    a->clear();
+    }
+
   delete g_engine;
   }
 
@@ -116,6 +123,12 @@ EngineInterface *Engine::findInterface(const QString &extension)
       }
     }
   return 0;
+  }
+
+Eks::UnorderedMap<int, InterfaceBase*> *Engine::internalInterfaceLookup()
+  {
+  xAssert(g_engine);
+  return &g_engine->interfaces;
   }
 
 Engine::Walker Engine::interfaces()

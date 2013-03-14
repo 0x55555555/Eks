@@ -2,6 +2,7 @@
 #define XSCRIPTENGINE_H
 
 #include "XScriptGlobal.h"
+#include "XUnorderedMap"
 
 class QVariant;
 class QFile;
@@ -165,6 +166,8 @@ public:
 
   static EngineInterface *findInterface(const QFile *);
   static EngineInterface *findInterface(const QString &extension);
+
+  static Eks::UnorderedMap<int, InterfaceBase*> *internalInterfaceLookup();
 
   class Walker
     {

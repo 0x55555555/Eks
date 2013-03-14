@@ -226,6 +226,8 @@ public:
                  const InterfaceBase *parent);
   ~InterfaceBase();
 
+  void clear();
+
   void seal();
   bool isSealed() const
     {

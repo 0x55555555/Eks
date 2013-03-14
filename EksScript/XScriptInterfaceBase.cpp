@@ -59,6 +59,12 @@ InterfaceBase::~InterfaceBase()
     }
   }
 
+void InterfaceBase::clear()
+  {
+  _typeName.clear();
+  _typeName.squeeze();
+  }
+
 QVariant InterfaceBase::toVariant(const Value &inp, int typeHint)
   {
   if(_fromScript)
@@ -338,9 +344,7 @@ void *InterfaceBase::prototype()
 
 Eks::UnorderedMap<int, InterfaceBase*> &_interfaces()
   {
-  X_HACK("Global static");
-  static Eks::UnorderedMap<int, InterfaceBase*> ifc;
-  return ifc;
+  return *XScript::Engine::internalInterfaceLookup();
   }
 
 void registerInterface(int id, int nonPtrId, InterfaceBase *interface)
