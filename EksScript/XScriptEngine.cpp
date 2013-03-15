@@ -41,7 +41,12 @@ struct StaticEngine
     }
 
   ~StaticEngine()
-    {
+  {
+    xForeach(auto &a, interfaces)
+      {
+      a->clear();
+      }
+
     xForeach(EngineInterface *i, engines)
       {
       delete i;
@@ -75,11 +80,6 @@ void Engine::initiate(bool debugging)
 
 void Engine::terminate()
   {
-  xForeach(auto &a, g_engine->interfaces)
-    {
-    a->clear();
-    }
-
   delete g_engine;
   }
 

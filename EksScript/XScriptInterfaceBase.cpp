@@ -61,8 +61,11 @@ InterfaceBase::~InterfaceBase()
 
 void InterfaceBase::clear()
   {
-  _typeName.clear();
-  _typeName.squeeze();
+  _typeName.Vector::clear();
+  _typeName.Vector::squeeze();
+
+  _upcasts.~UpCastMap();
+  new(&_upcasts) UpCastMap();
   }
 
 QVariant InterfaceBase::toVariant(const Value &inp, int typeHint)
