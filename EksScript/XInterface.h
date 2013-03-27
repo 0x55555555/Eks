@@ -220,10 +220,10 @@ public:
 
 #endif
 
-  static Interface *create(const QString &name)
+  static Interface *create(const Eks::String &name)
     {
-    xsize id = (xsize)qMetaTypeId<T*>();
-    xsize nonPointerId = (xsize)internal::QMetaTypeIdOrInvalid<T>::id();
+    int id = qMetaTypeId<T*>();
+    int nonPointerId = internal::QMetaTypeIdOrInvalid<T>::id();
 
     Interface &bob = instance(name, id, nonPointerId, id, nonPointerId, 0);
     registerInterface(&bob);
@@ -233,13 +233,13 @@ public:
     }
 
   template <typename PARENT, typename BASE>
-  static Interface *createWithParent(const QString &name, const Interface<PARENT> *constParent, const Interface<BASE> *constBase)
+  static Interface *createWithParent(const Eks::String &name, const Interface<PARENT> *constParent, const Interface<BASE> *constBase)
     {
-    xsize baseId = constBase->typeId();
-    xsize baseNonPointerId = (xsize)constBase->nonPointerTypeId();
+    int baseId = constBase->typeId();
+    int baseNonPointerId = (xsize)constBase->nonPointerTypeId();
 
-    xsize id = qMetaTypeId<T*>();
-    xsize nonPointerId = internal::QMetaTypeIdOrInvalid<T>::id();
+    int id = qMetaTypeId<T*>();
+    int nonPointerId = internal::QMetaTypeIdOrInvalid<T>::id();
 
     xAssert(baseId != id);
     xAssert(nonPointerId == 0 || nonPointerId != baseNonPointerId);
@@ -267,11 +267,11 @@ public:
     return bob;
     }
 
-  Interface(xsize typeId,
-    xsize nonPointerTypeId,
-    xsize baseTypeId,
-    xsize baseNonPointerTypeId,
-    const QString &name,
+  Interface(int typeId,
+    int nonPointerTypeId,
+    int baseTypeId,
+    int baseNonPointerTypeId,
+    const Eks::String &name,
     const InterfaceBase* parent)
     : InterfaceBase(typeId, nonPointerTypeId, baseTypeId, baseNonPointerTypeId,
                                 name,
@@ -323,7 +323,7 @@ public:
 #if 1 /* i believe this problem was fixed. If you are reading this b/c
   you followed an assert() message, please report this as a bug.
   */
-      assert( 0 && "weak_dtor() got no native object!");
+      xAssert( 0 && "weak_dtor() got no native object!");
 #endif
       return;
       }
@@ -389,7 +389,7 @@ public:
 private:
   typedef XScript::ClassCreator_Factory<T> Factory;
 
-  static Interface &instance(const QString &name, xsize id, xsize nonPointerId, xsize baseId, xsize baseNonPointerId, const InterfaceBase* parent)
+  static Interface &instance(const Eks::String &name, int id, int nonPointerId, int baseId, int baseNonPointerId, const InterfaceBase* parent)
     {
     static Interface bob(id, nonPointerId, baseId, baseNonPointerId,name, parent);
     return bob;
@@ -584,7 +584,8 @@ template <typename T, typename BASE> struct NativeToJSConvertableTypeInherited
   X_SCRIPTABLE_BUILD_CONSTRUCTABLE_TYPEDEF(type##Ctors, type, __VA_ARGS__)
 
 #define X_SCRIPTABLE_MATCHERS(type) \
-  template <> inline const type& match<const type&, type*>(type **in, bool& valid) { return ptrMatcher<type>(in, valid); }
+  template <> class TypeMatcher<const type&, type *> { public: \
+  static const type& match(type **in, bool &valid) { return ptrMatcher<type>(in, valid); } };
 
 #define X_SCRIPTABLE_TYPE_BASE(type)  \
   namespace XScript { namespace Convert { namespace internal { \

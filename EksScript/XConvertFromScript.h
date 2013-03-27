@@ -24,7 +24,9 @@ template <typename JST> struct JSToNative<JST const *> : JSToNative<JST> {};
 
 template <typename JST> struct JSToNative<JST &>
   {
-  typedef typename TypeInfo<JST>::Type &ResultType;
+  typedef typename JSToNative<JST>::ResultType BaseResultType;
+  typedef typename std::remove_pointer<BaseResultType>::type NoPointer;
+  typedef NoPointer &ResultType;
 
   ResultType operator()(Value const &h) const
     {
@@ -44,12 +46,12 @@ template <typename JST> struct JSToNative<JST &>
 
 template <typename JST> struct JSToNative<const JST &>
   {
-  typedef const typename TypeInfo<JST>::Type &ResultType;
+  typedef typename JSToNative<JST &>::ResultType BaseResultType;
+  typedef const BaseResultType ResultType;
 
   ResultType operator()(Value const &h) const
     {
     typedef JSToNative<JST &> Cast;
-    typedef typename Cast::ResultType NH;
     return Cast()(h);
     }
   };
@@ -203,13 +205,43 @@ template <> struct JSToNative<bool>
     }
   };
 
+template <typename C, xsize P, typename A> struct JSToNative<const Eks::StringBase<C, P, A> &>
+  {
+  typedef Eks::StringBase<C, P, A> ResultType;
+
+  ResultType operator()(Value const &h) const
+    {
+    return h.toString();
+    }
+  };
+
+template <typename C, xsize P, typename A> struct JSToNative<Eks::StringBase<C, P, A> >
+  {
+  typedef Eks::StringBase<C, P, A> ResultType;
+
+  ResultType operator()(Value const &h) const
+    {
+    return h.toString();
+    }
+  };
+
+template <> struct JSToNative<Eks::String>
+  {
+  typedef Eks::String ResultType;
+
+  ResultType operator()(Value const &h) const
+    {
+    return h.toString();
+    }
+  };
+
 template <> struct JSToNative<QString>
   {
   typedef QString ResultType;
 
   ResultType operator()(Value const &h) const
     {
-    return h.toString();
+    return h.toString().toQString();
     }
   };
 
@@ -223,7 +255,8 @@ template <> struct JSToNative<QByteArray>
 
   ResultType operator()(Value const &h) const
     {
-    return h.toString().toUtf8();
+    Eks::String s = h.toString();
+    return QByteArray(s.data(), (int)s.length());
     }
   };
 

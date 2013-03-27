@@ -2,8 +2,8 @@
 #define VECTOR3DWIDGET_H
 
 #include "XGuiGlobal"
-#include "QWidget"
-#include "XVector3D"
+#include "QtWidgets/QWidget"
+#include "XMathVector"
 
 class QVBoxLayout;
 class XFloatWidget;
@@ -12,23 +12,23 @@ class EKSGUI_EXPORT XVector3DWidget : public QWidget
     {
 Q_OBJECT
 public:
-    XVector3DWidget( QWidget *parent = 0, XVector3D val=XVector3D::Zero(), QStringList labels=QStringList());
-    XVector3DWidget( XVector3D val, XVector3D min, XVector3D max, QStringList labels=QStringList(), QWidget *parent = 0);
+    XVector3DWidget( QWidget *parent = 0, Eks::Vector3D val=Eks::Vector3D::Zero(), QStringList labels=QStringList());
+    XVector3DWidget( Eks::Vector3D val, Eks::Vector3D min, Eks::Vector3D max, QStringList labels=QStringList(), QWidget *parent = 0);
 
-    void setMaximum( XVector3D );
-    XVector3D maximum() const;
-    void setMinimum( XVector3D );
-    XVector3D minimum() const;
-    XVector3D range() const;
-    XVector3D value() const;
+    void setMaximum( Eks::Vector3D );
+    Eks::Vector3D maximum() const;
+    void setMinimum( Eks::Vector3D );
+    Eks::Vector3D minimum() const;
+    Eks::Vector3D range() const;
+    Eks::Vector3D value() const;
 
     bool isReadOnly() const;
 
 Q_SIGNALS:
-    void valueChanged( XVector3D );
+    void valueChanged( Eks::Vector3D );
 
 public Q_SLOTS:
-    void setValue( XVector3D );
+    void setValue( Eks::Vector3D );
     void setReadOnly(bool);
 
 protected:

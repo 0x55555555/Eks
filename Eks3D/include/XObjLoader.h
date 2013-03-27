@@ -1,33 +1,79 @@
-#ifndef XOBJLOADER_H
-#define XOBJLOADER_H
+#ifndef ObjLoader_H
+#define ObjLoader_H
 
 #include "X3DGlobal.h"
-#include "QByteArray"
-#include "XVector3D"
+#include "XMathVector"
+#include "XStringSimple"
+#include "XShader.h"
 
-class QIODevice;
-class XGeometry;
+namespace Eks
+{
 
-class EKS3D_EXPORT XObjLoader
+class Geometry;
+class Renderer;
+class IndexGeometry;
+
+class EKS3D_EXPORT ObjLoader
   {
 public:
-  XObjLoader();
+  enum
+    {
+    ExpectedVertices = 1024,
+    ExpectedLineLength = 512,
+    ExpectedFloatLength = 32,
+    MaxComponent = 3
+    };
 
-  void load(QIODevice *, XGeometry*, bool fixUnusedNormals);
+  typedef Vector<Char, ExpectedLineLength> LineCache;
+
+  struct ObjElement;
+  typedef Eigen::Matrix<Real, MaxComponent, 1> ElementVector;
+  struct ElementData
+    {
+    Vector<ElementVector> data;
+    const ObjLoader::ObjElement *desc;
+    };
+
+  ObjLoader(AllocatorBase *allocator);
+
+  void load(const char *data,
+    xsize dataSize,
+    const ShaderVertexLayoutDescription::Semantic *items,
+    xsize itemCount,
+    Vector<VectorI3D> *triangles,
+    xsize *vertexSize,
+    ElementData *elements);
+
+  void computeUnusedElements(ElementData *elements,
+      xsize itemCount,
+      Vector<VectorI3D> *triangles);
+
+  void bake(const Vector<VectorI3D> &triangles,
+    const ElementData *elementData,
+    xsize elementCount,
+    Vector<xuint8> *dataOut);
+
+  const ObjElement *findObjectDescriptionForSemantic(ShaderVertexLayoutDescription::Semantic s);
 
 private:
-  XVector3D readVector3D(const QByteArray &arr, int start);
-  int readIndices(const QByteArray &, int start, XVectorI3D &indices);
+  bool findElementType(
+    const LineCache &line,
+    const ShaderVertexLayoutDescription::Semantic *items,
+    xsize itemCount,
+    xsize *foundItem);
 
-  int skipSpaces(const QByteArray &line, int from, int &firstSpace);
+  bool readIndices(
+    const LineCache &,
+    xsize start,
+    xsize *end,
+    VectorI3D &indices,
+    const ElementData *elementData,
+    xsize elementCount);
 
-  void bakeTriangles(const QVector<XVectorI3D>& unbakedTriangles,
-                     QVector<xuint32> &baked,
-                     QVector<XVector3D> &vtx,
-                     QVector<XVector3D> &nor,
-                     QVector<XVector2D> &tex);
-
-  QByteArray _scratchString;
+  Eks::AllocatorBase *_allocator;
+  Eks::String _scratchString;
   };
 
-#endif // XOBJLOADER_H
+}
+
+#endif // ObjLoader_H

@@ -130,9 +130,17 @@ template <> struct NativeToJS<char const *>
     }
   };
 
-template <> struct NativeToJS<QString>
+template <typename C, xsize P, typename A> struct NativeToJS<Eks::StringBase<C, P, A> >
   {
-  Value operator()(QString v) const
+  Value operator()(const Eks::StringBase<C, P, A> &v) const
+    {
+    return Value(v);
+    }
+  };
+
+template <> struct NativeToJS<Eks::String>
+  {
+  Value operator()(const Eks::String &v) const
     {
     return Value(v);
     }

@@ -1,63 +1,62 @@
 #ifndef XABSTRACTTEXTURE_H
 #define XABSTRACTTEXTURE_H
 
-#include "XRenderer.h"
 #include "X3DGlobal.h"
-#include "XObject"
+#include "XPrivateImpl"
 #include "XProperty"
-#include "QImage"
-#include "QMetaType"
+#include "XRenderer.h"
 
-class XGLRenderer;
-class XRenderer;
-class XAbstractTexture;
+namespace Eks
+{
 
-class EKS3D_EXPORT XTexture
+class Renderer;
+
+class EKS3D_EXPORT Resource : public PrivateImpl<sizeof(void *) * 4>
   {
-public:
-  enum Options
-    {
-    None = 0,
-    InvertY = 1
-    };
+protected:
+  Resource();
 
-XProperties:
-  XRORefProperty( QImage, texture );
-  XROProperty( quint32, options );
-
-public:
-  XTexture( const QImage &image = QImage(), quint32 = None );
-  XTexture( const XTexture & );
-  ~XTexture( );
-
-  XTexture& operator=(const XTexture &);
-
-  bool operator==(const XTexture &in) const;
-  bool operator!=(const XTexture &in) const { return !(*this == in); }
-
-  void load( const QImage &, quint32 = None );
-
-  void prepareInternal( XRenderer * ) const;
-  XAbstractTexture *internal() const;
-
-  friend QDataStream &operator>>( QDataStream &str, XTexture & );
-  friend QDataStream &operator<<( QDataStream &str, const XTexture & );
-  
 private:
-  void clean() const;
-  mutable XAbstractTexture *_internal;
-  mutable XRenderer *_renderer;
-  mutable QMutex _lock;
+  X_DISABLE_COPY(Resource)
   };
 
-class EKS3D_EXPORT XAbstractTexture : public XRendererType
+class EKS3D_EXPORT Texture2D : public Resource
   {
 public:
-  virtual ~XAbstractTexture();
-  virtual void load( const QImage & ) = 0;
-  virtual QImage save( ) = 0;
+  Texture2D(Renderer *r=0,
+        xsize width=0,
+        xsize height=0,
+        TextureFormat fmt=Eks::TextureFormatCount,
+        const void *data=0);
+  ~Texture2D();
+
+  static bool delayedCreate(
+        Texture2D &ths,
+        Renderer *r,
+        xsize width,
+        xsize height,
+        TextureFormat fmt,
+        const void *data);
+
+  Eks::VectorUI2D size() const;
+
+  void setRenderer(Renderer *r);
+
+private:
+  X_DISABLE_COPY(Texture2D)
+
+  Renderer *_renderer;
   };
 
-Q_DECLARE_METATYPE(const XTexture*)
+
+inline Eks::VectorUI2D Texture2D::size() const
+  {
+  xAssert(isValid());
+  Eks::VectorUI2D ret;
+  _renderer->functions().get.texture2DInfo(_renderer, this, ret);
+
+  return ret;
+  }
+}
 
 #endif // XABSTRACTTEXTURE_H

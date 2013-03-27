@@ -7,7 +7,7 @@
 #include "XInterfaceUtilities.h"
 #include "XScriptObject.h"
 #include "XScriptEngine.h"
-#include "QWidget"
+#include "QtWidgets/QWidget"
 
 namespace XScript
 {
@@ -32,8 +32,8 @@ private:
       FunctionDef* extraFns=0,
       xsize extraFnCount=0);
 
-  XUnorderedMap<const QMetaObject *, InterfaceBase *> _objects;
-  XUnorderedMap<QObject *, QObjectConnectionList *> _connections;
+  Eks::UnorderedMap<const QMetaObject *, InterfaceBase *> _objects;
+  Eks::UnorderedMap<QObject *, QObjectConnectionList *> _connections;
   friend class QObjectConnectionList;
   friend struct Utils;
   };

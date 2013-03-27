@@ -2,9 +2,8 @@
 #define XSCRIPTINTERFACEBASE_H
 
 #include "XScriptGlobal.h"
-#include "XMetaType"
+#include "XStringSimple"
 #include "XProperty"
-#include "XVariant"
 #include "XMacroHelpers"
 #include "XScriptFunction.h"
 #include "XInterfaceUtilities.h"
@@ -13,6 +12,7 @@
 #include "XScriptException.h"
 #include "XFunctions.h"
 #include "XUnorderedMap"
+#include "XStringSimple"
 #include <array>
 
 
@@ -189,10 +189,10 @@ public:
   typedef void *(*FromScriptFn)(Value const &);
 
   typedef void* (*UpCastFn)(void *ptr);
-  typedef XUnorderedMap<int, UpCastFn> UpCastMap;
+  typedef Eks::UnorderedMap<int, UpCastFn> UpCastMap;
 
 XProperties:
-  XROProperty(QString, typeName);
+  XROProperty(Eks::String, typeName);
   XROProperty(int, typeId);
   XROProperty(int, baseTypeId);
   XROProperty(int, nonPointerTypeId);
@@ -215,16 +215,18 @@ public:
                  int nonPointerTypeID,
                  int baseTypeID,
                  int baseNonPointerTypeID,
-                 const QString &typeName,
+                 const Eks::String &typeName,
                  const InterfaceBase *parent,
                  ToScriptFn convertTo=0,
                  FromScriptFn convertFrom=0);
 
-  InterfaceBase(xsize typeID,
-                 xsize nonPointerTypeID,
-                 const QString &typeName,
+  InterfaceBase(int typeID,
+                 int nonPointerTypeID,
+                 const Eks::String &typeName,
                  const InterfaceBase *parent);
   ~InterfaceBase();
+
+  void clear();
 
   void seal();
   bool isSealed() const

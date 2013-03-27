@@ -74,7 +74,7 @@ bool Function::isValid() const
   return currentInterface()->isValid(this);
   }
 
-void Function::callWithTryCatch(Value *result, const Object &self, int argc, const Value *args, bool *error, QString *message) const
+void Function::callWithTryCatch(Value *result, const Object &self, xsize argc, const Value *args, bool *error, QString *message) const
   {
   currentInterface()->call(this, result, self, argc, args, error, message);
   }

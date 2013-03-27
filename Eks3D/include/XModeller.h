@@ -2,109 +2,150 @@
 #define XMODELLER_H
 
 #include "X3DGlobal.h"
-#include "XVector2D"
-#include "XVector3D"
-#include "XList"
+#include "XAllocatorBase"
+#include "XMathVector"
 #include "XGeometry.h"
-#include "XSize"
 #include "XColour"
 #include "XTransform.h"
+#include "XShader.h"
 
-template <typename T> class XAbstractCurve;
+namespace Eks
+{
 
-class EKS3D_EXPORT XModeller
-    {
+template <typename T> class AbstractCurve;
+class Cuboid;
+class ShaderVertexLayoutDescription;
+
+class EKS3D_EXPORT Modeller
+  {
+XProperties:
+  XROProperty(bool, areTriangleIndicesSequential);
+  XROProperty(bool, areLineIndicesSequential);
+
 public:
-    XModeller( XGeometry *, xsize initialSize );
-    ~XModeller( );
+  Modeller(AllocatorBase *, xsize initialSize);
+  ~Modeller();
 
-    void flush( );
+  void bakeVertices(
+      Renderer *r,
+      ShaderVertexLayoutDescription::Semantic *semanticOrder,
+      xsize semanticCount,
+      Geometry *geo);
 
-    // Fixed Functionality GL Emulation
-    enum Type { None, Quads, Triangles, Lines, Points };
-    void begin( Type = Triangles );
-    void end( );
+  void bakeTriangles(
+      Renderer *r,
+      ShaderVertexLayoutDescription::Semantic *semanticOrder,
+      xsize semanticCount,
+      IndexGeometry *index,
+      Geometry *geo);
 
-    void vertex( const XVector3D & );
-    inline void vertex( xReal, xReal, xReal );
-    void normal( const XVector3D & );
-    inline void normal( xReal, xReal, xReal );
-    void texture( const XVector2D & );
-    inline void texture( xReal, xReal );
-    void colour( const XVector4D & );
-    inline void colour( xReal, xReal, xReal, xReal = 1.0 );
+  void bakeLines(
+      Renderer *r,
+      ShaderVertexLayoutDescription::Semantic *semanticOrder,
+      xsize semanticCount,
+      IndexGeometry *index,
+      Geometry *geo);
 
-    void setNormalsAutomatic( bool=true );
-    bool normalsAutomatic( ) const;
+  // Fixed Functionality GL Emulation
+  enum Type { None, Quads, Triangles, Lines };
+  void begin( Type = Triangles );
+  void end( );
 
-    // Draw Functions
-    void drawGeometry( const XGeometry &, bool normaliseNormals=false );
-    void drawGeometry( XList <XVector3D> positions, const XGeometry &, bool normaliseNormals=false );
+  void vertex( const Vector3D & );
+  inline void vertex( Real, Real, Real );
+  void normal( const Vector3D & );
+  inline void normal( Real, Real, Real );
+  void texture( const Vector2D & );
+  inline void texture( Real, Real );
+  void colour( const Eks::Vector4D & );
+  inline void colour( Real, Real, Real, Real = 1.0 );
 
-    void drawWireCube( const XCuboid &cube );
+  void setNormalsAutomatic( bool=true );
+  bool normalsAutomatic( ) const;
 
-    void drawCone(const XVector3D &point, const XVector3D &direction, float length, float radius, xuint32 divs=6);
+  // Draw Functions
+  void drawWireCube(const Cuboid &cube);
+  void drawWireCircle(const Vector3D &pos, const Vector3D &normal, float radius, xsize pts=24);
 
-    void drawSphere(float radius, int lats = 8, int longs = 12);
-    void drawCube( XVector3D horizontal=XVector3D(1,0,0), XVector3D vertical=XVector3D(0,1,0), XVector3D depth=XVector3D(0,0,1), float tX=0.0, float tY=0.0 );
-    void drawQuad( XVector3D horizontal=XVector3D(1,0,0), XVector3D vertical=XVector3D(0,1,0) );
-    void drawLocator( XSize size=XSize(1,1,1), XVector3D center=XVector3D() );
+  void drawCone(
+      const Vector3D &point,
+      const Vector3D &direction,
+      float length,
+      float radius,
+      xuint32 divs=6);
 
-    void drawCurve( const XAbstractCurve <XVector3D> &, xsize segments );
+  void drawSphere(float radius, int lats = 8, int longs = 12);
+  void drawCube(
+      const Vector3D &horizontal=Vector3D(1,0,0),
+      const Vector3D &vertical=Vector3D(0,1,0),
+      const Vector3D &depth=Vector3D(0,0,1),
+      float tX=0.0,
+      float tY=0.0 );
+  void drawQuad(
+      const Vector3D &horizontal=Vector3D(1,0,0),
+      const Vector3D &vertical=Vector3D(0,1,0) );
+  void drawLocator(
+      const Vector3D &size=Vector3D(1,1,1),
+      const Vector3D &center=Vector3D() );
 
-    void setTransform( const XTransform & );
-    XTransform transform( ) const;
+  void drawCurve(const AbstractCurve<Vector3D> &, xsize segments );
 
-    void save();
-    void restore();
+  void setTransform( const Transform & );
+  Transform transform( ) const;
+
+  void save();
+  void restore();
 
 private:
-    inline XVector3D transformPoint( const XVector3D & );
-    inline XVector <XVector3D> transformPoints( const XVector <XVector3D> & );
+  inline Vector3D transformPoint(const Vector3D & );
+  inline void transformPoints(Vector <Vector3D> & );
 
-    inline XVector3D transformNormal( XVector3D );
-    inline XVector <XVector3D> transformNormals( const XVector <XVector3D> &, bool reNormalize );
+  inline Vector3D transformNormal( Vector3D );
+  inline void transformNormals(Vector <Vector3D> &, bool reNormalize );
 
-    XGeometry *_geo;
-    XVector <xuint32> _triIndices;
-    XVector <xuint32> _linIndices;
-    XVector <xuint32> _poiIndices;
-    XVector <XVector3D> _vertex;
-    XVector <XVector2D> _texture;
-    XVector <XVector3D> _normals;
-    XVector <XVector4D> _colours;
+  AllocatorBase *_allocator;
 
-    struct State
-        {
-        State() : normal(XVector3D::Zero()),
-            texture(XVector2D::Zero()),
-            colour(0.0f, 0.0f, 0.0f, 0.0f),
-            type( None ),
-            normalsAutomatic( false )
-          {
-          }
-        XVector3D normal;
-        XVector2D texture;
-        XVector4D colour;
-        Type type;
-        bool normalsAutomatic;
-        };
-    XVector <State> _states;
+  Vector<xuint16> _triIndices;
+  Vector<xuint16> _linIndices;
 
-    XTransform _transform;
-    int _quadCount;
+  Vector<Vector3D> _vertex;
+  Vector<Vector2D> _texture;
+  Vector<Vector3D> _normals;
+  Vector<Vector4D> _colours;
+
+  struct State
+    {
+    State() : normal(Vector3D::Zero()),
+      texture(Vector2D::Zero()),
+      colour(0.0f, 0.0f, 0.0f, 0.0f),
+      type( None ),
+      normalsAutomatic( false )
+      {
+      }
+    Vector3D normal;
+    Vector2D texture;
+    Eks::Vector4D colour;
+    Type type;
+    bool normalsAutomatic;
     };
+  Vector<State> _states;
 
-void XModeller::vertex( xReal x, xReal y, xReal z )
-    { vertex( XVector3D(x,y,z) ); }
+  Transform _transform;
+  int _quadCount;
+  };
 
-void XModeller::normal( xReal x, xReal y, xReal z )
-    { normal( XVector3D(x,y,z) ); }
+void Modeller::vertex( Real x, Real y, Real z )
+  { vertex( Vector3D(x,y,z) ); }
 
-void XModeller::texture( xReal x, xReal y )
-    { texture( XVector2D(x,y) ); }
+void Modeller::normal( Real x, Real y, Real z )
+  { normal( Vector3D(x,y,z) ); }
 
-void XModeller::colour( xReal x, xReal y, xReal z, xReal w )
-    { colour( XVector4D(x,y,z,w) ); }
+void Modeller::texture( Real x, Real y )
+  { texture( Vector2D(x,y) ); }
+
+void Modeller::colour( Real x, Real y, Real z, Real w )
+  { colour( Eks::Vector4D(x,y,z,w) ); }
+
+}
 
 #endif // XMODELLER_H

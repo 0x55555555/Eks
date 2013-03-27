@@ -4,7 +4,10 @@
 #include "XProperty"
 #include "XAbstractCanvasController.h"
 
-class EKS3D_EXPORT XCameraCanvasController : public XAbstractCanvasController
+namespace Eks
+{
+
+class EKS3D_EXPORT CameraCanvasController : public AbstractCanvasController
   {
 public:
   class CameraInterface
@@ -19,7 +22,7 @@ public:
       Pan = 8,
       AllMovementTypes = Zoom | Track | Dolly | Pan
       };
-    typedef XFlags<MovementType> MovementFlags;
+    typedef Flags<MovementType> MovementFlags;
 
     virtual ~CameraInterface() { }
     virtual MovementFlags supportedMovements() const { return AllMovementTypes; }
@@ -30,7 +33,7 @@ public:
     };
 
 public:
-  XCameraCanvasController(XAbstractCanvas *canvas);
+  CameraCanvasController(AbstractCanvas *canvas);
 
   virtual CameraInterface *camera() = 0;
 
@@ -41,5 +44,7 @@ private:
   CameraInterface::MovementType _current;
   QPoint _zoomCentre;
   };
+
+}
 
 #endif // XCAMERACANVASCONTROLLER_H

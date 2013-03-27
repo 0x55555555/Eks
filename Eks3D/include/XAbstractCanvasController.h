@@ -3,22 +3,21 @@
 
 #include "X3DGlobal.h"
 #include "XProperty"
-#include "QEvent"
-#include "QPoint"
+#include "QtCore/QEvent"
+#include "QtCore/QPoint"
 #include "XFlags"
-class XAbstractCanvas;
 
 #define X_IMPLEMENT_MOUSEHANDLER(function, type, update) \
 virtual void function(QMouseEvent *event) { \
   if(controller()) { \
-    XAbstractCanvasController::UsedFlags result = controller()->triggerMouseEvent( \
-                                                  XAbstractCanvasController::type, \
+    Eks::AbstractCanvasController::UsedFlags result = controller()->triggerMouseEvent( \
+                                                  Eks::AbstractCanvasController::type, \
                                                   event->pos(), \
                                                   event->button(), \
                                                   event->buttons(), \
                                                   event->modifiers()); \
-    if((result.hasFlag(XAbstractCanvasController::Used))) { event->accept(); } \
-    if((result.hasFlag(XAbstractCanvasController::NeedsUpdate))) { update(XAbstractRenderModel::RenderChange); } \
+    if((result.hasFlag(Eks::AbstractCanvasController::Used))) { event->accept(); } \
+    if((result.hasFlag(Eks::AbstractCanvasController::NeedsUpdate))) { update(); } \
     return; } \
   event->ignore(); }
 
@@ -29,21 +28,26 @@ virtual void function(QMouseEvent *event) { \
   X_IMPLEMENT_MOUSEHANDLER(mouseReleaseEvent, Release, update) \
   virtual void wheelEvent(QWheelEvent *event) { \
     if(controller()) { \
-      XAbstractCanvasController::UsedFlags result = controller()->triggerWheelEvent( \
+      Eks::AbstractCanvasController::UsedFlags result = controller()->triggerWheelEvent( \
                                                     event->delta(), \
                                                     event->orientation(), \
                                                     event->pos(), \
                                                     event->buttons(), \
                                                     event->modifiers()); \
-      if((result.hasFlag(XAbstractCanvasController::Used))) { event->accept(); } \
-      if((result.hasFlag(XAbstractCanvasController::NeedsUpdate))) { update(XAbstractRenderModel::RenderChange); } \
+      if((result.hasFlag(Eks::AbstractCanvasController::Used))) { event->accept(); } \
+      if((result.hasFlag(Eks::AbstractCanvasController::NeedsUpdate))) { update(); } \
       return; } \
     event->ignore(); }
 
-class EKS3D_EXPORT XAbstractCanvasController
+namespace Eks
+{
+
+class AbstractCanvas;
+
+class EKS3D_EXPORT AbstractCanvasController
   {
 XProperties:
-  XROProperty(XAbstractCanvas *, canvas);
+  XProperty(AbstractCanvas *, canvas, setCanvas);
   XROProperty(QPoint, lastKnownMousePosition);
 
 public:
@@ -55,7 +59,7 @@ public:
     Release
     };
 
-  XAbstractCanvasController(XAbstractCanvas *canvas);
+  AbstractCanvasController(AbstractCanvas *canvas);
 
   enum Result
     {
@@ -63,7 +67,7 @@ public:
     Used = 1,
     NeedsUpdate = 2
     };
-  typedef XFlags<Result, xint32> UsedFlags;
+  typedef Flags<Result, xint32> UsedFlags;
 
   virtual xuint32 maxNumberOfPasses(xuint32) const { return 0; }
   virtual void paint(xuint32) const { }
@@ -105,7 +109,9 @@ protected:
   virtual UsedFlags wheelEvent(const WheelEvent &) { return NotUsed; }
 
 private:
-  X_DISABLE_COPY(XAbstractCanvasController);
+  X_DISABLE_COPY(AbstractCanvasController);
   };
+
+}
 
 #endif // XABSTRACTCANVASCONTROLLER_H

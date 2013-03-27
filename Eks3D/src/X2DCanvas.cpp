@@ -1,7 +1,10 @@
 #include "X2DCanvas.h"
-#include "QPainter"
-#include "QPaintEvent"
-#include "QApplication"
+
+#if X_QT_INTEROP
+
+#include "QtGui/QPainter"
+#include "QtGui/QPaintEvent"
+#include "QtWidgets/QApplication"
 #include "XAbstractCanvasController.h"
 #include "QDebug"
 
@@ -20,15 +23,9 @@ void X2DCanvas::paintEvent(QPaintEvent *event)
 
   painter.setTransform(_transform);
 
-  paint();
+  //paint();
 
   _currentPainter = 0;
-  }
-
-void X2DCanvas::update(XAbstractRenderModel::UpdateMode c)
-  {
-  XAbstractCanvas::update(c);
-  QWidget::update();
   }
 
 bool X2DCanvas::isShown()
@@ -37,7 +34,7 @@ bool X2DCanvas::isShown()
   }
 
 
-XSimple2DCanvasController::XSimple2DCanvasController(X2DCanvas *canvas) : XCameraCanvasController(canvas)
+XSimple2DCanvasController::XSimple2DCanvasController(X2DCanvas *canvas) : Eks::CameraCanvasController(canvas)
   {
   }
 
@@ -82,3 +79,5 @@ void XSimple2DCanvasController::pan(float x, float y)
   {
   qDebug() << "pan" << x << y;
   }
+
+#endif

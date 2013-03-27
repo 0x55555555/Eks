@@ -2,7 +2,7 @@
 #define XSCRIPTOBJECT_H
 
 #include "XScriptGlobal.h"
-#include "QMetaType"
+#include "QtCore/QMetaType"
 
 namespace XScript
 {
@@ -13,7 +13,7 @@ class PersistentValue;
 class InterfaceBase;
 template <typename T> class Interface;
 
-EKSSCRIPT_EXPORT InterfaceBase *findInterface(int qMetaTypeId);
+EKSSCRIPT_EXPORT InterfaceBase *findInterface(int typeId);
 
 class EKSSCRIPT_EXPORT Object
   {
@@ -37,7 +37,7 @@ public:
   InterfaceBase *getInterface() const
     {
     void *tid = internalField(TypeId);
-    return findInterface((xsize)tid);
+    return findInterface((int)tid);
     }
 
   Value get(const QString &) const;

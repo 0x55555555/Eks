@@ -2,16 +2,16 @@
 #include "pickerWidget/qtcolortriangle.h"
 #include "XVector3DWidget"
 #include "XFloatWidget"
-#include "QVBoxLayout"
-#include "QHBoxLayout"
-#include "QGroupBox"
-#include "QTabWidget"
-#include "QLabel"
+#include "QtWidgets/QVBoxLayout"
+#include "QtWidgets/QHBoxLayout"
+#include "QtWidgets/QGroupBox"
+#include "QtWidgets/QTabWidget"
+#include "QtWidgets/QLabel"
 
 #include "QDebug"
 
-XColourWidget::XColourWidget(  QWidget *parent, const XColour &col, bool hA ) : QWidget(parent),
-        _slider( new XVector3DWidget( this, XVector3D( 0, 0, 0 ), QStringList() << "R" << "G" << "B" )),
+XColourWidget::XColourWidget(  QWidget *parent, const Eks::Colour &col, bool hA ) : QWidget(parent),
+        _slider( new XVector3DWidget( this, Eks::Vector3D( 0, 0, 0 ), QStringList() << "R" << "G" << "B" )),
         _picker( new QtColorTriangle( this ) ),
         _outerLayout( new QVBoxLayout( this ) ),
         _sliderLayout( new QVBoxLayout( ) ),
@@ -60,38 +60,38 @@ XColourWidget::XColourWidget(  QWidget *parent, const XColour &col, bool hA ) : 
         }
 
     connect( _picker, SIGNAL(colorChanged(QColor)), this, SLOT(pickerChanged(QColor)));
-    connect( _slider, SIGNAL(valueChanged(XVector3D)), this, SLOT(rgbChanged(XVector3D)));
+    connect( _slider, SIGNAL(valueChanged(Eks::Vector3D)), this, SLOT(rgbChanged(Eks::Vector3D)));
 
     setColour( col );
     }
 
 void XColourWidget::pickerChanged( QColor col )
     {
-    setColour( XColour( col.redF(), col.greenF(), col.blueF(), alpha() ) );
+    setColour( Eks::Colour( col.redF(), col.greenF(), col.blueF(), alpha() ) );
     }
 
-void XColourWidget::rgbChanged( const XVector3D &col )
+void XColourWidget::rgbChanged( const Eks::Vector3D &col )
     {
-    setColour( XColour( col.x(), col.y(), col.z(), alpha() ) );
+    setColour( Eks::Colour( col.x(), col.y(), col.z(), alpha() ) );
     }
 
 void XColourWidget::setAlpha( double in )
     {
-    XColour s( colour() );
+    Eks::Colour s( colour() );
     s.w() = in;
     setColour( s );
     }
 
-void XColourWidget::setColour( const XColour &inCol )
+void XColourWidget::setColour( const Eks::Colour &inCol )
     {
     if( !_setting )
         {
-        XColour col = inCol;
+        Eks::Colour col = inCol;
         _setting = true;
 
         col.w() = alpha();
 
-        _slider->setValue( XVector3D( col.x(), col.y(), col.z() ) );
+        _slider->setValue( Eks::Vector3D( col.x(), col.y(), col.z() ) );
         _picker->setColor( QColor::fromRgbF( col.x(), col.y(), col.z(), col.w() ) );
 
         if( _alpha )
@@ -114,7 +114,7 @@ double XColourWidget::alpha()
     return 1;
     }
 
-XColour XColourWidget::colour()
+Eks::Colour XColourWidget::colour()
     {
-    return XColour( _slider->value().x(), _slider->value().y(), _slider->value().z(), 1.0 );
+    return Eks::Colour( _slider->value().x(), _slider->value().y(), _slider->value().z(), 1.0 );
     }

@@ -4,9 +4,9 @@
 
 namespace XScript
 {
-InterfaceBase::InterfaceBase(xsize typeID,
-               xsize nonPointerTypeID,
-               const QString &typeName,
+InterfaceBase::InterfaceBase(int typeID,
+               int nonPointerTypeID,
+               const Eks::String &typeName,
                const InterfaceBase *parent)
   : _typeName(typeName),
     _typeId(typeID),
@@ -28,7 +28,7 @@ InterfaceBase::InterfaceBase(int typeId,
                                int nonPointerTypeId,
                                int baseTypeId,
                                int baseNonPointerTypeId,
-                               const QString &typeName,
+                               const Eks::String &typeName,
                                const InterfaceBase *parent,
                                ToScriptFn tScr,
                                FromScriptFn fScr)
@@ -57,6 +57,15 @@ InterfaceBase::~InterfaceBase()
     {
     ifc->removeInterface(this);
     }
+  }
+
+void InterfaceBase::clear()
+  {
+  _typeName.Vector::clear();
+  _typeName.Vector::squeeze();
+
+  _upcasts.~UpCastMap();
+  new(&_upcasts) UpCastMap();
   }
 
 QVariant InterfaceBase::toVariant(const Value &inp, int typeHint)
@@ -336,17 +345,21 @@ void *InterfaceBase::prototype()
   }
 */
 
-XUnorderedMap<int, InterfaceBase*> _interfaces;
+Eks::UnorderedMap<int, InterfaceBase*> &_interfaces()
+  {
+  return *XScript::Engine::internalInterfaceLookup();
+  }
+
 void registerInterface(int id, int nonPtrId, InterfaceBase *interface)
   {
-  xAssert(!_interfaces.contains(id));
-  xAssert(!_interfaces.contains(nonPtrId));
+  xAssert(!_interfaces().contains(id));
+  xAssert(!_interfaces().contains(nonPtrId));
   xAssert(id != QVariant::Invalid);
 
-  _interfaces.insert(id, interface);
+  _interfaces().insert(id, interface);
   if(nonPtrId != QVariant::Invalid)
     {
-    _interfaces.insert(nonPtrId, interface);
+    _interfaces().insert(nonPtrId, interface);
     }
   }
 
@@ -365,7 +378,7 @@ InterfaceBase *findInterface(int id)
 #endif
 
   xAssert(id != QVariant::Invalid);
-  InterfaceBase *base = _interfaces.value(id);
+  InterfaceBase *base = _interfaces().value(id);
   xAssert(!base || base->isSealed());
   return base;
   }

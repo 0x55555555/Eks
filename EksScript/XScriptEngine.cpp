@@ -29,6 +29,8 @@ struct StaticEngine
     xsize idx = 0;
     (void)idx;
 
+    memset(engines, 0, sizeof(engines));
+
 #ifdef X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
     engines[idx++] = createV8Interface(debugging);
 #endif
@@ -39,7 +41,12 @@ struct StaticEngine
     }
 
   ~StaticEngine()
-    {
+  {
+    xForeach(auto &a, interfaces)
+      {
+      a->clear();
+      }
+
     xForeach(EngineInterface *i, engines)
       {
       delete i;
@@ -54,6 +61,8 @@ struct StaticEngine
   EngineInterface *engines[EngineAllocation];
 
   EngineInterface *currentInterface;
+
+  Eks::UnorderedMap<int, InterfaceBase*> interfaces;
   };
 
 StaticEngine *g_engine = 0;
@@ -114,6 +123,12 @@ EngineInterface *Engine::findInterface(const QString &extension)
       }
     }
   return 0;
+  }
+
+Eks::UnorderedMap<int, InterfaceBase*> *Engine::internalInterfaceLookup()
+  {
+  xAssert(g_engine);
+  return &g_engine->interfaces;
   }
 
 Engine::Walker Engine::interfaces()

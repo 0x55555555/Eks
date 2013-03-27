@@ -1,6 +1,7 @@
 #ifndef XCONVERTSCRIPTSTL_H
 #define XCONVERTSCRIPTSTL_H
 
+#include <vector>
 #include "XConvertFromScript.h"
 #include "XConvertToScript.h"
 #include "XScriptObject.h"
@@ -38,7 +39,7 @@ template <> struct NativeToJS<std::string>
   {
   Value operator()(std::string const &v) const
     {
-    return Value(QString::fromStdString(v));
+    return Value(Eks::String(v));
     }
   };
 
@@ -62,6 +63,7 @@ template <typename T> struct NativeToJS<std::list<T> > : NativeToJSList< std::li
 template <typename T> struct NativeToJS<std::vector<T> > : NativeToJSList< std::vector<T> > {};
 template <typename T> struct NativeToJS<QVector<T> > : NativeToJSList< QVector<T> > {};
 template <typename T> struct NativeToJS<QList<T> > : NativeToJSList< QList<T> > {};
+template <typename T> struct NativeToJS<Eks::Vector<T> > : NativeToJSList< Eks::Vector<T> > {};
 template <> struct NativeToJS<QStringList> : NativeToJSList<QStringList> {};
 
 template <typename MapT> struct NativeToJSLookup

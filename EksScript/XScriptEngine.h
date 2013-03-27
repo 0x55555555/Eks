@@ -2,9 +2,19 @@
 #define XSCRIPTENGINE_H
 
 #include "XScriptGlobal.h"
-#include "QVariant"
+#include "XUnorderedMap"
 
+class QVariant;
 class QFile;
+class QString;
+
+template <typename K, typename V> class QMap;
+template <typename K> class QList;
+
+namespace Eks
+{
+class String;
+}
 
 namespace XScript
 {
@@ -49,11 +59,11 @@ public:
   virtual void newValue(Value* val, xuint64 i) = 0;
   virtual void newValue(Value* val, float i) = 0;
   virtual void newValue(Value* val, double i) = 0;
-  virtual void newValue(Value* val, const QString& i) = 0;
+  virtual void newValue(Value* val, const Eks::String& i) = 0;
   virtual void newValue(Value* val, void *i) = 0;
-  virtual void newValue(Value* val, const QVariantMap &i) = 0;
-  virtual void newValue(Value* val, const QVariantList &i) = 0;
-  virtual void newValue(Value* val, const QStringList &i) = 0;
+  virtual void newValue(Value* val, const QMap<QString, QVariant> &i) = 0;
+  virtual void newValue(Value* val, const QList<QVariant> &i) = 0;
+  virtual void newValue(Value* val, const QList<QString> &i) = 0;
   virtual void newValue(Value* val, const Value *i) = 0;
   virtual void newValue(Value* val, const Object *i) = 0;
   virtual void newValue(Value* val, const Function *i) = 0;
@@ -74,9 +84,9 @@ public:
   virtual bool toBoolean(const Value *val) = 0;
   virtual double toNumber(const Value *val) = 0;
   virtual xint64 toInteger(const Value *val) = 0;
-  virtual void toString(QString *, const Value *val) = 0;
-  virtual void toMap(QVariantMap *, const Value *val) = 0;
-  virtual void toList(QVariantList *, const Value *val) = 0;
+  virtual void toString(Eks::String *, const Value *val) = 0;
+  virtual void toMap(QMap<QString, QVariant> *, const Value *val) = 0;
+  virtual void toList(QList<QVariant> *, const Value *val) = 0;
   virtual void *toExternal(const Value *val) = 0;
 
   virtual xsize length(const Value *val) = 0;
@@ -115,7 +125,7 @@ public:
   virtual void call(const Function *fn,
                     Value *out,
                     const Object &self,
-                    int argc,
+                    xsize argc,
                     const Value *args,
                     bool *error,
                     QString *message) = 0;
@@ -156,6 +166,8 @@ public:
 
   static EngineInterface *findInterface(const QFile *);
   static EngineInterface *findInterface(const QString &extension);
+
+  static Eks::UnorderedMap<int, InterfaceBase*> *internalInterfaceLookup();
 
   class Walker
     {

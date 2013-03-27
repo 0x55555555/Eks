@@ -4,6 +4,7 @@
 #include "XProperty"
 #include "XScriptGlobal.h"
 #include "XScriptEngine.h"
+#include "XStringSimple"
 
 class QVariant;
 
@@ -25,7 +26,7 @@ public:
   Value(xint64 x);
   Value(double x);
   Value(float x);
-  Value(const QString &str);
+  Value(const Eks::String &str);
   Value(const Object &str);
   Value(const Function &str);
   explicit Value(const QVariant& val);
@@ -53,7 +54,7 @@ public:
   double toNumber() const;
   xint64 toInteger() const;
   bool toBoolean() const;
-  QString toString() const;
+  Eks::String toString() const;
   QVariant toVariant(int typeHint=0) const;
 
   static Value newArray();

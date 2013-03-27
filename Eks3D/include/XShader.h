@@ -2,226 +2,238 @@
 #define XABSTRACTSHADER_H
 
 #include "X3DGlobal.h"
-#include "XFramebuffer.h"
-#include "XProperty"
-#include "QByteArray"
-#include "XColour"
-#include "XVector"
-#include "XVector2D"
-#include "XVector3D"
-#include "XVector4D"
-#include "XObject"
-#include "QGenericMatrix"
-#include "QVariant"
+#include "XPrivateImpl"
 
-class XRenderer;
-class XTexture;
-class XGLTexture;
-class XShader;
-class XAbstractShader;
+namespace Eks
+{
 
-class EKS3D_EXPORT XAbstractShaderVariable
+class Shader;
+class Renderer;
+class Resource;
+
+class ShaderVertexLayoutDescription
   {
-XProperties:
-  XROProperty( XAbstractShader *, abstractShader )
-
 public:
-  XAbstractShaderVariable( XAbstractShader * );
-  virtual ~XAbstractShaderVariable( );
-  virtual void setValue( int value ) = 0;
-  virtual void setValue( xReal value ) = 0;
-  virtual void setValue( unsigned int value ) = 0;
-  virtual void setValue( const XColour &color ) = 0;
-  virtual void setValue( const XVector2D &value ) = 0;
-  virtual void setValue( const XVector3D &value ) = 0;
-  virtual void setValue( const XVector4D &value ) = 0;
-  virtual void setValue( const QMatrix2x2 &value ) = 0;
-  virtual void setValue( const QMatrix2x3 &value ) = 0;
-  virtual void setValue( const QMatrix2x4 &value ) = 0;
-  virtual void setValue( const QMatrix3x2 &value ) = 0;
-  virtual void setValue( const QMatrix3x3 &value ) = 0;
-  virtual void setValue( const QMatrix3x4 &value ) = 0;
-  virtual void setValue( const QMatrix4x2 &value ) = 0;
-  virtual void setValue( const QMatrix4x3 &value ) = 0;
-  virtual void setValue( const QMatrix4x4 &value ) = 0;
-  virtual void setValue( const XTexture *value ) = 0;
-  virtual void setValueArray( const XVector<int> &values ) = 0;
-  virtual void setValueArray( const XVector<xReal> &values ) = 0;
-  virtual void setValueArray( const XVector<unsigned int> &values ) = 0;
-  virtual void setValueArray( const XVector<XColour> &values ) = 0;
-  virtual void setValueArray( const XVector<XVector2D> &values ) = 0;
-  virtual void setValueArray( const XVector<XVector3D> &values ) = 0;
-  virtual void setValueArray( const XVector<XVector4D> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix2x2> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix2x3> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix2x4> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix3x2> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix3x3> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix3x4> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix4x2> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix4x3> &values ) = 0;
-  virtual void setValueArray( const XVector<QMatrix4x4> &values ) = 0;
-
-  virtual void rebind() = 0;
-  };
-
-class EKS3D_EXPORT XShaderVariable
-  {
-XProperties:
-  XRORefProperty( QVariant, value );
-  XROProperty( XShader *, shader );
-  XROProperty( QString, name );
-  XROProperty( XAbstractShaderVariable *, internal );
-
-public:
-  XShaderVariable( QString name, XShader *, XAbstractShaderVariable *variable = 0 );
-  ~XShaderVariable( );
-  void setValue( int value );
-  void setValue( xReal value );
-  void setValue( unsigned int value );
-  void setValue( const XColour &color );
-  void setValue( const XVector2D &value );
-  void setValue( const XVector3D &value );
-  void setValue( const XVector4D &value );
-  void setValue( const QMatrix2x2 &value );
-  void setValue( const QMatrix2x3 &value );
-  void setValue( const QMatrix2x4 &value );
-  void setValue( const QMatrix3x2 &value );
-  void setValue( const QMatrix3x3 &value );
-  void setValue( const QMatrix3x4 &value );
-  void setValue( const QMatrix4x2 &value );
-  void setValue( const QMatrix4x3 &value );
-  void setValue( const QMatrix4x4 &value );
-  void setValue( const XTexture *value );
-  void setValueArray( const XVector<int> &values );
-  void setValueArray( const XVector<xReal> &values );
-  void setValueArray( const XVector<unsigned int> &values );
-  void setValueArray( const XVector<XColour> &values );
-  void setValueArray( const XVector<XVector2D> &values );
-  void setValueArray( const XVector<XVector3D> &values );
-  void setValueArray( const XVector<XVector4D> &values );
-  void setValueArray( const XVector<QMatrix2x2> &values );
-  void setValueArray( const XVector<QMatrix2x3> &values );
-  void setValueArray( const XVector<QMatrix2x4> &values );
-  void setValueArray( const XVector<QMatrix3x2> &values );
-  void setValueArray( const XVector<QMatrix3x3> &values );
-  void setValueArray( const XVector<QMatrix3x4> &values );
-  void setValueArray( const XVector<QMatrix4x2> &values );
-  void setValueArray( const XVector<QMatrix4x3> &values );
-  void setValueArray( const XVector<QMatrix4x4> &values );
-
-  void setVariantValue( const QVariant & );
-
-  void prepareInternal( );
-  };
-
-class EKS3D_EXPORT XAbstractShader
-  {
-XProperties:
-  XROProperty( XRenderer *, renderer );
-
-public:
-  XAbstractShader( XRenderer * );
-  virtual ~XAbstractShader();
-
-  enum ComponentType
+  enum Format
     {
-    Fragment,
-    Vertex,
-    Geometry
-    };
-  virtual bool addComponent(ComponentType c, const QString& source, QStringList &log) = 0;
-  virtual bool build(QStringList &log) = 0;
-  virtual bool isValid() = 0;
+    FormatFloat1,
+    FormatFloat2,
+    FormatFloat3,
+    FormatFloat4,
 
-  virtual XAbstractShaderVariable *createVariable( QString, XAbstractShader * ) = 0;
-  virtual void destroyVariable( XAbstractShaderVariable * ) = 0;
+    FormatCount
+    };
+
+  struct Slot
+    {
+  public:
+    enum Type
+      {
+      PerVertex,
+      PerInstance
+      };
+    Slot() : index(0), type(PerVertex), instanceDataStepRate(0)
+      {
+      }
+
+    xuint8 index;
+    Type type;
+    xsize instanceDataStepRate;
+    };
+
+  enum OffsetPack
+    {
+    OffsetPackTight = X_UINT32_SENTINEL
+    };
+
+  enum Semantic
+    {
+    Position,
+    Colour,
+    TextureCoordinate,
+    Normal,
+
+    SemanticCount
+    };
+
+  ShaderVertexLayoutDescription(Semantic s, Format fmt, xsize off=OffsetPackTight, Slot sl=Slot())
+    : semantic(s), format(fmt), offset(off), slot(sl)
+    {
+    }
+
+  Semantic semantic;
+  Format format;
+  xsize offset;
+  Slot slot;
+  };
+
+class EKS3D_EXPORT ShaderVertexLayout : public PrivateImpl<sizeof(void*) * 6>
+  {
+public:
+  typedef ShaderVertexLayoutDescription Description;
+  ShaderVertexLayout() : _renderer(0) { }
+  ~ShaderVertexLayout();
 
 private:
-  mutable QAtomicInt _ref;
+  X_DISABLE_COPY(ShaderVertexLayout);
+  friend class ShaderVertexComponent;
+
+  Renderer *_renderer;
   };
 
-Q_DECLARE_METATYPE(XShader)
-
-class EKS3D_EXPORT XShaderComponent
+class ShaderConstantDataDescription
   {
-XProperties:
-  XROProperty( XRenderer *, renderer );
-
 public:
+  enum Type
+    {
+    Float,
+    Float3,
+    Float4,
+    Matrix4x4,
+
+    TypeCount
+    };
+  const char* name;
+  Type type;
   };
 
-class EKS3D_EXPORT XShader
+class EKS3D_EXPORT ShaderConstantData : public PrivateImpl<sizeof(void*) * 9>
   {
-XProperties:
-  XROProperty( XRenderer *, renderer );
-  XRORefProperty( QStringList, log );
-
 public:
-  XShader();
-  XShader( const XShader & );
-  ~XShader();
-  XShader& operator=(const XShader &);
+  typedef ShaderConstantDataDescription Description;
 
-  void addComponent(XAbstractShader::ComponentType, const QString &source);
-  void clear();
+  ShaderConstantData(Renderer *r=0,
+                     Description *desc = 0,
+                     xsize descCount = 0,
+                     const void *data=0);
+  ~ShaderConstantData();
 
-  XShaderVariable *getVariable(const QString &type);
+  static bool delayedCreate(ShaderConstantData &ths,
+                            Renderer *r,
+                            Description *desc = 0,
+                            xsize descCount = 0,
+                            const void *data = 0);
 
-  void setToDefinedType(const QString &type);
-
-  QHash <QString, XShaderVariable*> variables() const;
-
-  void prepareInternal( XRenderer * ) const;
-  XAbstractShader *internal() const;
+  void update(void *data);
 
 private:
-  QHash <QString, XShaderVariable*> _variables;
+  X_DISABLE_COPY(ShaderConstantData);
 
-  struct Component
-    {
-    XAbstractShader::ComponentType type;
-    QString source;
-    };
-  XList<Component> _components;
-
-  mutable XAbstractShader *_internal;
+  Renderer *_renderer;
   };
 
-inline bool operator==(const XShader&, const XShader&)
+class EKS3D_EXPORT ShaderVertexComponent : public PrivateImpl<sizeof(void*) * 2>
   {
-  xAssertFail();
-  return false;
+public:
+  typedef ShaderVertexLayout VertexLayout;
+
+  ShaderVertexComponent(Renderer *r=0,
+                         const char *source=0,
+                         xsize length=0,
+                         const VertexLayout::Description *vertexDescriptions=0,
+                         xsize vertexItemCount=0,
+                         VertexLayout *layout=0);
+  ~ShaderVertexComponent();
+
+  static bool delayedCreate(ShaderVertexComponent &ths,
+                            Renderer *r,
+                            const char *source,
+                            xsize length,
+                            const VertexLayout::Description *vertexDescription=0,
+                            xsize vertexItemCount=0,
+                            VertexLayout *layout=0);
+
+
+private:
+  X_DISABLE_COPY(ShaderVertexComponent);
+
+  Renderer *_renderer;
+  };
+
+class EKS3D_EXPORT ShaderFragmentComponent : public PrivateImpl<sizeof(void*) * 2>
+  {
+public:
+  ShaderFragmentComponent(Renderer *r=0,
+                           const char *source=0,
+                           xsize length=0);
+  ~ShaderFragmentComponent();
+
+  static bool delayedCreate(ShaderFragmentComponent &ths,
+                            Renderer *r,
+                            const char *source,
+                            xsize length);
+
+private:
+  X_DISABLE_COPY(ShaderFragmentComponent);
+
+  Renderer *_renderer;
+  };
+
+class EKS3D_EXPORT Shader : public PrivateImpl<sizeof(void*)*6>
+  {
+public:
+  typedef ShaderConstantData ConstantData;
+
+  Shader(Renderer *r=0,
+          ShaderVertexComponent *v=0,
+          ShaderFragmentComponent *f=0);
+  ~Shader();
+
+  static bool delayedCreate(Shader &ths,
+              Renderer *r,
+              ShaderVertexComponent *v,
+              ShaderFragmentComponent *f);
+
+
+  void setShaderConstantData(xsize first, const ConstantData *data);
+  void setShaderConstantDatas(xsize first, xsize num, const ConstantData *const* data);
+
+  void setShaderResource(xsize first, const Resource *data);
+  void setShaderResources(xsize first, xsize num, const Resource *const* data);
+
+private:
+  X_DISABLE_COPY(Shader);
+
+  Renderer *_renderer;
+  };
+
+}
+
+#include "XRenderer.h"
+
+namespace Eks
+{
+
+inline void ShaderConstantData::update(void *data)
+  {
+  xAssert(_renderer);
+  _renderer->functions().set.shaderConstantData(_renderer, this, data);
   }
 
-inline bool operator!=(const XShader&, const XShader&)
+inline void Shader::setShaderConstantData(xsize first, const ConstantData *data)
   {
-  xAssertFail();
-  return false;
+  xAssert(_renderer);
+  _renderer->functions().set.shaderConstantBuffer(_renderer, this, first, 1, &data);
   }
 
-inline bool operator<<(const QTextStream&, const XShader&)
+inline void Shader::setShaderConstantDatas(xsize first, xsize num, const ConstantData *const* data)
   {
-  xAssertFail();
-  return false;
+  xAssert(_renderer);
+  _renderer->functions().set.shaderConstantBuffer(_renderer, this, first, num, data);
   }
 
-inline bool operator<<(const QDataStream&, const XShader&)
+inline void Shader::setShaderResource(xsize first, const Resource *data)
   {
-  xAssertFail();
-  return false;
+  xAssert(_renderer);
+  _renderer->functions().set.shaderResource(_renderer, this, first, 1, &data);
   }
 
-inline bool operator>>(QTextStream&, XShader&)
+inline void Shader::setShaderResources(xsize first, xsize num, const Resource *const* data)
   {
-  xAssertFail();
-  return false;
+  xAssert(_renderer);
+  _renderer->functions().set.shaderResource(_renderer, this, first, num, data);
   }
 
-inline bool operator>>(QDataStream&, XShader&)
-  {
-  xAssertFail();
-  return false;
-  }
+}
 
 #endif // XABSTRACTSHADER_H

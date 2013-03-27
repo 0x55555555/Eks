@@ -1,13 +1,13 @@
 #include "XVector3DWidget"
-#include "QVBoxLayout"
 #include "XFloatWidget"
-#include "QLabel"
+#include "QtWidgets/QVBoxLayout"
+#include "QtWidgets/QLabel"
 
 #include "cmath"
 
 #include "QKeyEvent"
 
-XVector3DWidget::XVector3DWidget( QWidget *parent, XVector3D val, QStringList labels) : QWidget( parent ),
+XVector3DWidget::XVector3DWidget( QWidget *parent, Eks::Vector3D val, QStringList labels) : QWidget( parent ),
         _x( new XFloatWidget( val.x(), -HUGE_VAL, HUGE_VAL, this ) ),
         _y( new XFloatWidget( val.y(), -HUGE_VAL, HUGE_VAL, this ) ),
         _z( new XFloatWidget( val.z(), -HUGE_VAL, HUGE_VAL, this ) ),
@@ -37,7 +37,7 @@ XVector3DWidget::XVector3DWidget( QWidget *parent, XVector3D val, QStringList la
     connect( _z, SIGNAL(valueChanged(double)), this, SLOT(setValues()) );
     }
 
-XVector3DWidget::XVector3DWidget( XVector3D val, XVector3D min, XVector3D max, QStringList labels, QWidget *parent ) : QWidget( parent ),
+XVector3DWidget::XVector3DWidget( Eks::Vector3D val, Eks::Vector3D min, Eks::Vector3D max, QStringList labels, QWidget *parent ) : QWidget( parent ),
         _x( new XFloatWidget( val.x(), min.x(), max.x(), this ) ),
         _y( new XFloatWidget( val.y(), min.y(), max.y(), this ) ),
         _z( new XFloatWidget( val.z(), min.z(), max.z(), this ) ),
@@ -79,41 +79,41 @@ void XVector3DWidget::setReadOnly(bool t)
     _z->setReadOnly(t);
     }
 
-void XVector3DWidget::setMaximum( XVector3D in )
+void XVector3DWidget::setMaximum( Eks::Vector3D in )
     {
     _x->setMaximum( in.x() );
     _y->setMaximum( in.y() );
     _z->setMaximum( in.z() );
     }
 
-XVector3D XVector3DWidget::maximum() const
+Eks::Vector3D XVector3DWidget::maximum() const
     {
-    return XVector3D( _x->maximum(), _y->maximum(), _z->maximum() );
+    return Eks::Vector3D( _x->maximum(), _y->maximum(), _z->maximum() );
     }
 
-void XVector3DWidget::setMinimum( XVector3D in )
+void XVector3DWidget::setMinimum( Eks::Vector3D in )
     {
     _x->setMinimum( in.x() );
     _y->setMinimum( in.y() );
     _z->setMinimum( in.z() );
     }
 
-XVector3D XVector3DWidget::minimum() const
+Eks::Vector3D XVector3DWidget::minimum() const
     {
-    return XVector3D( _x->minimum(), _y->minimum(), _z->minimum() );
+    return Eks::Vector3D( _x->minimum(), _y->minimum(), _z->minimum() );
     }
 
-XVector3D XVector3DWidget::range() const
+Eks::Vector3D XVector3DWidget::range() const
     {
     return maximum() - minimum();
     }
 
-XVector3D XVector3DWidget::value() const
+Eks::Vector3D XVector3DWidget::value() const
     {
-    return XVector3D( _x->value(), _y->value(), _z->value() );
+    return Eks::Vector3D( _x->value(), _y->value(), _z->value() );
     }
 
-void XVector3DWidget::setValue( XVector3D in )
+void XVector3DWidget::setValue( Eks::Vector3D in )
     {
     if( !_setting )
         {
@@ -128,7 +128,7 @@ void XVector3DWidget::setValue( XVector3D in )
 
 void XVector3DWidget::setValues()
     {
-    setValue( XVector3D( _x->value(), _y->value(),  _z->value() ) );
+    setValue( Eks::Vector3D( _x->value(), _y->value(),  _z->value() ) );
     }
 
 void XVector3DWidget::keyPressEvent( QKeyEvent *event )

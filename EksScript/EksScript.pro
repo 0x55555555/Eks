@@ -7,6 +7,8 @@
 TARGET = EksScript
 TEMPLATE = lib
 
+QT += widgets
+
 include("../EksCore/GeneralOptions.pri")
 
 SOURCES += \
@@ -52,10 +54,11 @@ HEADERS += XScriptGlobal.h \
     XScriptDefinitions.h \
     XScriptInterfaceBase.h
 
-LIBS += -lEksCore # -lQtV8
+LIBS += -lEksCore
 
-INCLUDEPATH += $$ROOT/Eks/EksCore # $$ROOT/Eks/EksScript/qtjsbackend/src/3rdparty/v8/include
+INCLUDEPATH += $$ROOT/Eks/EksCore
 
+#QT += v8-private
 #define X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
 
 #win32-msvc2010 {

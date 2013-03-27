@@ -1,8 +1,9 @@
 #include "../XScriptGlobal.h"
 
+
 #ifdef X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
-# include "v8.h"
-# include "v8-debug.h"
+# include "private/v8.h"
+# include "private/v8-debug.h"
 #endif
 
 #include "../XScriptEngine.h"
@@ -1025,7 +1026,7 @@ public:
   void call(const Function *fn,
             Value *out,
             const Object &self,
-            int argc,
+            xsize argc,
             const Value *args,
             bool *error,
             QString *message) X_OVERRIDE

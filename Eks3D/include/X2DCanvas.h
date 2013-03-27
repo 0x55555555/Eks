@@ -2,18 +2,19 @@
 #define X2DCANVAS_H
 
 #include "X3DGlobal.h"
-#include "QWidget"
 #include "XAbstractCanvas.h"
 #include "XCameraCanvasController.h"
-#include "QMouseEvent"
+
+#if X_QT_INTEROP
+
+#include "QtWidgets/QWidget"
+#include "QtGui/QMouseEvent"
 
 
 class QPainter;
 
-class EKS3D_EXPORT X2DCanvas : public QWidget, public XAbstractCanvas
+class EKS3D_EXPORT X2DCanvas : public QWidget, public Eks::AbstractCanvas
   {
-  Q_OBJECT
-
 XProperties:
   XProperty(QColor, backgroundColour, setBackgroundColour);
   XROProperty(QPainter *, currentPainter);
@@ -26,7 +27,7 @@ public:
 
   X_CANVAS_GENERAL_MOUSEHANDLERS()
 
-  virtual void update(XAbstractRenderModel::UpdateMode);
+  //virtual void update(Eks::AbstractRenderModel::UpdateMode);
 
   virtual bool isShown();
 
@@ -34,12 +35,12 @@ protected:
   virtual void paintEvent(QPaintEvent *);
   };
 
-class EKS3D_EXPORT XSimple2DCanvasController : public XCameraCanvasController, XCameraCanvasController::CameraInterface
+class EKS3D_EXPORT XSimple2DCanvasController : public Eks::CameraCanvasController, Eks::CameraCanvasController::CameraInterface
   {
 public:
   XSimple2DCanvasController(X2DCanvas *canvas);
 
-  XCameraCanvasController::CameraInterface *camera() { return this; }
+  Eks::CameraCanvasController::CameraInterface *camera() { return this; }
 
 
   virtual MovementFlags supportedMovements() const;
@@ -48,5 +49,7 @@ public:
   virtual void dolly(float x, float y);
   virtual void pan(float x, float y);
   };
+
+#endif
 
 #endif // X2DCANVAS_H

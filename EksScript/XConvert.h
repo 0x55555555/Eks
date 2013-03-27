@@ -16,7 +16,7 @@ template <typename T, typename U> T *castFromBase(U *ptr)
   return dynamic_cast<T*>(ptr);
   }
 
-template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
+template <typename T> inline T &ptrMatcher(T **in, bool& valid)
   {
   if(!*in)
     {
@@ -33,11 +33,16 @@ template <typename T> inline const T &ptrMatcher(T **in, bool& valid)
   return **in;
   }
 
-template <typename Out, typename In> Out match(In *in, bool &valid)
+template <typename Out, typename In> class TypeMatcher
   {
-  valid = true;
-  return Out(*in);
-  }
+public:
+  typedef typename std::remove_reference<In>::type NoRef;
+  static Out match(NoRef *in, bool &valid)
+    {
+    valid = true;
+    return *in;
+    }
+  };
 
 namespace internal
 {

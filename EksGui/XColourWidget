@@ -2,9 +2,9 @@
 #define COLOURWIDGET_H
 
 #include "XGuiGlobal"
-#include "QWidget"
+#include "QtWidgets/QWidget"
 #include "XColour"
-#include "XVector3D"
+#include "XMathVector"
 
 class QVBoxLayout;
 class QHBoxLayout;
@@ -17,20 +17,20 @@ class EKSGUI_EXPORT XColourWidget : public QWidget
     {
 Q_OBJECT
 public:
-    XColourWidget( QWidget *parent = 0, const XColour &col = XColour(), bool hasAlpha=true );
+    XColourWidget( QWidget *parent = 0, const Eks::Colour &col = Eks::Colour(), bool hasAlpha=true );
 
     double alpha();
-    XColour colour();
+    Eks::Colour colour();
 
 Q_SIGNALS:
-    void colourChanged( const XColour & );
+    void colourChanged( const Eks::Colour & );
 
 public Q_SLOTS:
-    void setColour( const XColour & );
+    void setColour( const Eks::Colour & );
 
 private Q_SLOTS:
     void setAlpha(double);
-    void rgbChanged( const XVector3D & );
+    void rgbChanged( const Eks::Vector3D & );
     void pickerChanged( QColor );
 
 private:
