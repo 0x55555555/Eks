@@ -1,7 +1,5 @@
 #include "XFloatWidget"
-#include "QtWidgets/QHBoxLayout"
-#include "QtWidgets/QDoubleSpinBox"
-#include "QtWidgets/QSlider"
+#include "QtHelper/XQWidgets"
 #include "math.h"
 
 #include "QDebug"

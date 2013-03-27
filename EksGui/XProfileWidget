@@ -3,7 +3,7 @@
 
 #include "XGuiGlobal"
 #include "QtCore/QObject"
-#include "QtWidgets/QWidget"
+#include "QtHelper/XQWidget"
 
 class QTreeWidget;
 class QListWidget;
