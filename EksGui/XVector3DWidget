@@ -2,11 +2,7 @@
 #define VECTOR3DWIDGET_H
 
 #include "XGuiGlobal"
-#if QT_VERSION >= 0x050000
-# include "QtWidgets/QWidget"
-#else
-# include "QtGui/QWidget"
-#endif
+#include "QtHelper/XQWidget"
 #include "XMathVector"
 
 class QVBoxLayout;

@@ -1,13 +1,6 @@
 #include "XProfileWidget"
 #include "XProfiler"
-#include "QtWidgets/QTreeWidget"
-#include "QtWidgets/QListWidget"
-#include "QtWidgets/QVBoxLayout"
-#include "QtWidgets/QHeaderView"
-#include "QtWidgets/QPushButton"
-#include "QtWidgets/QCheckBox"
-#include "QtWidgets/QStackedLayout"
-#include "QtWidgets/QMenu"
+#include "QtHelper/XQWidgets"
 #include "QtCore/QDebug"
 
 class Item : public QTreeWidgetItem

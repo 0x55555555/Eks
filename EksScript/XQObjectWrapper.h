@@ -7,7 +7,7 @@
 #include "XInterfaceUtilities.h"
 #include "XScriptObject.h"
 #include "XScriptEngine.h"
-#include "QtWidgets/QWidget"
+#include "QtHelper/XQWidget"
 
 namespace XScript
 {

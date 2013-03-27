@@ -49,7 +49,7 @@
 
 #include "XGuiGlobal"
 #include <QtGui/QImage>
-#include <QtWidgets/QWidget>
+#include "QtHelper/XQWidget"
 
 class QPointF;
 struct Vertex;

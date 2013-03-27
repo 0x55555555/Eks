@@ -56,11 +56,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 #include <QtGui/QPixmap>
-#include <QtGui/QResizeEvent>
-#include <QtWidgets/QFrame>
-#include <QtWidgets/QLayout>
-#include <QtWidgets/QToolTip>
-#include <QtWidgets/QVBoxLayout>
+#include "QtHelper/XQWidgets"
 
 #include <math.h>
 

@@ -1,11 +1,10 @@
 #include "XVector3DWidget"
 #include "XFloatWidget"
-#include "QtWidgets/QVBoxLayout"
-#include "QtWidgets/QLabel"
+#include "QtHelper/XQWidgets"
+#include "QKeyEvent"
 
 #include "cmath"
 
-#include "QKeyEvent"
 
 XVector3DWidget::XVector3DWidget( QWidget *parent, Eks::Vector3D val, QStringList labels) : QWidget( parent ),
         _x( new XFloatWidget( val.x(), -HUGE_VAL, HUGE_VAL, this ) ),
