@@ -216,17 +216,17 @@ void QObjectWrapper::initiate()
   qRegisterMetaType<Function>("ScriptFunction");
 
   // build up custom QObject wrapper
-  Interface<QObject>* interface = Interface<QObject>::create(qobjectName);
-  buildInterface(interface, &QObject::staticMetaObject);
+  Interface<QObject>* ifc = Interface<QObject>::create(qobjectName);
+  buildInterface(ifc, &QObject::staticMetaObject);
 
-  interface->seal();
+  ifc->seal();
 
-  Engine::addInterface(interface);
-  instance()->_objects.insert(&QObject::staticMetaObject, interface);
+  Engine::addInterface(ifc);
+  instance()->_objects.insert(&QObject::staticMetaObject, ifc);
 
 
   // build up custom QWidget wrapper
-  Interface<QWidget>* widget = Interface<QWidget>::createWithParent("QWidget", interface, interface);
+  Interface<QWidget>* widget = Interface<QWidget>::createWithParent("QWidget", ifc, ifc);
 
 
   // QWidget
@@ -252,10 +252,10 @@ QObjectWrapper *QObjectWrapper::instance()
 
 Object QObjectWrapper::wrap(QObject *obj)
   {
-  const InterfaceBase* interface = findInterface(obj->metaObject());
+  const InterfaceBase* ifc = findInterface(obj->metaObject());
 
   Value vals[1] = { Value(obj) };
-  Object self = interface->newInstance(1, vals);
+  Object self = ifc->newInstance(1, vals);
   xAssert(self.isValid());
 
   return self;
