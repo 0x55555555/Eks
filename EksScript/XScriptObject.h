@@ -36,8 +36,9 @@ public:
 
   InterfaceBase *getInterface() const
     {
-    int tid = reinterpret_cast<int>(internalField(TypeId));
-    return findInterface((int)tid);
+    void *data = internalField(TypeId);
+    int tid = *reinterpret_cast<int*>(&data);
+    return findInterface(tid);
     }
 
   Value get(const QString &) const;
