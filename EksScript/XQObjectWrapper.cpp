@@ -711,8 +711,9 @@ struct Utils
       {
       return toss(QString("Too few arguments to method ")
 #if QT_VERSION >= 0x050000
-                  + QString::fromLocal8Bit(method.methodSignature()));
+                  + QString::fromLocal8Bit(method.methodSignature())
 #endif
+                  );
       }
     length = qMin(length, types.size());
 
