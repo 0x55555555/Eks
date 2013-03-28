@@ -233,7 +233,11 @@ void QObjectWrapper::initiate()
     {
     FunctionDef extraWidgetFunctions[] =
     {
+  #if QT_VERSION >= 0x050000
       widget->constMethod<QPoint (const QWidget*, const QPoint&), &QWidget::mapTo>("mapTo"),
+  #else
+      widget->constMethod<QPoint (QWidget*, const QPoint&), &QWidget::mapTo>("mapTo"),
+  #endif
       widget->constMethod<QPoint (const QPoint&), &QWidget::mapToGlobal>("mapToGlobal"),
     };
 
@@ -697,7 +701,7 @@ struct Utils
   static Value methodCall(QObject *ths, int id, const internal::JSArguments& args)
     {
     QMetaMethod method = ths->metaObject()->method(id);
-#ifdef X_TYPE_DEBUG
+#if QT_VERSION >= 0x050000 && defined(X_TYPE_DEBUG)
     QByteArray name = method.methodSignature();
     (void)name;
 #endif
@@ -705,7 +709,10 @@ struct Utils
     int length = (int)args.length();
     if(length < types.size())
       {
-      return toss(QString("Too few arguments to method ") + QString::fromLocal8Bit(method.methodSignature()));
+      return toss(QString("Too few arguments to method ")
+#if QT_VERSION >= 0x050000
+                  + QString::fromLocal8Bit(method.methodSignature()));
+#endif
       }
     length = qMin(length, types.size());
 
