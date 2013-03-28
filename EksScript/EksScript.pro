@@ -56,7 +56,7 @@ HEADERS += XScriptGlobal.h \
 
 LIBS += -lEksCore
 
-INCLUDEPATH += $$ROOT/Eks/EksCore
+INCLUDEPATH += $$ROOT/Eks/EksCore ./
 
 #QT += v8-private
 #define X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT
