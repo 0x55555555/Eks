@@ -36,7 +36,7 @@ public:
 
   InterfaceBase *getInterface() const
     {
-    void *tid = internalField(TypeId);
+    int tid = reinterpret_cast<int>(internalField(TypeId));
     return findInterface((int)tid);
     }
 
