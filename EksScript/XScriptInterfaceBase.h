@@ -365,7 +365,7 @@ protected:
   };
 
 EKSSCRIPT_EXPORT InterfaceBase *findInterface(int qMetaTypeId);
-EKSSCRIPT_EXPORT void registerInterface(InterfaceBase *interface);
+EKSSCRIPT_EXPORT void registerInterface(InterfaceBase *ifc);
 
 template <typename T> const InterfaceBase* findInterface(const T *)
   {
