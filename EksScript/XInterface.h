@@ -542,9 +542,9 @@ template <typename T> struct NativeToJSConvertableType
       {
       return Value();
       }
-    const InterfaceBase* interface = findInterface<T>(n);
+    const InterfaceBase* ifc = findInterface<T>(n);
     Value vals[1] = { Value(n) };
-    Object self = interface->newInstance(1, vals);
+    Object self = ifc->newInstance(1, vals);
     return self;
     }
   Value operator()(T &n) const
@@ -562,9 +562,9 @@ template <typename T, typename BASE> struct NativeToJSConvertableTypeInherited
       return Value();
       }
     BASE* base = n;
-    const InterfaceBase* interface = findInterface<T>(n);
+    const InterfaceBase* ifc = findInterface<T>(n);
     Value vals[1] = { Value(base) };
-    Object self = interface->newInstance(1, vals);
+    Object self = ifc->newInstance(1, vals);
     return self;
     }
   Value operator()(T &n) const
