@@ -618,7 +618,7 @@ template <typename Sig,
 struct FunctionForwarder
   {
 private:
-  typedef typename XIfElse< XSameType<void ,typename XSignature<Sig>::ReturnType>::Value,
+  typedef typename Eks::IfElse< XSameType<void ,typename XSignature<Sig>::ReturnType>::Value,
   Detail::FunctionForwarderVoid< sl::Arity< XSignature<Sig> >::Value, Sig, UnlockV8 >,
   Detail::FunctionForwarder< sl::Arity< XSignature<Sig> >::Value, Sig, UnlockV8 >
   >::Type
@@ -897,7 +897,7 @@ template <typename Sig,
           bool UnlockV8 = XSignatureIsUnlockable< XSignature<Sig> >::Value
           >
 struct FunctionToInCa
-    : XIfElse< XSameType<void ,typename XFunctionSignature<Sig>::ReturnType>::Value,
+    : Eks::IfElse< XSameType<void ,typename XFunctionSignature<Sig>::ReturnType>::Value,
     Detail::FunctionToInCaVoid< Sig, Func, UnlockV8>,
     Detail::FunctionToInCa< Sig, Func, UnlockV8>
     >::Type
@@ -961,7 +961,7 @@ template <typename T, typename Sig,
           bool UnlockV8 = XSignatureIsUnlockable< XMethodSignature<T,Sig> >::Value
           >
 struct MethodToInCa
-    : XIfElse< XSameType<void ,typename XMethodSignature<T,Sig>::ReturnType>::Value,
+    : Eks::IfElse< XSameType<void ,typename XMethodSignature<T,Sig>::ReturnType>::Value,
     Detail::MethodToInCaVoid<T, Sig, Func, UnlockV8>,
     Detail::MethodToInCa<T, Sig, Func, UnlockV8>
     >::Type
@@ -1062,7 +1062,7 @@ struct ConstMethodToInCa
     #if 0 // not working due to an ambiguous Sig<T,...> vs Sig<const T,...>. Kinda weird, since MethodToInCa<const T,...> works.
     : MethodToInCa<const T,Sig,Func,UnlockV8> {};
 #else
-    : XIfElse< XSameType<void ,typename XConstMethodSignature<T, Sig>::ReturnType>::Value,
+    : Eks::IfElse< XSameType<void ,typename XConstMethodSignature<T, Sig>::ReturnType>::Value,
     Detail::ConstMethodToInCaVoid<T, Sig, Func, UnlockV8>,
     Detail::ConstMethodToInCa<T, Sig, Func, UnlockV8>
     >::Type
@@ -1101,7 +1101,7 @@ struct XMethodForwarder
   {
 private:
   typedef typename
-  XIfElse< XSameType<void ,typename XMethodSignature<T,Sig>::ReturnType>::Value,
+  Eks::IfElse< XSameType<void ,typename XMethodSignature<T,Sig>::ReturnType>::Value,
   Detail::XMethodForwarderVoid< T, sl::Arity< XSignature<Sig> >::Value, Sig, UnlockV8 >,
   Detail::XMethodForwarder< T, sl::Arity< XSignature<Sig> >::Value, Sig, UnlockV8 >
   >::Type
@@ -1147,7 +1147,7 @@ struct XConstMethodForwarder
   {
 private:
   typedef typename
-  XIfElse< XSameType<void ,typename XConstMethodSignature<T,Sig>::ReturnType>::Value,
+  Eks::IfElse< XSameType<void ,typename XConstMethodSignature<T,Sig>::ReturnType>::Value,
   Detail::XConstMethodForwarderVoid< T, sl::Arity< XSignature<Sig> >::Value, Sig, UnlockV8 >,
   Detail::XConstMethodForwarder< T, sl::Arity< XSignature<Sig> >::Value, Sig, UnlockV8 >
   >::Type
@@ -1196,7 +1196,7 @@ forwardFunction( Sig func, internal::JSArguments const & argv )
   typedef typename MSIG::ReturnType RV;
   enum { Arity = sl::Arity< XSignature<Sig> >::Value };
   typedef typename
-  XIfElse< XSameType<void ,RV>::Value,
+  Eks::IfElse< XSameType<void ,RV>::Value,
       Detail::FunctionForwarderVoid< Arity, Sig >,
       Detail::FunctionForwarder< Arity, Sig >
       >::Type Proxy;
@@ -1220,7 +1220,7 @@ forwardMethod( T & self,
   typedef typename MSIG::ReturnType RV;
   enum { Arity = sl::Arity< MSIG >::Value };
   typedef typename
-  XIfElse< XSameType<void ,RV>::Value,
+  Eks::IfElse< XSameType<void ,RV>::Value,
       Detail::XMethodForwarderVoid< T, Arity, Sig >,
       Detail::XMethodForwarder< T, Arity, Sig >
       >::Type Proxy;
@@ -1242,7 +1242,7 @@ forwardMethod(Sig func, internal::JSArguments const & argv )
   typedef typename MSIG::ReturnType RV;
   enum { Arity = sl::Arity< MSIG >::Value };
   typedef typename
-  XIfElse< XSameType<void ,RV>::Value,
+  Eks::IfElse< XSameType<void ,RV>::Value,
       Detail::XMethodForwarderVoid< T, Arity, Sig >,
       Detail::XMethodForwarder< T, Arity, Sig >
       >::Type Proxy;
@@ -1266,7 +1266,7 @@ forwardConstMethod( T const & self,
   typedef typename MSIG::ReturnType RV;
   enum { Arity = sl::Arity< MSIG >::Value };
   typedef typename
-  XIfElse< XSameType<void ,RV>::Value,
+  Eks::IfElse< XSameType<void ,RV>::Value,
       Detail::XConstMethodForwarderVoid< T, Arity, Sig >,
       Detail::XConstMethodForwarder< T, Arity, Sig >
       >::Type Proxy;
@@ -1288,7 +1288,7 @@ forwardConstMethod(Sig func, internal::JSArguments const & argv )
   typedef typename MSIG::ReturnType RV;
   enum { Arity = sl::Arity< MSIG >::Value };
   typedef typename
-  XIfElse< XSameType<void ,RV>::Value,
+  Eks::IfElse< XSameType<void ,RV>::Value,
       Detail::XConstMethodForwarderVoid< T, Arity, Sig >,
       Detail::XConstMethodForwarder< T, Arity, Sig >
       >::Type Proxy;

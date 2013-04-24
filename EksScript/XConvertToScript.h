@@ -76,7 +76,7 @@ template <> struct NativeToJS<xuint64>
   };
 
 
-template <> struct NativeToJS< XIfElse< XSameType<unsigned long int, xuint64>::Value,
+template <> struct NativeToJS< Eks::IfElse< XSameType<unsigned long int, xuint64>::Value,
     UselessConversionType<unsigned long>,
     unsigned long >::Type >
   {
@@ -87,7 +87,7 @@ template <> struct NativeToJS< XIfElse< XSameType<unsigned long int, xuint64>::V
   };
 
 
-template <> struct NativeToJS< XIfElse< XSameType<long, xint64>::Value,
+template <> struct NativeToJS< Eks::IfElse< XSameType<long, xint64>::Value,
     UselessConversionType<long>,
     long >::Type >
   {

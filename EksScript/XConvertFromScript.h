@@ -285,7 +285,7 @@ template <typename T> struct UselessConversionTypeToNative
   };
 }
 
-template <> struct JSToNative< XIfElse<
+template <> struct JSToNative< Eks::IfElse<
     XSameType<unsigned long int,xuint64>::Value,
     UselessConversionTypeToNative<unsigned long>,
     unsigned long >::Type >
@@ -293,7 +293,7 @@ template <> struct JSToNative< XIfElse<
   {
   };
 
-template <> struct JSToNative< XIfElse<
+template <> struct JSToNative< Eks::IfElse<
     XSameType<long,xint64>::Value,
     UselessConversionTypeToNative<long>,
     long >::Type > : JSToNative<xint64>
