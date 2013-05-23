@@ -34,16 +34,30 @@ void thing()
 
 template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
   {
+  typedef std::tuple<ArgsIn...> ArgTuple;
   static const size_t ArgCount = sizeof...(ArgsIn);
 
   template <size_t i> struct Arg
     {
-    typedef typename std::tuple_element<i, std::tuple<ArgsIn...>>::type type;
+    typedef typename std::tuple_element<i, ArgTuple>::type type;
     };
 
-  template <typename T> T unpack()
+  template <xsize N> class Unpacker
     {
-    }
+    template <typename Fn, typename Args...> void unpackAndCall(const Fn &fn, const ArgTuple& args, Args... args)
+      {
+      auto &&myArg = args.get<N>();
+      Unpacker<N-1>::unpackAndCall(fn, args, myArg, args);
+      }
+    };
+
+  template <> class Unpacker<0>
+    {
+    template <typename Fn, typename Args...> void unpackAndCall(const Fn &fn, const ArgTuple& args, Args... args)
+      {
+      fn(args...);
+      }
+    };
   };
 
 class NoClass { };
@@ -58,7 +72,8 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
 
   template <typename SIG, SIG t> static void call(ReturnType *r, ClassType *c, Args *a)
     {
-    *r = T(Args::unpack<ArgsIn>()...);
+    auto fn = [](ArgsIn...) { };
+    Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
 
@@ -70,9 +85,10 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   typedef ArgList<ArgsIn...> Args;
 
   template <typename SIG, SIG t> static void call(ReturnType *r, ClassType *c, Args *a)
-  {
-    *r = c->*T(Args::unpack<Args>...);
-  }
+    {
+    auto fn = [](ArgsIn...) { };
+    Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
+    }
   };
 
 template<typename Ret, typename... ArgsIn> struct Traits<Ret (*)(ArgsIn...)>
@@ -84,7 +100,8 @@ template<typename Ret, typename... ArgsIn> struct Traits<Ret (*)(ArgsIn...)>
 
   template <typename SIG, SIG t> static void call(ReturnType *r, ClassType *c, Args *a)
     {
-    *r = c->*T(Args::unpack<Args>...);
+    auto fn = [](ArgsIn...) { };
+    Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
 
