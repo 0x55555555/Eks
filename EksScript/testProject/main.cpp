@@ -31,6 +31,24 @@ void thing()
   {
   }
 
+namespace detail
+{
+
+template <xsize N> struct ArgUnpacker
+  {
+  template <typename Fn, typename ArgPack, typename... Args> static void unpackAndCall(const Fn &fn, ArgPack &argPack, Args... args)
+    {
+    ArgUnpacker<N-1>::unpackAndCall(fn, argPack, argPack.get<N-1>(), std::forward<Args>(args)...);
+    }
+  };
+
+template <> struct ArgUnpacker<0>
+  {
+  template <typename Fn, typename ArgPack, typename... Args> static void unpackAndCall(const Fn &fn, ArgPack &, Args... args)
+    {
+    fn(std::forward<Args>(args)...);
+    }
+  };
 
 template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
   {
@@ -43,43 +61,75 @@ template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
 
   template <size_t i> struct Arg
     {
-    typedef typename std::tuple_element<i, ArgTuple>::type type;
+    typedef typename std::tuple_element<i, ArgTuple>::type Type;
     };
 
-
-  template <xsize N> struct Unpacker
+  template <xsize I> typename Arg<I>::Type get()
     {
-    template <typename Fn, typename... Args> static void unpackAndCall(const Fn &fn, const ArgTuple &argTuple, Args... args)
-      {
-      auto &&myArg = std::get<N-1>(argTuple);
-      Unpacker<N-1>::unpackAndCall(fn, argTuple, myArg, std::forward<Args>(args)...);
-      }
-    };
-
-  template <> struct Unpacker<0>
-    {
-    template <typename Fn, typename... Args> static void unpackAndCall(const Fn &fn, const ArgTuple &, Args... args)
-      {
-      fn(std::forward<Args>(args)...);
-      }
-    };
+    return std::get<I>(*this);
+    }
   };
 
 class NoClass { };
 template<typename T> struct Traits;
+
+template<typename Class, typename... ArgsIn> struct Traits<void (Class::*)(ArgsIn...)>
+{
+  typedef void (Class::*Sig)(ArgsIn...);
+  typedef Class ClassType;
+  typedef void ReturnType;
+  typedef ArgList<ArgsIn...> ArgData;
+
+  template <typename SIG, SIG Fn, typename Args> static void call(ReturnType *, ClassType *c, Args *a)
+    {
+    auto fn = [c](ArgsIn... args) { (c->*Fn)(std::move(args)...); };
+
+    ArgUnpacker<ArgData::ArgCount>::unpackAndCall(fn, *a);
+    }
+  };
+
+template<typename Class, typename... ArgsIn> struct Traits<void (Class::*)(ArgsIn...) const>
+{
+  typedef void (Class::*Sig)(ArgsIn...) const;
+  typedef Class ClassType;
+  typedef void ReturnType;
+  typedef ArgList<ArgsIn...> ArgData;
+
+  template <typename SIG, SIG Fn, typename Args> static void call(ReturnType *, ClassType *c, Args *a)
+    {
+    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::move(args)...); };
+
+    ArgUnpacker<ArgData::ArgCount>::unpackAndCall(fn, *a);
+    }
+  };
+
+template<typename... ArgsIn> struct Traits<void (*)(ArgsIn...)>
+  {
+  typedef void (*Sig)(ArgsIn...);
+  typedef NoClass ClassType;
+  typedef void ReturnType;
+  typedef ArgList<ArgsIn...> ArgData;
+
+  template <typename SIG, SIG Fn, typename Args> static void call(ReturnType *, ClassType *, Args *a)
+    {
+    auto fn = [](ArgsIn... args) { Fn(std::move(args)...); };
+
+    ArgUnpacker<ArgData::ArgCount>::unpackAndCall(fn, *a);
+    }
+  };
 
 template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Class::*)(ArgsIn...)>
 {
   typedef Ret (Class::*Sig)(ArgsIn...);
   typedef Class ClassType;
   typedef Ret ReturnType;
-  typedef ArgList<ArgsIn...> Args;
+  typedef ArgList<ArgsIn...> ArgData;
 
-  template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
-  {
-    (void)r;
-    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::move(args)...); };
-    Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
+  template <typename SIG, SIG Fn, typename Args> static void call(ReturnType *r, ClassType *c, Args *a)
+    {
+    auto fn = [r, c](ArgsIn... args) { *r = (c->*Fn)(std::move(args)...); };
+
+    ArgUnpacker<ArgData::ArgCount>::unpackAndCall(fn, *a);
     }
   };
 
@@ -88,13 +138,13 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   typedef Ret (Class::*Sig)(ArgsIn...) const;
   typedef Class ClassType;
   typedef Ret ReturnType;
-  typedef ArgList<ArgsIn...> Args;
+  typedef ArgList<ArgsIn...> ArgData;
 
-  template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
-  {
-    (void)r;
-    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::move(args)...); };
-    Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
+  template <typename SIG, SIG Fn, typename Args> static void call(ReturnType *r, ClassType *c, Args *a)
+    {
+    auto fn = [r, c](ArgsIn... args) { *r = (c->*Fn)(std::move(args)...); };
+
+    ArgUnpacker<ArgData::ArgCount>::unpackAndCall(fn, *a);
     }
   };
 
@@ -103,23 +153,23 @@ template<typename Ret, typename... ArgsIn> struct Traits<Ret (*)(ArgsIn...)>
   typedef Ret (*Sig)(ArgsIn...);
   typedef NoClass ClassType;
   typedef Ret ReturnType;
-  typedef ArgList<ArgsIn...> Args;
+  typedef ArgList<ArgsIn...> ArgData;
 
-  template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
+  template <typename SIG, SIG Fn, typename Args> static void call(ReturnType *r, ClassType *, Args *a)
     {
-    (void)c;
-    (void)r;
-    auto fn = [](ArgsIn... args) { Fn(std::move(args)...); };
-    Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
+    auto fn = [r](ArgsIn... args) { *r = Fn(std::move(args)...); };
+
+    ArgUnpacker<ArgData::ArgCount>::unpackAndCall(fn, *a);
     }
   };
+}
 
 template <typename SIG, SIG T> class Binder
   {
 public:
-  typedef Traits<SIG> Traits;
+  typedef detail::Traits<SIG> Traits;
 
-  static void call(typename Traits::ReturnType *result, typename Traits::ClassType *cls, typename Traits::Args *args)
+  static void call(typename Traits::ReturnType *result, typename Traits::ClassType *cls, typename Traits::ArgData *args)
     {
     Traits::call<SIG, T>(result, cls, args);
     }
@@ -136,15 +186,19 @@ int main(int , char* [])
   typedef X_BIND_FUNCTION(&thing) CallC;
   typedef X_BIND_FUNCTION(&Nummer::cake2) CallD;
 
-  auto argsA = CallA::Traits::Args(5.0f);
-  auto argsB = CallB::Traits::Args(5);
-  auto argsC = CallC::Traits::Args();
-  auto argsD = CallD::Traits::Args(5, 5);
+  auto argsA = CallA::Traits::ArgData(5.0f);
+  auto argsB = CallB::Traits::ArgData(5);
+  auto argsC = CallC::Traits::ArgData();
+  auto argsD = CallD::Traits::ArgData(5, 5);
 
-  CallA::call(0, 0, &argsA);
-  CallB::call(0, 0, &argsB);
+  Nummer n(0.0);
+
+  float val = 0.0f;
+
+  CallA::call(&val, &n, &argsA);
+  CallB::call(&val, 0, &argsB);
   CallC::call(0, 0, &argsC);
-  CallD::call(0, 0, &argsD);
+  CallD::call(&val, 0, &argsD);
 
   /*XScriptEngine::initiate();
 
