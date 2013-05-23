@@ -42,18 +42,18 @@ template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
     typedef typename std::tuple_element<i, ArgTuple>::type type;
     };
 
-  template <xsize N> class Unpacker
+  template <xsize N> struct Unpacker
     {
-    template <typename Fn, typename Args...> void unpackAndCall(const Fn &fn, const ArgTuple& args, Args... args)
+    template <typename Fn, typename... Args> static void unpackAndCall(const Fn &fn, const ArgTuple &argTuple, Args... args)
       {
-      auto &&myArg = args.get<N>();
+      auto &&myArg = argTuple.get<N>();
       Unpacker<N-1>::unpackAndCall(fn, args, myArg, args);
       }
     };
 
-  template <> class Unpacker<0>
+  template <> struct Unpacker<0>
     {
-    template <typename Fn, typename Args...> void unpackAndCall(const Fn &fn, const ArgTuple& args, Args... args)
+    template <typename Fn, typename... Args> static void unpackAndCall(const Fn &fn, const ArgTuple &, Args... args)
       {
       fn(args...);
       }
@@ -70,9 +70,10 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   typedef Ret ReturnType;
   typedef ArgList<ArgsIn...> Args;
 
-  template <typename SIG, SIG t> static void call(ReturnType *r, ClassType *c, Args *a)
-    {
-    auto fn = [](ArgsIn...) { };
+  template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
+  {
+    (void)r;
+    auto fn = [&c](ArgsIn... args) { c->*Fn(args...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -84,9 +85,10 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   typedef Ret ReturnType;
   typedef ArgList<ArgsIn...> Args;
 
-  template <typename SIG, SIG t> static void call(ReturnType *r, ClassType *c, Args *a)
-    {
-    auto fn = [](ArgsIn...) { };
+  template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
+  {
+    (void)r;
+    auto fn = [&c](ArgsIn... args) { c->*Fn(args...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -98,9 +100,11 @@ template<typename Ret, typename... ArgsIn> struct Traits<Ret (*)(ArgsIn...)>
   typedef Ret ReturnType;
   typedef ArgList<ArgsIn...> Args;
 
-  template <typename SIG, SIG t> static void call(ReturnType *r, ClassType *c, Args *a)
+  template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
     {
-    auto fn = [](ArgsIn...) { };
+    (void)c;
+    (void)r;
+    auto fn = [](ArgsIn... args) { Fn(args...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
