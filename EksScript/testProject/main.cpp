@@ -37,10 +37,15 @@ template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
   typedef std::tuple<ArgsIn...> ArgTuple;
   static const size_t ArgCount = sizeof...(ArgsIn);
 
+  ArgList(ArgsIn... args) : std::tuple<ArgsIn...>(std::make_tuple(std::forward<ArgsIn>(args)...))
+    {
+    }
+
   template <size_t i> struct Arg
     {
     typedef typename std::tuple_element<i, ArgTuple>::type type;
     };
+
 
   template <xsize N> struct Unpacker
     {
@@ -73,7 +78,7 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
   {
     (void)r;
-    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::forward<ArgsIn>(args)...); };
+    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::move(args)...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -88,7 +93,7 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
   {
     (void)r;
-    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::forward<ArgsIn>(args)...); };
+    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::move(args)...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -104,7 +109,7 @@ template<typename Ret, typename... ArgsIn> struct Traits<Ret (*)(ArgsIn...)>
     {
     (void)c;
     (void)r;
-    auto fn = [](ArgsIn... args) { Fn(std::forward<ArgsIn>(args)...); };
+    auto fn = [](ArgsIn... args) { Fn(std::move(args)...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -131,10 +136,15 @@ int main(int , char* [])
   typedef X_BIND_FUNCTION(&thing) CallC;
   typedef X_BIND_FUNCTION(&Nummer::cake2) CallD;
 
-  CallA::call(0, 0, 0);
-  CallB::call(0, 0, 0);
-  CallC::call(0, 0, 0);
-  CallD::call(0, 0, 0);
+  auto argsA = CallA::Traits::Args(5.0f);
+  auto argsB = CallB::Traits::Args(5);
+  auto argsC = CallC::Traits::Args();
+  auto argsD = CallD::Traits::Args(5, 5);
+
+  CallA::call(0, 0, &argsA);
+  CallB::call(0, 0, &argsB);
+  CallC::call(0, 0, &argsC);
+  CallD::call(0, 0, &argsD);
 
   /*XScriptEngine::initiate();
 
