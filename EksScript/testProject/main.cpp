@@ -18,12 +18,12 @@ struct Nummer
 
   static float cake(int)
     {
-
+    return 0.0f;
     }
 
   float cake2(int, float) const
     {
-
+    return 0.0f;
     } 
   };
 
@@ -46,8 +46,8 @@ template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
     {
     template <typename Fn, typename... Args> static void unpackAndCall(const Fn &fn, const ArgTuple &argTuple, Args... args)
       {
-      auto &&myArg = argTuple.get<N>();
-      Unpacker<N-1>::unpackAndCall(fn, args, myArg, args);
+      auto &&myArg = std::get<N-1>(argTuple);
+      Unpacker<N-1>::unpackAndCall(fn, argTuple, myArg, std::forward<Args>(args)...);
       }
     };
 
@@ -55,7 +55,7 @@ template <typename... ArgsIn> struct ArgList : std::tuple<ArgsIn...>
     {
     template <typename Fn, typename... Args> static void unpackAndCall(const Fn &fn, const ArgTuple &, Args... args)
       {
-      fn(args...);
+      fn(std::forward<Args>(args)...);
       }
     };
   };
@@ -73,7 +73,7 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
   {
     (void)r;
-    auto fn = [&c](ArgsIn... args) { c->*Fn(args...); };
+    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::forward<ArgsIn>(args)...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -88,7 +88,7 @@ template<typename Class, typename Ret, typename... ArgsIn> struct Traits<Ret (Cl
   template <typename SIG, SIG Fn> static void call(ReturnType *r, ClassType *c, Args *a)
   {
     (void)r;
-    auto fn = [&c](ArgsIn... args) { c->*Fn(args...); };
+    auto fn = [&c](ArgsIn... args) { (c->*Fn)(std::forward<ArgsIn>(args)...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
@@ -104,7 +104,7 @@ template<typename Ret, typename... ArgsIn> struct Traits<Ret (*)(ArgsIn...)>
     {
     (void)c;
     (void)r;
-    auto fn = [](ArgsIn... args) { Fn(args...); };
+    auto fn = [](ArgsIn... args) { Fn(std::forward<ArgsIn>(args)...); };
     Args::Unpacker<Args::ArgCount>::unpackAndCall(fn, *a);
     }
   };
