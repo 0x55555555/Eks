@@ -34,6 +34,14 @@ void thing()
 namespace detail
 {
 
+template <typename... Fn> struct FunctionList : std::tuple<Fn...>
+  {
+  static const size_t size = sizeof...(Fn);
+  template <size_t i> struct at : std::tuple_element<i, std::tuple<Fn...>>::type
+    {
+    };
+  };
+
 template <xsize N> struct ArgUnpacker
   {
   template <typename Fn, typename ArgPack, typename... Args> static void unpackAndCall(const Fn &fn, ArgPack &argPack, Args... args)
@@ -181,24 +189,25 @@ X_SCRIPTABLE_TYPE(Nummer)
 
 int main(int , char* [])
 {
-  typedef X_BIND_FUNCTION(&Nummer::crapSalad) CallA;
-  typedef X_BIND_FUNCTION(&Nummer::cake) CallB;
-  typedef X_BIND_FUNCTION(&thing) CallC;
-  typedef X_BIND_FUNCTION(&Nummer::cake2) CallD;
+  typedef detail::FunctionList<
+    X_BIND_FUNCTION(&Nummer::crapSalad),
+    X_BIND_FUNCTION(&Nummer::cake),
+    X_BIND_FUNCTION(&thing),
+    X_BIND_FUNCTION(&Nummer::cake2)
+    > List;
 
-  auto argsA = CallA::Traits::ArgData(5.0f);
-  auto argsB = CallB::Traits::ArgData(5);
-  auto argsC = CallC::Traits::ArgData();
-  auto argsD = CallD::Traits::ArgData(5, 5);
+  auto argsA = List::at<0>::Traits::ArgData(5.0f);
+  auto argsB = List::at<1>::Traits::ArgData(5);
+  auto argsC = List::at<2>::Traits::ArgData();
+  auto argsD = List::at<3>::Traits::ArgData(5, 5);
 
   Nummer n(0.0);
-
   float val = 0.0f;
 
-  CallA::call(&val, &n, &argsA);
-  CallB::call(&val, 0, &argsB);
-  CallC::call(0, 0, &argsC);
-  CallD::call(&val, 0, &argsD);
+  List::at<0>::call(&val, &n, &argsA);
+  List::at<1>::call(&val, 0, &argsB);
+  List::at<2>::call(0, 0, &argsC);
+  List::at<3>::call(&val, 0, &argsD);
 
   /*XScriptEngine::initiate();
 
