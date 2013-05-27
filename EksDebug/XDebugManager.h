@@ -2,6 +2,8 @@
 #define XDEBUGMANAGER_H
 
 #include "XDebugGlobal.h"
+#include "XUniquePointer"
+#include "XCore"
 
 class QIODevice;
 
@@ -17,10 +19,18 @@ class DebugController;
 class EKSDEBUG_EXPORT DebugManager
   {
 public:
-  DebugManager(bool client);
+  class Watcher
+    {
+  public:
+    virtual void onInterfaceRegistered(Eks::DebugInterface *) = 0;
+    virtual void onInterfaceUnregistered(Eks::DebugInterface *) = 0;
+    };
+
+  DebugManager(bool client, Watcher *watch = 0);
   ~DebugManager();
 
-  typedef DebugInterface *(*CreateInterfaceFunction)(bool client);
+
+  typedef DebugInterface *(*CreateInterfaceFunction)(DebugManager *m, bool client);
   static const DebugInterfaceType *findInterfaceType(const QString &);
   static void registerInterfaceType(DebugInterfaceType *);
   static void registerInterface(DebugInterface *ifc);
@@ -33,7 +43,6 @@ public:
 private:
   typedef DebugManagerImpl Impl;
   Impl *_impl;
-  DebugController *_controller;
   };
 
 #endif

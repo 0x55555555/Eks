@@ -7,7 +7,7 @@
 namespace Eks
 {
 
-DebugManagerImpl::DebugManagerImpl(bool client)
+DebugManagerImpl::DebugManagerImpl(DebugManager *m, bool client)
   : _clientStream(&_preConnectClientData, QIODevice::WriteOnly),
     _scratchBuffer(&_scratchImpl),
     _client(0),
@@ -15,7 +15,9 @@ DebugManagerImpl::DebugManagerImpl(bool client)
     _outputLocked(0),
     _controller(0),
     _readingID(X_UINT32_SENTINEL),
-    _bytesNeeded(0)
+    _bytesNeeded(0),
+    _watcher(0),
+    _manager(m)
   {
   _scratchImpl.open(QIODevice::WriteOnly);
 
@@ -39,6 +41,7 @@ DebugManagerImpl::~DebugManagerImpl()
   {
   _client = 0;
   _server = 0;
+  clear();
   }
 
 void DebugManagerImpl::setupClient()
@@ -52,7 +55,33 @@ void DebugManagerImpl::addInterfaceLookup(DebugInterface *ifc)
   xAssert(ifc->interfaceID() != X_UINT32_SENTINEL);
   _interfaceMap[ifc->interfaceID()] = ifc;
 
+  if(_watcher)
+    {
+    _watcher->onInterfaceRegistered(ifc);
+    }
+
   xAssert(_interfaces.size() == _interfaceMap.size());
+  }
+
+void DebugManagerImpl::setupController()
+  {
+  xAssert(!_controller);
+  _controller = Eks::Core::defaultAllocator()->create<DebugController>(_manager, _client != 0);
+  addInterfaceLookup(_controller);
+  }
+
+void DebugManagerImpl::clear()
+  {
+  xAssert(!_outputLocked);
+  _client = 0;
+
+  _readingID = X_UINT32_SENTINEL;
+  _bytesNeeded = 0;
+  _preConnectClientData.clear();
+
+  DebugManager::unregisterInterface(_controller);
+  Eks::Core::defaultAllocator()->destroy(_controller);
+  _controller = 0;
   }
 
 void DebugManagerImpl::flush()
@@ -113,9 +142,9 @@ void DebugManagerImpl::onNewConnection()
     {
     if(_client)
       {
-      qCritical() << "New client detected, arp, need to wipe stuff down!";
-      _client = 0;
-      xAssertFail();
+      qCritical() << "New client detected, clearing old data.";
+      clear();
+      setupController();
       }
     _client = s;
 

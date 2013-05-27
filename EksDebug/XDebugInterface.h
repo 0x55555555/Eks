@@ -5,7 +5,9 @@
 #include "XAssert"
 #include "XDebugManager.h"
 
-#define X_DEBUG_INTERFACE(cls) public: cls(bool client=true); \
+class QAbstractItemModel;
+
+#define X_DEBUG_INTERFACE(cls) public: cls(DebugManager *m, bool client=true); \
   QString typeName() X_OVERRIDE { static QString n(#cls); return n; } \
   private:
 
@@ -35,6 +37,7 @@ class EKSDEBUG_EXPORT DebugInterface
   {
 XProperties:
   XProperty(xuint32, interfaceID, setInterfaceID);
+  XROProperty(QAbstractItemModel *, dataModel);
 
 public:
   ~DebugInterface();
@@ -75,6 +78,7 @@ protected:
 
   template <typename T> void sendData(const T &data)
     {
+    xAssert(T::DebugMessageType < X_UINT8_SENTINEL);
     OutputTunnel t(this);
     t.stream() << (xuint8)T::DebugMessageType << data;
     }
@@ -88,6 +92,14 @@ protected:
       T::DebugMessageType,
       fn
       );
+    }
+
+  template <typename T> Eks::UniquePointer<T> createDataModel()
+    {
+    Eks::UniquePointer<T> res;
+    res.create(Eks::Core::defaultAllocator());
+    _dataModel = res.value();
+    return res;
     }
 
 private:
@@ -120,9 +132,9 @@ public:
     }
 
 private:
-  static DebugInterface *createFn(bool client)
+  static DebugInterface *createFn(DebugManager *m, bool client)
     {
-    return new T(client);
+    return Eks::Core::defaultAllocator()->create<T>(m, client);
     }
 
   DebugInterfaceType type;

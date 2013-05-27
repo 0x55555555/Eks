@@ -18,8 +18,11 @@ class DebugManagerImpl : private QObject
   Q_OBJECT
 
 public:
-  DebugManagerImpl(bool client);
+  DebugManagerImpl(DebugManager *m, bool client);
   ~DebugManagerImpl();
+
+  DebugController *_controller;
+  DebugManager::Watcher *_watcher;
 
   Eks::UnorderedMap<xuint32, DebugInterface *> _interfaceMap;
   QList<DebugInterface *> _interfaces;
@@ -38,7 +41,10 @@ public:
   xuint32 _readingID;
   xuint32 _bytesNeeded;
 
-  DebugController *_controller;
+  DebugManager *_manager;
+
+  void setupController();
+  void clear();
 
   void flush();
   void setupClient();

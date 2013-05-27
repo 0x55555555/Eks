@@ -1,4 +1,5 @@
 #include "XDebugController.h"
+#include "XCore"
 #include "QDebug"
 
 
@@ -48,8 +49,10 @@ QDataStream &operator>>(QDataStream& s, SetupInterface& i)
   return s >> i.id >> i.typeName;
   }
 
-DebugController::DebugController(bool client)
+DebugController::DebugController(DebugManager *m, bool client)
+    : _createdInterfaces(Eks::Core::defaultAllocator())
   {
+  _manager = m;
   _isClient = client;
   _maxInteface = 0;
   setInterfaceID(0);
@@ -61,6 +64,15 @@ DebugController::DebugController(bool client)
     };
 
   setRecievers(recv, X_ARRAY_COUNT(recv));
+  }
+
+DebugController::~DebugController()
+  {
+  xForeach(DebugInterface *ifc, _createdInterfaces)
+    {
+    DebugManager::unregisterInterface(ifc);
+    Eks::Core::defaultAllocator()->destroy(ifc);
+    }
   }
 
 void DebugController::onDebuggerConnected(bool client)
@@ -104,7 +116,7 @@ void DebugController::onSetupInterface(const SetupInterface &ifcDesc)
     qCritical() << "Interface" << ifcDesc.typeName << "not registered";
     }
 
-  DebugInterface *ifc = def->create(_isClient);
+  DebugInterface *ifc = def->create(_manager, _isClient);
   if(!ifc)
     {
     qCritical() << "Creation of interface" << def->type << "failed";

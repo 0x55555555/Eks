@@ -14,9 +14,11 @@ TEMPLATE = app
 include("../EksCore/GeneralOptions.pri")
 
 SOURCES += main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    logview.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    logview.h
 
 FORMS    += mainwindow.ui
 

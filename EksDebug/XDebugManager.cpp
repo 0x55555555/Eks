@@ -9,23 +9,21 @@ namespace Eks
 
 DebugInterfaceType *g_lastInterface = 0;
 DebugManagerImpl *g_manager = 0;
-DebugManager::DebugManager(bool client)
+DebugManager::DebugManager(bool client, Watcher *w)
   {
   xAssert(!g_manager);
-  g_manager = new Impl(client);
-  _controller = new DebugController(client);
+  g_manager = new Impl(this, client);
 
-  g_manager->_controller = _controller;
-  g_manager->addInterfaceLookup(_controller);
+  g_manager->setupController();
+
+  g_manager->_watcher = w;
 
   // fake connected straight away, data is buffered locally.
-  _controller->onDebuggerConnected(client);
+  g_manager->_controller->onDebuggerConnected(client);
   }
 
 DebugManager::~DebugManager()
   {
-  delete _controller;
-
   xAssert(g_manager);
   delete g_manager;
   g_manager = 0;
@@ -57,7 +55,24 @@ void DebugManager::registerInterface(DebugInterface *ifc)
 
 void DebugManager::unregisterInterface(DebugInterface *ifc)
   {
+  if(g_manager->_watcher)
+    {
+    g_manager->_watcher->onInterfaceUnregistered(ifc);
+    }
+
   g_manager->_interfaces.removeAll(ifc);
+
+  for(auto it = g_manager->_interfaceMap.begin(); it != g_manager->_interfaceMap.end();)
+    {
+    if (it.value() == ifc)
+      {
+      it = g_manager->_interfaceMap.erase(it);
+      }
+    else
+      {
+      ++it;
+      }
+    }
   }
 
 void DebugManager::addInterfaceLookup(DebugInterface *ifc)

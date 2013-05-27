@@ -5,7 +5,6 @@
 #-------------------------------------------------
 
 QT       += network
-QT       -= gui
 
 TARGET = EksDebug
 TEMPLATE = lib

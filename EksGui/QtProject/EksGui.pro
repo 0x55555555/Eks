@@ -15,8 +15,7 @@ SOURCES += ../src/XFloatWidget.cpp \
     ../src/XVector3DWidget.cpp \
     ../src/XVector4DWidget.cpp \
     ../src/XColourWidget.cpp \
-    ../src/pickerWidget/qtcolortriangle.cpp \
-    ../src/XProfileWidget.cpp
+    ../src/pickerWidget/qtcolortriangle.cpp
 
 HEADERS += \
     ../XFloatWidget \
@@ -25,8 +24,7 @@ HEADERS += \
     ../XVector4DWidget \
     ../XColourWidget \
     ../src/pickerWidget/qtcolortriangle.h \
-    ../XGuiGlobal \
-    ../XProfileWidget
+    ../XGuiGlobal
 
 LIBS += -lEksCore
 

@@ -15,7 +15,9 @@ DebugInterface::OutputTunnel::~OutputTunnel()
   DebugManager::unlockOutputStream();
   }
 
-DebugInterface::DebugInterface() : _interfaceID(X_UINT32_SENTINEL)
+DebugInterface::DebugInterface()
+    : _interfaceID(X_UINT32_SENTINEL),
+      _dataModel(0)
   {
   DebugManager::registerInterface(this);
   }
@@ -33,7 +35,7 @@ void DebugInterface::setRecievers(const Reciever *r, xsize c)
 
 void DebugInterface::onDataRecieved(QDataStream& data)
   {
-  xuint32 id;
+  xuint8 id;
   data >> id;
 
   for(xsize i = 0; i < _recieverCount; ++i)
