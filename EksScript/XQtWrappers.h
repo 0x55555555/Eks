@@ -1,7 +1,7 @@
 #ifndef XQTWRAPPERS_H
 #define XQTWRAPPERS_H
 
-#include "XInterface.h"
+#include "XScriptInterface.h"
 #include "QtCore/QPointF"
 #include "QtCore/QRectF"
 #include "QtCore/QUrl"
@@ -48,16 +48,5 @@ X_SCRIPTABLE_TYPE_COPYABLE(QRegion)
 
 X_SCRIPTABLE_ABSTRACT_TYPE(QIODevice)
 X_SCRIPTABLE_TYPE_BASE_INHERITED(QFile, QIODevice)
-
-namespace XScript
-{
-namespace Convert
-{
-namespace internal
-{
-template <> struct NativeToJS<QFile> : public NativeToJSConvertableTypeInherited<QFile, QIODevice> {};
-}
-}
-}
 
 #endif // XQTWRAPPERS_H

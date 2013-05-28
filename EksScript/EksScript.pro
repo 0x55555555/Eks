@@ -13,13 +13,11 @@ include("../EksCore/GeneralOptions.pri")
 
 SOURCES += \
     XInterface.cpp \
-    XScriptException.cpp \
     XScriptValue.cpp \
     XScriptFunction.cpp \
     XScriptSource.cpp \
     XScriptObject.cpp \
     XQObjectWrapper.cpp \
-    XFunctions.cpp \
     XScriptEngine.cpp \
     XQtWrappers.cpp \
     Engines/XScriptDartEngine.cpp \
@@ -27,32 +25,19 @@ SOURCES += \
     XScriptInterfaceBase.cpp
 
 HEADERS += XScriptGlobal.h \
-    XInterface.h \
-    XSignature.h \
-    XSignatureHelpers.h \
-    XSignatureSpecialisations.h \
-    XTemplateMetaHelpers.h \
     XScriptTypeInfo.h \
-    XConvertToScript.h \
-    XConvertFromScript.h \
-    XConvertScriptSTL.h \
-    XConvert.h \
-    XScriptException.h \
     XScriptValue.h \
     XScriptFunction.h \
     XInterfaceUtilities.h \
-    XProperties.h \
-    XScriptConstructors.h \
-    XConvertToScriptMap.h \
-    XFunctions.h \
-    XFunctionSpecialisations.h \
     XScriptSource.h \
     XScriptObject.h \
     XQObjectWrapper.h \
     XScriptEngine.h \
     XQtWrappers.h \
     XScriptDefinitions.h \
-    XScriptInterfaceBase.h
+    XScriptInterfaceBase.h \
+    XScriptFunctionWrapper.h \
+    XScriptInterface.h
 
 LIBS += -lEksCore
 
@@ -66,5 +51,4 @@ INCLUDEPATH += $$ROOT/Eks/EksCore ./
 #  LIBS += -L./dart/ -llibdart_builtin -llibdart_withcore -llibdart_lib_withcore -llibdouble_conversion -llibdart_vm -llibjscre
 #}
 
-OTHER_FILES += \
-    License.txt
+OTHER_FILES +=

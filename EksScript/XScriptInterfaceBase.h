@@ -7,10 +7,7 @@
 #include "XMacroHelpers"
 #include "XScriptFunction.h"
 #include "XInterfaceUtilities.h"
-#include "XConvertToScript.h"
 #include "XScriptObject.h"
-#include "XScriptException.h"
-#include "XFunctions.h"
 #include "XUnorderedMap"
 #include "XStringSimple"
 #include <array>
@@ -18,25 +15,6 @@
 
 namespace XScript
 {
-
-namespace internal
-{
-template <typename T, bool HasQMetaType = QMetaTypeId<T>::Defined> struct QMetaTypeIdOrInvalid
-  {
-  static int id()
-    {
-    return 0;
-    }
-  };
-
-template <typename T> struct QMetaTypeIdOrInvalid<T, true>
-  {
-  static int id()
-    {
-    return qMetaTypeId<T>();
-    }
-  };
-}
 
 struct ConstructorDef
   {
@@ -102,79 +80,6 @@ struct PropertyDef
   SetterFn setterV8;
   FunctionDart getterDart;
   FunctionDart setterDart;
-  };
-
-template <xsize CCount,
-          xsize PCount,
-          xsize FCount> struct ClassDef
-  {
-  ConstructorDef constructors[CCount];
-  PropertyDef properties[PCount];
-  FunctionDef functions[FCount];
-  };
-
-template <xsize CCount,
-          xsize PCount> struct ClassDef<CCount, PCount, 0>
-  {
-  ConstructorDef constructors[CCount];
-  PropertyDef properties[PCount];
-  enum
-    {
-    functions = 0
-    };
-  };
-
-template <xsize CCount,
-          xsize FCount> struct ClassDef<CCount, 0, FCount>
-  {
-  ConstructorDef constructors[CCount];
-  FunctionDef functions[FCount];
-  enum
-    {
-    properties = 0
-    };
-  };
-
-template <xsize CCount> struct ClassDef<CCount, 0, 0>
-  {
-  ConstructorDef constructors[CCount];
-  enum
-    {
-    properties = 0,
-    functions = 0
-    };
-  };
-
-template <xsize PCount,
-          xsize FCount> struct ClassDef<0, PCount, FCount>
-  {
-  PropertyDef properties[PCount];
-  FunctionDef functions[FCount];
-  enum
-    {
-    constructors = 0,
-    };
-  };
-
-template <xsize PCount> struct ClassDef<0, PCount, 0>
-  {
-  PropertyDef properties[PCount];
-  enum
-    {
-    constructors = 0,
-    functions = 0,
-    };
-  };
-
-
-template <xsize FCount> struct ClassDef<0, 0, FCount>
-  {
-  FunctionDef functions[FCount];
-  enum
-    {
-    constructors = 0,
-    properties = 0
-    };
   };
 
 class InterfaceInternal
@@ -246,25 +151,11 @@ public:
   typedef Value (*NamedGetter)(Value, const internal::JSAccessorInfo& info);
   typedef Value (*IndexedGetter)(xuint32, const internal::JSAccessorInfo& info);
 
-  void buildInterface(
-      const ConstructorDef *ctors,
-      xsize ctorCount,
-      const PropertyDef *props,
-      xsize propCount,
-      const FunctionDef *fns,
-      xsize fnCount);
+  void build(const char* name);
 
-  template <xsize CtorCount,
-            xsize PropCount,
-            xsize FnCount>
-  void buildInterface(const ClassDef<CtorCount, PropCount, FnCount> &cls)
+  template <typename T> void build(const char* name)
     {
-    buildInterface((const ConstructorDef *)cls.constructors,
-                   CtorCount,
-                   (const PropertyDef *)cls.properties,
-                   PropCount,
-                   (const FunctionDef *)cls.functions,
-                   FnCount);
+    build(name);
     }
 
   void addChildInterface(int typeId, UpCastFn fn);
@@ -288,72 +179,6 @@ public:
     xAssert(_functions);
     xAssert(index < _functionCount);
     return _functions[index];
-    }
-
-  // generating defs
-
-  template <typename Getter,
-            typename Setter>
-      X_CONST_EXPR static PropertyDef property(const char *name)
-    {
-    return PropertyDef(
-      name,
-      Getter::Get,
-      Setter::Set,
-      Getter::GetDart,
-      Setter::SetDart
-      );
-    }
-
-  template <typename Getter>
-      X_CONST_EXPR static PropertyDef property(const char *name)
-    {
-    return PropertyDef(
-      name,
-      Getter::Get,
-      0,
-      Getter::GetDart,
-      0
-      );
-    }
-
-  template <typename FunctionType>
-      X_CONST_EXPR static FunctionDef method(const char *name)
-    {
-    return FunctionDef(
-      name,
-      FunctionType::Call,
-      FunctionType::CallDart,
-      FunctionType::Arity,
-      false // not static method
-      );
-    }
-
-  template <typename FunctionType>
-      static void methodX(const char *name)
-    {
-    return;
-    }
-
-  template <typename FunctionType>
-      static FunctionDef function(const char *name)
-    {
-    return FunctionDef(
-      name,
-      FunctionType::Call,
-      FunctionType::CallDart,
-      FunctionType::Arity,
-      true // is static method
-      );
-    }
-
-  template <typename SIG,
-            typename XFunctionSignature<SIG>::FunctionType METHOD>
-      X_CONST_EXPR static FunctionDef staticMethod(const char *name)
-    {
-    typedef XScript::FunctionToInCa<SIG, METHOD> FunctionType;
-
-    return function<FunctionType>(name);
     }
 
 protected:

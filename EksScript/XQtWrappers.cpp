@@ -1,12 +1,12 @@
 #include "XQtWrappers.h"
 #include "XScriptEngine.h"
-#include "XInterface.h"
-#include "XScriptConstructors.h"
+#include "XScriptInterface.h"
 
 namespace XScript
 {
-namespace Convert
+/*namespace Convert
 {
+
 namespace internal
 {
 template <> struct JSToNative<QIODevice::OpenMode>
@@ -29,10 +29,11 @@ template <> struct JSToNative<QIODevice::OpenMode>
   };
 }
 }
+*/
 
 namespace QtWrappers
 {
-
+/*
 template <typename T> void setupBindings(Interface<T> *templ);
 
 template <typename T> struct Binder
@@ -192,13 +193,14 @@ template <> void setupBindings<QIODevice>(Interface<QIODevice> *templ)
 
   templ->buildInterface(cls);
   }
+*/
 
 void initiate()
   {
 #define BIND(t) Binder<Q##t>::init(#t)
 #define BIND_WITH_PARENT(t, p, b) Binder<Q##t>::initWithParent<Q##p, Q##b>(#t)
 
-  BIND(PointF);
+  /*BIND(PointF);
   BIND(RectF);
   BIND(Point);
   BIND(Rect);
@@ -216,9 +218,11 @@ void initiate()
   BIND(Region);
 
   BIND(IODevice);
-  BIND_WITH_PARENT(File, IODevice, IODevice);
+  BIND_WITH_PARENT(File, IODevice, IODevice);*/
 #undef BIND
 #undef BIND_WITH_PARENT
   }
+
+
 }
 }

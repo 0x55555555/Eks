@@ -1,10 +1,9 @@
 #include "XQObjectWrapper.h"
+#include "XScriptValue.h"
 #include "XQtWrappers.h"
 #include "QMetaProperty"
 #include "QVarLengthArray"
-#include "XFunctions.h"
 #include "QtCore/QDebug"
-
 #ifdef X_DEBUG
 # define X_TYPE_DEBUG
 #endif
@@ -192,7 +191,7 @@ QObjectWrapper::~QObjectWrapper()
   _objects.remove(&QWidget::staticMetaObject);
   Q_FOREACH(InterfaceBase *b, _objects)
     {
-    if(b != Interface<QObject>::lookup())
+    if(b != Interface<QObject>::find())
       {
       delete b;
       }
@@ -216,21 +215,18 @@ void QObjectWrapper::initiate()
   qRegisterMetaType<Function>("ScriptFunction");
 
   // build up custom QObject wrapper
-  Interface<QObject>* ifc = Interface<QObject>::create(qobjectName);
-  buildInterface(ifc, &QObject::staticMetaObject);
-
-  ifc->seal();
+  auto ifc = Interface<QObject>::find();
 
   Engine::addInterface(ifc);
   instance()->_objects.insert(&QObject::staticMetaObject, ifc);
 
 
   // build up custom QWidget wrapper
-  Interface<QWidget>* widget = Interface<QWidget>::createWithParent("QWidget", ifc, ifc);
+  auto widget = Interface<QWidget>::find();
 
 
   // QWidget
-    {
+    /*{
     FunctionDef extraWidgetFunctions[] =
     {
   #if QT_VERSION >= 0x050000
@@ -243,7 +239,7 @@ void QObjectWrapper::initiate()
 
     buildInterface(widget, &QWidget::staticMetaObject, extraWidgetFunctions, X_ARRAY_COUNT(extraWidgetFunctions));
     widget->seal();
-    }
+    }*/
 
   instance()->_objects.insert(&QWidget::staticMetaObject, widget);
   }
@@ -281,8 +277,9 @@ InterfaceBase *QObjectWrapper::findInterface(const QMetaObject *object)
     }
 
 
-  InterfaceBase* qobject = XScript::findInterface(qMetaTypeId<QObject*>());
-  base = new Interface<QObject>(qobject->typeId(), 0, qobject->typeId(), qobject->nonPointerTypeId(), formatClassName(object->className()), parentInterface);
+  //InterfaceBase* qobject = XScript::findInterface(qMetaTypeId<QObject*>());
+  //base = new Interface<QObject>(qobject->typeId(), 0, qobject->typeId(), qobject->nonPointerTypeId(), formatClassName(object->className()), parentInterface);
+  xAssertFail();
 
   _objects.insert(object, base);
 
@@ -412,50 +409,27 @@ struct CallArgument
       }
     else if (callType == QMetaType::QString)
       {
-      qstringPtr = new (&allocData) QString(Convert::from<Eks::String>(value).toQString());
-      type = callType;
+      xAssertFail();
+      //qstringPtr = new (&allocData) QString(Convert::from<Eks::String>(value).toQString());
+      //type = callType;
     }
     else if (callType == QMetaType::QObjectStar)
     {
-      qobjectPtr = Convert::from<QObject>(value);
-      type = callType;
+      xAssertFail();
+      //qobjectPtr = Convert::from<QObject>(value);
+      //type = callType;
     }
     else if (callType == qMetaTypeId<QWidget*>())
     {
-      qobjectPtr = Convert::from<QWidget>(value);
-      type = callType;
+      xAssertFail();
+      //qobjectPtr = Convert::from<QWidget>(value);
+      //type = callType;
     }
     else if (callType == qMetaTypeId<QVariant>())
       {
       qvariantPtr = new (&allocData) QVariant(value.toVariant());
       type = callType;
       }
-    else if (callType == qMetaTypeId<QList<QObject*> >())
-      {
-      xAssertFail();
-#if 0
-      qlistPtr = new (&allocData) QList<QObject *>();
-      if (value->IsArray())
-        {
-        v8::Handle<v8::Array> array = v8::Handle<v8::Array>::Cast(value);
-        uint32_t length = array->Length();
-        for (uint32_t ii = 0; ii < length; ++ii)
-          {
-          qlistPtr->append(Convert::from<QObject>(fromHandle(array->Get(ii))));
-          }
-        }
-      else
-        {
-        qlistPtr->append(Convert::from<QObject>(fromHandle(value)));
-        }
-      type = callType;
-#endif
-      }
-    /*else if (callType == qMetaTypeId<QQmlV8Handle>())
-        {
-        handlePtr = new (&allocData) QQmlV8Handle(QQmlV8Handle::fromHandle(value));
-        type = callType;
-        }*/
     else
       {
       qvariantPtr = new (&allocData) QVariant();
@@ -471,20 +445,7 @@ struct CallArgument
         *qvariantPtr = v;
         qvariantPtr->convert((QVariant::Type)callType);
         }
-      else /*if (const QMetaObject *mo = ep ? ep->rawMetaObjectForType(callType) : 0)
-          {
-          QObject *obj = ep->toQObject(v);
-
-          if (obj)
-            {
-            const QMetaObject *objMo = obj->metaObject();
-            while (objMo && objMo != mo) objMo = objMo->superClass();
-            if (!objMo) obj = 0;
-            }
-
-          *qvariantPtr = QVariant(callType, &obj);
-          }
-        else*/
+      else
         {
         *qvariantPtr = QVariant(callType, (void *)0);
         }
@@ -515,11 +476,13 @@ struct CallArgument
       }
     else if (type == QMetaType::QString)
       {
-      return Convert::to(*qstringPtr);
+      xAssertFail();
+      //return Convert::to(*qstringPtr);
       }
     else if (type == QMetaType::QObjectStar)
       {
-      return Convert::to(qobjectPtr);
+      xAssertFail();
+      //return Convert::to(qobjectPtr);
       }
     else if (type == qMetaTypeId<QList<QObject *> >())
       {
@@ -536,11 +499,7 @@ struct CallArgument
       return array;
 #endif
       return Value();
-      }/*
-    else if(type == qMetaTypeId<QQmlV8Handle>())
-      {
-      return handlePtr->toHandle();
-      }*/
+      }
     else if (type == -1 || type == qMetaTypeId<QVariant>())
       {
       return Value(*qvariantPtr);
@@ -645,13 +604,16 @@ struct Utils
 
   static Value read(Value, const internal::JSAccessorInfo& info)
     {
-    QObject *ths = Convert::from<QObject>(info.calleeThis());
+    xAssertFail();
+    (void)info;
+    QObject *ths = 0;//Convert::from<QObject>(info.calleeThis());
     if(!ths)
       {
       return Value();
       }
 
-    int id = Convert::from<int>(info.data());
+    xAssertFail();
+    int id = 0;//Convert::from<int>(info.data());
     QMetaProperty prop(ths->metaObject()->property(id));
 
 #ifdef X_TYPE_DEBUG
@@ -671,13 +633,16 @@ struct Utils
 
   static void write(Value, Value value, const internal::JSAccessorInfo& info)
     {
-    QObject *ths = Convert::from<QObject>(info.calleeThis());
+    xAssertFail();
+    (void)info;
+    QObject *ths = 0;//Convert::from<QObject>(info.calleeThis());
     if(!ths)
       {
       return;
       }
 
-    int id = Convert::from<int>(info.data());
+    xAssertFail();
+    int id = 0;//Convert::from<int>(info.data());
     ths->metaObject()->property(id).write(ths, value.toVariant());
     }
 
@@ -709,11 +674,14 @@ struct Utils
     int length = (int)args.length();
     if(length < types.size())
       {
+      xAssertFail();
+      return Value();
+      /*
       return toss(QString("Too few arguments to method ")
 #if QT_VERSION >= 0x050000
                   + QString::fromLocal8Bit(method.methodSignature())
 #endif
-                  );
+                  );*/
       }
     length = qMin(length, types.size());
 

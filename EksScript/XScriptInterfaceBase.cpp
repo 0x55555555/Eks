@@ -1,4 +1,5 @@
 #include "XScriptInterfaceBase.h"
+#include "XScriptValue.h"
 #include "XUnorderedMap"
 #include "XScriptEngine.h"
 
@@ -21,7 +22,7 @@ InterfaceBase::InterfaceBase(int typeID,
   xAssert(_typeName.length());
 
   xAssertFail(); // should this be explicity
-  buildInterface(0, 0, 0, 0, 0, 0);
+  build<std::tuple<>>(0);
   }
 
 InterfaceBase::InterfaceBase(int typeId,
@@ -140,26 +141,9 @@ Object InterfaceBase::newInstance(int argc, Value argv[], const QString& name) c
   return obj;
   }
 
-void InterfaceBase::buildInterface(
-    const ConstructorDef *ctors,
-    xsize ctorCount,
-    const PropertyDef *props,
-    xsize propCount,
-    const FunctionDef *fns,
-    xsize fnCount)
+void InterfaceBase::build(const char *)
   {
-  xAssert(!isSealed());
-
-  _constructors = ctors;
-  _constructorCount = ctorCount;
-
-  _properties = props;
-  _propertyCount = propCount;
-
-  _functions = fns;
-  _functionCount = fnCount;
-
-  seal();
+  xAssertFail();
   }
 
 /*void InterfaceBase::set(const char *name, Value val)

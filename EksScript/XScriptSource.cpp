@@ -1,9 +1,7 @@
 #include "XScriptSource.h"
 #include "XScriptValue.h"
 #include "XScriptFunction.h"
-#include "XConvertFromScript.h"
 #include "XAssert"
-#include "XConvertToScript.h"
 #include "QFile"
 
 namespace XScript

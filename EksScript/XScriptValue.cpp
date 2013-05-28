@@ -2,9 +2,7 @@
 #include "XScriptObject.h"
 #include "XUnorderedMap"
 #include "QStringList"
-#include "XConvertFromScript.h"
-#include "XConvertToScript.h"
-#include "XInterface.h"
+#include "XScriptInterface.h"
 #include "XAssert"
 
 namespace XScript

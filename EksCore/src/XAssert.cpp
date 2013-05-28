@@ -46,7 +46,7 @@ bool Assert::defaultFire(const Assert &a)
   if(QThread::currentThread() != QApplication::instance()->thread())
     {
     return true;
-    } 
+    }
 
   static bool recursion = false;
   if(recursion

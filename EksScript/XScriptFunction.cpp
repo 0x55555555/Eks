@@ -1,7 +1,6 @@
 #include "XScriptFunction.h"
 #include "XScriptValue.h"
 #include "XScriptObject.h"
-#include "XScriptException.h"
 #include "XScriptEngine.h"
 #include "XScriptSource.h"
 #include "XAssert"

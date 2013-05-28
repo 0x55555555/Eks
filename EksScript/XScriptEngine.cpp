@@ -1,8 +1,7 @@
 #include "XScriptGlobal.h"
 #include "XScriptEngine.h"
 #include "XScriptValue.h"
-#include "XInterface.h"
-#include "XConvertToScript.h"
+#include "XScriptInterface.h"
 #include "XQObjectWrapper.h"
 #include "XQtWrappers.h"
 #include "QFile"
@@ -24,7 +23,7 @@ struct StaticEngine
   StaticEngine(bool debugging)
     {
     currentInterface = 0;
-    
+
     (void)debugging;
     xsize idx = 0;
     (void)idx;

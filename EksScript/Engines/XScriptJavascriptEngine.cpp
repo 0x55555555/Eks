@@ -11,8 +11,7 @@
 #include "../XScriptSource.h"
 #include "../XScriptObject.h"
 #include "../XScriptFunction.h"
-#include "../XConvertFromScript.h"
-#include "../XInterface.h"
+#include "../XScriptInterface.h"
 
 #include "XAssert"
 

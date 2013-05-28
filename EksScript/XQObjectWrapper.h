@@ -3,7 +3,7 @@
 
 #include "XScriptGlobal.h"
 #include "XUnorderedMap"
-#include "XInterface.h"
+#include "XScriptInterface.h"
 #include "XInterfaceUtilities.h"
 #include "XScriptObject.h"
 #include "XScriptEngine.h"
@@ -38,29 +38,6 @@ private:
   friend struct Utils;
   };
 
-namespace Convert {
-namespace internal {
-template <> struct JSToNative<QObject> : JSToNativeObject<QObject> {};
-
-template <> struct NativeToJS<QObject>
-  {
-  Value operator()(QObject *n) const
-    {
-    return QObjectWrapper::instance()->wrap(n);
-    }
-  Value operator()(QObject &n) const
-    {
-    xAssertFail();
-    return this->operator()(&n);
-    }
-  };
-}
-
-template <> inline QWidget *castFromBase(QObject *ptr)
-  {
-  return qobject_cast<QWidget*>(ptr);
-  }
-}
 }
 
 #define X_SCRIPTABLE_QOBJECT_TYPE(type) X_SCRIPTABLE_TYPE_INHERITS(type, QObject)
