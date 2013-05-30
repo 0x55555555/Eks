@@ -30,6 +30,7 @@ class DebugInterfaceType
 public:
   QString type;
   DebugManager::CreateInterfaceFunction create;
+  DebugManager::DestroyInterfaceFunction destroy;
   DebugInterfaceType *next;
   };
 
@@ -40,7 +41,7 @@ XProperties:
   XROProperty(QAbstractItemModel *, dataModel);
 
 public:
-  ~DebugInterface();
+  virtual ~DebugInterface();
 
   virtual QString typeName() = 0;
 
@@ -126,6 +127,7 @@ public:
   DebugInterfaceRegisterer(const char* typeName)
     {
     type.create = createFn;
+    type.destroy = destroyFn;
     type.type = typeName;
 
     DebugManager::registerInterfaceType(&type);
@@ -135,6 +137,11 @@ private:
   static DebugInterface *createFn(DebugManager *m, bool client)
     {
     return Eks::Core::defaultAllocator()->create<T>(m, client);
+    }
+
+  static void destroyFn(DebugInterface *ifc)
+    {
+    return Eks::Core::defaultAllocator()->destroy(static_cast<T*>(ifc));
     }
 
   DebugInterfaceType type;

@@ -5,6 +5,7 @@
 #include "XDebugInterface.h"
 #include "XUniquePointer"
 #include "XEventLogger"
+#include "XTemporaryAllocator"
 #include "XTime"
 
 class QStandardItemModel;
@@ -36,14 +37,35 @@ public:
     QString entry;
     };
 
+  struct EventList
+    {
+    enum
+      {
+      DebugMessageType = 2
+      };
+
+    EventList()
+        : alloc(Eks::Core::temporaryAllocator()),
+          inPlaceEvents(&alloc)
+      {
+      }
+
+    void *thread;
+    const ThreadEventLogger::EventVector *events;
+
+    Eks::TemporaryAllocator alloc;
+    ThreadEventLogger::EventVector inPlaceEvents;
+    };
+
   void emitLogMessage(const LogEntry &e);
 
 protected:
   void onLogMessage(const LogEntry &e);
+  void onEventList(const EventList &e);
 
   void timerEvent(QTimerEvent* event) X_OVERRIDE;
   void onEvents(
-      void *thread,
+      const QThread *thread,
       const ThreadEventLogger::EventVector &) X_OVERRIDE;
 
   class Feedback;

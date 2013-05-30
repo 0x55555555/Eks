@@ -31,6 +31,7 @@ public:
 
 
   typedef DebugInterface *(*CreateInterfaceFunction)(DebugManager *m, bool client);
+  typedef void (*DestroyInterfaceFunction)(DebugInterface *ifc);
   static const DebugInterfaceType *findInterfaceType(const QString &);
   static void registerInterfaceType(DebugInterfaceType *);
   static void registerInterface(DebugInterface *ifc);

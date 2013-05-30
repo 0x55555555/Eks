@@ -70,8 +70,10 @@ DebugController::~DebugController()
   {
   xForeach(DebugInterface *ifc, _createdInterfaces)
     {
+    const DebugInterfaceType *def = DebugManager::findInterfaceType(ifc->typeName());
+
     DebugManager::unregisterInterface(ifc);
-    Eks::Core::defaultAllocator()->destroy(ifc);
+    def->destroy(ifc);
     }
   }
 
