@@ -3,6 +3,7 @@
 #include "QDebug"
 #include "QtGui/QStandardItemModel"
 #include "XVector"
+#include "QtWidgets/QApplication"
 
 namespace Eks
 {
@@ -24,7 +25,7 @@ QDataStream &operator<<(QDataStream &s, const ThreadEventLogger::EventData &l)
     const CodeLocation &loc = l.location();
     s << loc.file() << loc.line() << loc.function();
     }
-  else
+  else if(l.hasAllocatedLocation())
     {
     auto &&loc = l.allocatedLocation();
     QByteArray data = loc.file.toUtf8();
@@ -33,6 +34,10 @@ QDataStream &operator<<(QDataStream &s, const ThreadEventLogger::EventData &l)
 
     data = loc.function.toUtf8();
     s << data.constData();
+    }
+  else
+    {
+    s << "" << (xsize)0 << "";
     }
 
   return s << l.data;
@@ -45,7 +50,7 @@ QDataStream &operator>>(QDataStream &s, ThreadEventLogger::EventData &l)
   s >> arr >> loc.line;
   loc.file = QString::fromUtf8(arr);
   s >> arr;
-  /*loc.function = QString::fromUtf8(arr);*/
+  loc.function = QString::fromUtf8(arr);
 
   l.setAllocatedLocation(loc);
   s >> l.data;
@@ -108,6 +113,9 @@ X_IMPLEMENT_DEBUG_INTERFACE(DebugLogger)
 
 DebugLogger::DebugLogger(DebugManager *, bool client)
   {
+  // we need an instance to flush on close.
+  xAssert(QApplication::instance());
+
   static Reciever recv[] =
     {
     recieveFunction<LogEntry, DebugLogger, &DebugLogger::onLogMessage>(),
@@ -140,6 +148,8 @@ DebugLogger::DebugLogger(DebugManager *, bool client)
 
 DebugLogger::~DebugLogger()
   {
+  Core::eventLogger()->syncCachedEvents();
+
   if(g_logger)
     {
     qInstallMessageHandler(g_oldHandler);
@@ -199,9 +209,27 @@ void DebugLogger::onLogMessage(const LogEntry &e)
 
 void DebugLogger::onEventList(const EventList &e)
   {
-  xForeach(const auto &evts, *e.events)
+  QStandardItem *parentItem = _fb->invisibleRootItem();
+
+  xForeach(const auto &evt, *e.events)
     {
-    (void)evts;
+    QString info;
+    if(evt.type == ThreadEventLogger::EventType::Begin || evt.type == ThreadEventLogger::EventType::Moment)
+      {
+      info = "event " +
+          QString::number(evt.id) +
+          " at " + evt.data.allocatedLocation().file +
+          ", line " + QString::number(evt.data.allocatedLocation().line) +
+          ", in " + evt.data.allocatedLocation().function;
+      }
+    else if(evt.type == ThreadEventLogger::EventType::End)
+      {
+      info = "end event " + QString::number(evt.id);
+      }
+
+    QList<QStandardItem*> items;
+    items << new QStandardItem(info);
+    parentItem->appendRow(items);
     }
   }
 

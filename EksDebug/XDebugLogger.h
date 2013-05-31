@@ -50,7 +50,7 @@ public:
       {
       }
 
-    void *thread;
+    const void *thread;
     const ThreadEventLogger::EventVector *events;
 
     Eks::TemporaryAllocator alloc;
