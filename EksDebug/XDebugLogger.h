@@ -5,9 +5,11 @@
 #include "XDebugInterface.h"
 #include "XUniquePointer"
 #include "XEventLogger"
+#include "XUnorderedMap"
 #include "XTemporaryAllocator"
 #include "XTime"
 
+class QStandardItem;
 class QStandardItemModel;
 
 namespace Eks
@@ -59,6 +61,18 @@ public:
 
   void emitLogMessage(const LogEntry &e);
 
+  struct ServerData
+    {
+    struct OpenEvent
+      {
+      const void *thread;
+      ThreadEventLogger::EventID id;
+      };
+
+    Eks::UnorderedMap <OpenEvent, QStandardItem *> openEvents;
+    Eks::UniquePointer<QStandardItemModel> model;
+    };
+
 protected:
   void onLogMessage(const LogEntry &e);
   void onEventList(const EventList &e);
@@ -68,8 +82,9 @@ protected:
       const QThread *thread,
       const ThreadEventLogger::EventVector &) X_OVERRIDE;
 
-  class Feedback;
-  Eks::UniquePointer<QStandardItemModel> _fb;
+  friend bool operator==(const Eks::DebugLogger::ServerData::OpenEvent &a, const Eks::DebugLogger::ServerData::OpenEvent &b);
+
+  Eks::UniquePointer<ServerData> _server;
   };
 
 }
