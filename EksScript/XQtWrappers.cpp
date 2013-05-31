@@ -1,6 +1,7 @@
 #include "XQtWrappers.h"
 #include "XScriptEngine.h"
 #include "XScriptInterface.h"
+#include "XScriptFunctionWrapper.h"
 
 namespace XScript
 {
