@@ -27,6 +27,15 @@ class EKSDEBUG_EXPORT DebugLogger
 public:
   ~DebugLogger();
 
+  enum Role
+    {
+    MomentTime = Qt::UserRole,
+    StartTime,
+    EndTime,
+    Thread,
+    Location
+    };
+
   struct LogEntry
     {
     enum
@@ -35,6 +44,7 @@ public:
       };
 
     Eks::Time time;
+    const void *thread;
     xuint32 level;
     QString entry;
     };

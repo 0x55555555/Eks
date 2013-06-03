@@ -136,6 +136,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="debug\moc_logview.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="logview.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
@@ -156,10 +159,22 @@
     <ClCompile Include="debug\moc_mainwindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Release\moc_logview.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="release\moc_mainwindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClInclude Include="logview.h" />
+    <CustomBuild Include="logview.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing logview.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o "$(ConfigurationName)\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DX_CPPOX_SUPPORT -DX_CPPOX_OVERRIDE_SUPPORT -DX_HAS_LONG_LONG -DEKSDEBUGGER_BUILD -DQT_DLL -DQT_GUI_LIB -DQT_CORE_LIB -DQT_HAVE_MMX -DQT_HAVE_3DNOW -DQT_HAVE_SSE -DQT_HAVE_MMXEXT -DQT_HAVE_SSE2 -DQT_THREAD_SUPPORT "-I.\..\EksCore" "-I.\..\EksDebug" "-I.\%QTDIR%\include"</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing logview.h...</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o "$(ConfigurationName)\moc_%(Filename).cpp"  -D_WINDOWS -DUNICODE -DWIN32 -DQT_LARGEFILE_SUPPORT -DX_CPPOX_SUPPORT -DX_CPPOX_OVERRIDE_SUPPORT -DX_HAS_LONG_LONG -DEKSDEBUGGER_BUILD -DQT_DLL -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB -DQT_HAVE_MMX -DQT_HAVE_3DNOW -DQT_HAVE_SSE -DQT_HAVE_MMXEXT -DQT_HAVE_SSE2 -DQT_THREAD_SUPPORT -DNDEBUG "-Ic:\QtSDK\Desktop\Qt\4.8.1\msvc2010\include\QtCore" "-Ic:\QtSDK\Desktop\Qt\4.8.1\msvc2010\include\QtGui" "-Ic:\QtSDK\Desktop\Qt\4.8.1\msvc2010\include" "-Ic:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include" "-Ic:\Program Files\Microsoft SDKs\Windows\v7.1\Include" "-I.\..\EksCore" "-I.\..\EksDebug" "-Ic:\QtSDK\Desktop\Qt\4.8.1\msvc2010\include\ActiveQt" "-I.\release" "-I." "-Ic:\QtSDK\Desktop\Qt\4.8.1\msvc2010\mkspecs\win32-msvc2010"</Command>
+    </CustomBuild>
     <ClInclude Include="ui_mainwindow.h" />
   </ItemGroup>
   <ItemGroup>

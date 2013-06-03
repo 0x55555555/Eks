@@ -4,6 +4,7 @@
 #include "QtGui/QStandardItemModel"
 #include "XVector"
 #include "QtWidgets/QApplication"
+#include "QThread"
 
 uint qHash(const Eks::DebugLogger::ServerData::OpenEvent &ev)
   {
@@ -13,23 +14,12 @@ uint qHash(const Eks::DebugLogger::ServerData::OpenEvent &ev)
 namespace Eks
 {
 
-enum Role
-  {
-  MomentTime,
-  StartTime,
-  EndTime,
-  Location
-  };
-
-
 bool operator==(
     const Eks::DebugLogger::ServerData::OpenEvent &a,
     const Eks::DebugLogger::ServerData::OpenEvent &b)
   {
   return a.id == b.id && a.thread && b.thread;
   }
-
-Q_DECLARE_METATYPE(ThreadEventLogger::EventData::Location)
 
 QDataStream &operator<<(QDataStream &s, const DebugLogger::LogEntry &l)
   {
@@ -125,6 +115,7 @@ void handler(QtMsgType t, const QMessageLogContext &c, const QString &m)
   DebugLogger::LogEntry e;
   e.level = t;
   e.entry = m;
+  e.thread = QThread::currentThread();
 
   xAssert(g_logger)
   g_logger->emitLogMessage(e);
@@ -225,9 +216,13 @@ void DebugLogger::onLogMessage(const LogEntry &e)
 
     const QString &status = statuses[e.level];
 
-    QList<QStandardItem*> items;
-    items << new QStandardItem(status + ":\n" + e.entry);
-    parentItem->appendRow(items);
+    auto item = new QStandardItem(status + ":\n" + e.entry);
+
+    item->setData(QVariant::fromValue(ThreadEventLogger::EventData::Location()), Location);
+    item->setData(QVariant::fromValue(e.time), MomentTime);
+    item->setData(QVariant((xuint64)e.thread), Thread);
+
+    parentItem->appendRow(item);
     }
   }
 
@@ -239,10 +234,10 @@ void DebugLogger::onEventList(const EventList &list)
 
     xForeach(const auto &evt, *list.events)
       {
-      if(evt.type == ThreadEventLogger::EventType::Begin || evt.type == ThreadEventLogger::EventType::Moment)
+      if(evt.type == ThreadEventLogger::EventType::Begin ||
+         evt.type == ThreadEventLogger::EventType::Moment)
         {
         auto item = new QStandardItem();
-
 
         item->setData(QVariant::fromValue(evt.data.allocatedLocation()), Location);
 
@@ -260,7 +255,15 @@ void DebugLogger::onEventList(const EventList &list)
           item->setData(QVariant::fromValue(evt.time), MomentTime);
           }
 
-        item->setData(QVariant::fromValue(evt.data.data), Qt::DisplayRole);
+        item->setData(QVariant((xuint64)list.thread), Thread);
+        if(!evt.data.data.isEmpty())
+          {
+          item->setData(QVariant::fromValue(evt.data.data), Qt::DisplayRole);
+          }
+        else
+          {
+          item->setData(QVariant::fromValue(evt.data.allocatedLocation().function), Qt::DisplayRole);
+          }
 
         parentItem->appendRow(item);
         }
@@ -271,7 +274,9 @@ void DebugLogger::onEventList(const EventList &list)
         e.id = evt.id;
 
         QStandardItem *item = _server->openEvents[e];
+        xAssert(item);
         item->setData(QVariant::fromValue(evt.time), EndTime);
+        _server->openEvents.remove(e);
         }
       }
     }
