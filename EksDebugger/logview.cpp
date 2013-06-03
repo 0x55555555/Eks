@@ -3,60 +3,151 @@
 #include "XDebugLogger.h"
 #include "QtWidgets/QGraphicsItem"
 
-class ThreadItem : public QGraphicsItem
+static const float durationHeight = 30.0f;
+
+float timeToX(const Eks::Time &t)
   {
-public:
-  ThreadItem(QGraphicsItem *i=0) : QGraphicsItem(i) { }
-
-  QRectF boundingRect() const X_OVERRIDE
-    {
-    return QRectF();
-    }
-
-  void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
-    {
-    }
-  };
+  return t.milliseconds();
+  }
 
 class DurationItem : public QGraphicsItem
   {
 XProperties:
-  XByRefProperty(Eks::Time, start, setStart);
-  XByRefProperty(Eks::Time, end, setEnd);
+  XROByRefProperty(Eks::Time, start);
+  XROByRefProperty(Eks::Time, end);
   XByRefProperty(LogView::Location, location, setLocation);
   XByRefProperty(QString, display, setDisplay);
 
 public:
   DurationItem(QGraphicsItem *i) : QGraphicsItem(i) { }
 
-  QRectF boundingRect() const X_OVERRIDE
+  void setStartAndEnd(const Eks::Time &t)
     {
-    return QRectF();
+    _start = _end = t;
+    prepareGeometryChange();
     }
 
-  void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
+  void setEnd(const Eks::Time &t)
     {
+    _end = t;
+    prepareGeometryChange();
+    }
+
+  QRectF boundingRect() const X_OVERRIDE
+    {
+    float t = timeToX(start());
+    QRectF r(t, 0.0f, timeToX(end()) - t, durationHeight);
+
+    return r.united(childrenBoundingRect());
+    }
+
+  void paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
+    {
+    float t = timeToX(start());
+    QRectF r(t, 0.0f, timeToX(end()) - t, durationHeight);
+
+    p->setPen(Qt::black);
+    p->setBrush(Qt::white);
+    p->drawRect(r);
     }
   };
 
 class MomentItem : public QGraphicsItem
   {
 XProperties:
-  XByRefProperty(Eks::Time, time, setTime);
+  XROByRefProperty(Eks::Time, time);
   XByRefProperty(LogView::Location, location, setLocation);
   XByRefProperty(QString, display, setDisplay);
 
 public:
   MomentItem(QGraphicsItem *i) : QGraphicsItem(i) { }
 
-  QRectF boundingRect() const X_OVERRIDE
+  void setTime(const Eks::Time &t)
     {
-    return QRectF();
+    _time = t;
+    prepareGeometryChange();
     }
 
-  void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
+  QRectF boundingRect() const X_OVERRIDE
+    {
+    return QRectF(timeToX(time()), 0.0f, 1.0f, durationHeight);
+    }
+
+  void paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
+    {
+    QRectF r(timeToX(time()), 0.0f, 1.0f, durationHeight);
+    p->setPen(Qt::black);
+    p->setBrush(Qt::white);
+    p->drawRect(r);
+    }
+  };
+
+class ThreadItem : public QGraphicsItem
+  {
+public:
+  ThreadItem(QGraphicsItem *i=0) : QGraphicsItem(i)
     {
     }
+
+  MomentItem *addMoment(const Eks::Time &t)
+    {
+    QGraphicsItem *last = this;
+    if(_openDurations.size())
+      {
+      last = _openDurations.back();
+      }
+
+    auto i = new MomentItem(last);
+    i->setTime(t);
+
+    return i;
+    }
+
+  DurationItem *addDuration(const Eks::Time &start)
+    {
+    QGraphicsItem *last = this;
+    if(_openDurations.size())
+      {
+      last = _openDurations.back();
+      }
+
+    auto d = new DurationItem(last);
+    _durationItems.insert(std::pair<Eks::Time, DurationItem*>(start, d));
+    _openDurations.push_back(d);
+    d->setStartAndEnd(start);
+    d->setY(-durationHeight);
+    return d;
+    }
+
+  void endDuration(DurationItem *e, const Eks::Time &time)
+    {
+    e->setEnd(time);
+    auto it = std::find(_openDurations.begin(), _openDurations.end(), e);
+    if(it == _openDurations.end())
+      {
+      return;
+      }
+
+    _openDurations.erase(it);
+    }
+
+  QRectF boundingRect() const X_OVERRIDE
+    {
+    return childrenBoundingRect();
+    }
+
+  void paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
+    {
+    QRectF r(childrenBoundingRect());
+
+    p->setPen(Qt::black);
+    p->setBrush(Qt::white);
+    p->drawRect(r);
+    }
+
+private:
+  std::multimap<Eks::Time, DurationItem *> _durationItems;
+  std::vector<DurationItem *> _openDurations;
   };
 
 LogView::LogView(QAbstractItemModel *model)
@@ -113,8 +204,7 @@ void LogView::addDuration(
     const Location &l)
   {
   auto thread = getThreadItem(thr);
-  auto duration = new DurationItem(thread);
-  duration->setStart(t);
+  auto duration = thread->addDuration(t);
 
   duration->setLocation(l);
   duration->setDisplay(disp);
@@ -130,9 +220,7 @@ void LogView::addMoment(
     const Location &l)
   {
   auto thread = getThreadItem(thr);
-  auto moment = new MomentItem(thread);
-
-  moment->setTime(t);
+  auto moment = thread->addMoment(t);
 
   moment->setLocation(l);
   moment->setDisplay(disp);
@@ -145,7 +233,9 @@ void LogView::updateEnd(
   auto item = _openEvents[id];
   xAssert(item);
 
-  item->setEnd(t);
+  auto thread = static_cast<ThreadItem*>(item->parentItem());
+  thread->endDuration(item, t);
+
   _openEvents.remove(id);
   }
 
