@@ -23,12 +23,15 @@ bool operator==(
 
 QDataStream &operator<<(QDataStream &s, const DebugLogger::LogEntry &l)
   {
-  return s << l.level << l.entry;
+  return s << l.time << (xuint64)l.thread << l.level << l.entry;
   }
 
 QDataStream &operator>>(QDataStream &s, DebugLogger::LogEntry &l)
   {
-  return s >> l.level >> l.entry;
+  xuint64 thr;
+  s >> l.time >> thr >> l.level >> l.entry;
+  l.thread = (void*)thr;
+  return s;
   }
 
 QDataStream &operator<<(QDataStream &s, const ThreadEventLogger::EventData &l)
@@ -115,6 +118,7 @@ void handler(QtMsgType t, const QMessageLogContext &c, const QString &m)
   DebugLogger::LogEntry e;
   e.level = t;
   e.entry = m;
+  e.time = Time::now();
   e.thread = QThread::currentThread();
 
   xAssert(g_logger)

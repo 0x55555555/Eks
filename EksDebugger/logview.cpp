@@ -2,24 +2,86 @@
 #include "QtCore/QAbstractItemModel"
 #include "XDebugLogger.h"
 #include "QtWidgets/QGraphicsItem"
+#include "QtWidgets/QGraphicsTextItem"
+#include "QtWidgets/QGraphicsSceneMouseEvent"
+#include "QtCore/QDebug"
+#include "QtGui/QPen"
 
+class ThreadItem;
 static const float durationHeight = 30.0f;
+static const float threadPad = 5;
+static const float infoPad = 3;
 
-float timeToX(const Eks::Time &t)
-  {
-  return t.milliseconds();
-  }
-
-class DurationItem : public QGraphicsItem
+class EventItem : public QGraphicsItem
   {
 XProperties:
-  XROByRefProperty(Eks::Time, start);
-  XROByRefProperty(Eks::Time, end);
+  XROProperty(ThreadItem *, thread);
   XByRefProperty(LogView::Location, location, setLocation);
   XByRefProperty(QString, display, setDisplay);
 
 public:
-  DurationItem(QGraphicsItem *i) : QGraphicsItem(i) { }
+  EventItem(QGraphicsItem *parent, ThreadItem *t) : QGraphicsItem(parent), _thread(t)
+    {
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setAcceptedMouseButtons(Qt::LeftButton);
+    }
+
+  void mousePressEvent(QGraphicsSceneMouseEvent *)
+    {
+    }
+
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
+
+  float timeToX(const Eks::Time &t) const;
+  };
+
+class InfoItem : public QGraphicsTextItem
+  {
+public:
+  InfoItem(EventItem *i)
+    {
+    setHtml(formatItem(i));
+    }
+
+  QString formatItem(EventItem *i)
+    {
+    QString location;
+    
+    if(i->location().file != "")
+      {
+      location = "<i>" + i->location().file + ", " +
+                 i->location().function + ", on line " +
+                 QString::number(i->location().line) + "</i><br>";
+      }
+
+    QString txt = location +
+                  "<b>" + i->display() + "</b>";
+    return txt;
+    }
+
+  QRectF boundingRect()
+    {
+    return QGraphicsTextItem::boundingRect().adjusted(-infoPad-2, -infoPad-2, infoPad+2, infoPad+2);
+    }
+
+  void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+    {
+    painter->setPen(Qt::black);
+    painter->setBrush(Qt::lightGray);
+    painter->drawRoundedRect(boundingRect(), infoPad, infoPad);
+
+    QGraphicsTextItem::paint(painter, option, widget);
+    }
+  };
+
+class DurationItem : public EventItem
+  {
+XProperties:
+  XROByRefProperty(Eks::Time, start);
+  XROByRefProperty(Eks::Time, end);
+
+public:
+  DurationItem(QGraphicsItem *item, ThreadItem *i);
 
   void setStartAndEnd(const Eks::Time &t)
     {
@@ -46,21 +108,29 @@ public:
     float t = timeToX(start());
     QRectF r(t, 0.0f, timeToX(end()) - t, durationHeight);
 
-    p->setPen(Qt::black);
+    if(isSelected())
+      {
+      QPen pen(Qt::red, 2.0f);
+      p->setPen(pen);
+      }
+    else
+      {
+      p->setPen(Qt::black);
+      }
+
     p->setBrush(Qt::white);
     p->drawRect(r);
     }
   };
 
-class MomentItem : public QGraphicsItem
+class MomentItem : public EventItem
   {
 XProperties:
+  XROProperty(ThreadItem *, thread);
   XROByRefProperty(Eks::Time, time);
-  XByRefProperty(LogView::Location, location, setLocation);
-  XByRefProperty(QString, display, setDisplay);
 
 public:
-  MomentItem(QGraphicsItem *i) : QGraphicsItem(i) { }
+  MomentItem(QGraphicsItem *item, ThreadItem *i);
 
   void setTime(const Eks::Time &t)
     {
@@ -76,7 +146,17 @@ public:
   void paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
     {
     QRectF r(timeToX(time()), 0.0f, 1.0f, durationHeight);
-    p->setPen(Qt::black);
+
+    if(isSelected())
+      {
+      QPen pen(Qt::red, 2.0f);
+      p->setPen(pen);
+      }
+    else
+      {
+      p->setPen(Qt::black);
+      }
+
     p->setBrush(Qt::white);
     p->drawRect(r);
     }
@@ -84,9 +164,17 @@ public:
 
 class ThreadItem : public QGraphicsItem
   {
+XProperties:
+  XROProperty(LogView *, log);
+
 public:
-  ThreadItem(QGraphicsItem *i=0) : QGraphicsItem(i)
+  ThreadItem(LogView *l) : _log(l)
     {
+    }
+
+  float timeToX(const Eks::Time &t) const
+    {
+    return _log->timeToX(t);
     }
 
   MomentItem *addMoment(const Eks::Time &t)
@@ -97,7 +185,7 @@ public:
       last = _openDurations.back();
       }
 
-    auto i = new MomentItem(last);
+    auto i = new MomentItem(last, this);
     i->setTime(t);
 
     return i;
@@ -111,7 +199,7 @@ public:
       last = _openDurations.back();
       }
 
-    auto d = new DurationItem(last);
+    auto d = new DurationItem(last, this);
     _durationItems.insert(std::pair<Eks::Time, DurationItem*>(start, d));
     _openDurations.push_back(d);
     d->setStartAndEnd(start);
@@ -131,18 +219,26 @@ public:
     _openDurations.erase(it);
     }
 
+  void selectEvent(EventItem *item, const QPointF &pos)
+    {
+    log()->selectEvent(item, pos);
+    }
+
   QRectF boundingRect() const X_OVERRIDE
     {
-    return childrenBoundingRect();
+    QRectF r(childrenBoundingRect());
+    r.adjust(-threadPad, -threadPad, threadPad, threadPad);
+    return r;
     }
 
   void paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE
     {
     QRectF r(childrenBoundingRect());
+    r.adjust(-threadPad, -threadPad, threadPad, threadPad);
 
-    p->setPen(Qt::black);
+    p->setPen(Qt::red);
     p->setBrush(Qt::white);
-    p->drawRect(r);
+    p->drawRoundedRect(r, threadPad, threadPad);
     }
 
 private:
@@ -150,9 +246,37 @@ private:
   std::vector<DurationItem *> _openDurations;
   };
 
+void EventItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *e)
+  {
+  thread()->selectEvent(this, e->scenePos());
+  }
+
+DurationItem::DurationItem(QGraphicsItem *item, ThreadItem *i) : EventItem(item, i)
+  {
+  }
+
+MomentItem::MomentItem(QGraphicsItem *item, ThreadItem *i) : EventItem(item, i)
+  {
+  }
+
+float EventItem::timeToX(const Eks::Time &t) const
+  {
+  return _thread->timeToX(t);
+  }
+
+
 LogView::LogView(QAbstractItemModel *model)
+  : _threads(Eks::Core::defaultAllocator()),
+    _threadList(Eks::Core::defaultAllocator()),
+    _selected(0),
+    _info(0)
   {
   setObjectName("Log");
+
+  _min.set(X_INT64_MAX, X_INT64_MAX);
+  _max.set(X_INT64_MIN, X_INT64_MIN);
+
+  setRenderHint(QPainter::Antialiasing);
 
   connect(
     model,
@@ -169,11 +293,12 @@ LogView::LogView(QAbstractItemModel *model)
       auto d = model->data(idx, Eks::DebugLogger::MomentTime);
       if (d.isValid())
         {
-        addMoment(idx, d.value<Eks::Time>(), display, thread, loc);
+        auto &&t = d.value<Eks::Time>();
+        addMoment(idx, t, display, thread, loc);
         }
       else
         {
-        auto d = model->data(idx, Eks::DebugLogger::StartTime).value<Eks::Time>();
+        auto &&d = model->data(idx, Eks::DebugLogger::StartTime).value<Eks::Time>();
         addDuration(idx, d, display, thread, loc);
         }
       }
@@ -196,6 +321,26 @@ LogView::LogView(QAbstractItemModel *model)
   setScene(&_scene);
   }
 
+float LogView::timeToX(const Eks::Time &t) const
+  {
+  return (t - _min).milliseconds();
+  }
+
+void LogView::layoutThreads()
+  {
+  int usedY = 0;
+
+  xForeach(auto th, _threadList)
+    {
+    auto bnds = th->boundingRect();
+    
+    th->setY(usedY);
+
+    usedY -= bnds.height();
+    th->setX(0);
+    }
+  }
+
 void LogView::addDuration(
     const QModelIndex &id,
     const Eks::Time &t,
@@ -206,10 +351,14 @@ void LogView::addDuration(
   auto thread = getThreadItem(thr);
   auto duration = thread->addDuration(t);
 
+  _min = xMin(_min, t);
+  _max = xMax(_max, t);
+
   duration->setLocation(l);
   duration->setDisplay(disp);
 
   _openEvents[id] = duration;
+  layoutThreads();
   }
 
 void LogView::addMoment(
@@ -222,8 +371,12 @@ void LogView::addMoment(
   auto thread = getThreadItem(thr);
   auto moment = thread->addMoment(t);
 
+  _min = xMin(_min, t);
+  _max = xMax(_max, t);
+
   moment->setLocation(l);
   moment->setDisplay(disp);
+  layoutThreads();
   }
 
 void LogView::updateEnd(
@@ -233,10 +386,14 @@ void LogView::updateEnd(
   auto item = _openEvents[id];
   xAssert(item);
 
-  auto thread = static_cast<ThreadItem*>(item->parentItem());
+  _min = xMin(_min, t);
+  _max = xMax(_max, t);
+
+  auto thread = item->thread();
   thread->endDuration(item, t);
 
   _openEvents.remove(id);
+  layoutThreads();
   }
 
 ThreadItem *LogView::getThreadItem(quint64 t)
@@ -244,10 +401,32 @@ ThreadItem *LogView::getThreadItem(quint64 t)
   auto item = _threads[t];
   if(!item)
     {
-    item = new ThreadItem();
+    item = new ThreadItem(this);
+    _threads[t] = item;
+    _threadList << item;
     _scene.addItem(item);
     }
 
   return item;
+  }
+
+void LogView::selectEvent(EventItem *item, const QPointF &scenePos)
+  {
+  if(_selected)
+    {
+    _selected->setSelected(false);
+    delete _info;
+    }
+
+  _selected = item;
+
+  if(_selected)
+    {
+    _selected->setSelected(true);
+
+    _info = new InfoItem(_selected);
+    _scene.addItem(_info);
+    _info->setPos(scenePos);
+    }
   }
 
