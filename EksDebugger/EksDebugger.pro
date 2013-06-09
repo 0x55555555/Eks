@@ -20,7 +20,7 @@ SOURCES += main.cpp \
 HEADERS  += mainwindow.h \
     logview.h
 
-FORMS    += mainwindow.ui
+FORMS    +=
 
 
 LIBS += -lEksCore -lEksDebug

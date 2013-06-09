@@ -35,8 +35,14 @@ public:
       }
     }
 
-  QDockWidget *addDock(QWidget *widg)
+  QWidget *addDock(QWidget *widg)
     {
+    if(!_main->centralWidget())
+      {
+      _main->setCentralWidget(widg);
+      return widg;
+      }
+
     QDockWidget *dock = new QDockWidget(widg->objectName());
     dock->setWidget(widg);
     _main->addDockWidget(Qt::LeftDockWidgetArea, dock);
@@ -45,7 +51,7 @@ public:
 
   MainWindow *_main;
 
-  QDockWidget *_log;
+  QWidget *_log;
   Eks::DebugInterface *_logIfc;
   };
 

@@ -279,8 +279,11 @@ void DebugLogger::onEventList(const EventList &list)
 
         QStandardItem *item = _server->openEvents[e];
         xAssert(item);
-        item->setData(QVariant::fromValue(evt.time), EndTime);
-        _server->openEvents.remove(e);
+        if(item)
+          {
+          item->setData(QVariant::fromValue(evt.time), EndTime);
+          _server->openEvents.remove(e);
+          }
         }
       }
     }
