@@ -56,7 +56,7 @@ public:
   QString formatItem(EventItem *i)
     {
     QString location;
-    
+
     if(i->location().file != "")
       {
       location = "<i>" + i->location().file + ", " +
@@ -101,13 +101,19 @@ public:
   void setStartAndEnd(const Eks::Time &t)
     {
     _start = _end = t;
-    prepareGeometryChange();
+    if(isVisible())
+      {
+      prepareGeometryChange();
+      }
     }
 
   void setEnd(const Eks::Time &t)
     {
     _end = t;
-    prepareGeometryChange();
+    if(isVisible())
+      {
+      prepareGeometryChange();
+      }
     }
 
   QString formattedTime()
@@ -156,7 +162,10 @@ public:
   void setTime(const Eks::Time &t)
     {
     _time = t;
-    prepareGeometryChange();
+    if(isVisible())
+      {
+      prepareGeometryChange();
+      }
     }
 
   QRectF boundingRect() const X_OVERRIDE
@@ -252,6 +261,11 @@ void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
     return;
     }
 
+  if((e->end() - e->start()).milliseconds() < 1)
+    {
+    e->setVisible(false);
+    }
+
   _openDurations.erase(it);
   }
 
@@ -318,6 +332,8 @@ ThreadItem *ThreadsItem::getThreadItem(quint64 t)
 
 TimelineItem::TimelineItem(LogView *log) : _log(log)
   {
+  _pendingLayoutThread = false;
+
   _threads = new ThreadsItem(log);
   _threads->setParentItem(this);
 
@@ -384,7 +400,7 @@ void TimelineItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *i, Q
     {
     auto t = _log->timeFromX(pos, false);
     float x = pos;
-    
+
     auto sec = t.seconds();
     auto msec = t.milliseconds();
     auto microsec = t.microseconds();
@@ -420,16 +436,29 @@ ThreadsItem *TimelineItem::threads()
 
 void TimelineItem::layoutThreads()
   {
-  int usedY = 0;
-
-  xForeach(auto th, threads()->threads())
+  if(!_pendingLayoutThread)
     {
-    auto bnds = th->boundingRect();
+    _pendingLayoutThread = true;
+    startTimer(0);
+    }
+  }
 
-    th->setY(usedY);
+void TimelineItem::timerEvent(QTimerEvent *)
+  {
+  if(_pendingLayoutThread)
+    {
+    _pendingLayoutThread = false;
+    int usedY = 0;
 
-    usedY -= bnds.height();
-    th->setX(0);
+    xForeach(auto th, threads()->threads())
+      {
+      auto bnds = th->boundingRect();
+
+      th->setY(usedY);
+
+      usedY -= bnds.height();
+      th->setX(0);
+      }
     }
   }
 
@@ -544,7 +573,7 @@ LogView::LogView(QAbstractItemModel *model)
 
 void LogView::timerEvent(QTimerEvent *)
   {
-  _timelineRoot->setCurrentTime(Eks::Time::now());
+  //_timelineRoot->setCurrentTime(Eks::Time::now());
   }
 
 float LogView::timeToX(const Eks::Time &t) const
@@ -561,7 +590,7 @@ Eks::Time LogView::timeFromX(float x, bool offset) const
   {
   float scaledX = (x - _offset) / _scale;
   auto t = Eks::Time::fromMilliseconds(scaledX);
-  
+
   if (offset)
     {
     return t + _min;
@@ -640,7 +669,7 @@ void LogView::wheelEvent(QWheelEvent *event)
 
     auto xOffset = event->pos().x();
 
-    _offset = ((_offset - xOffset) * scrollY) + xOffset;
+    //_offset = ((_offset - xOffset) * scrollY) + xOffset;
 
     emit timeConversionChanged();
     }
@@ -668,10 +697,10 @@ void LogView::mouseMoveEvent(QMouseEvent *event)
   {
   if(_dragging)
     {
-    emit timeConversionChanged();
 
-    _offset += event->pos().x() - _lastDragX;
+    //_offset += event->pos().x() - _lastDragX;
     _lastDragX = event->pos().x();
+    //emit timeConversionChanged();
     }
   else
     {

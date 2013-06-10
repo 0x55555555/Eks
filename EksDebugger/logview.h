@@ -98,9 +98,13 @@ public slots:
   void timeConversionChanged();
   void layoutThreads();
 
+protected:
+  void timerEvent(QTimerEvent *event) X_OVERRIDE;
+
 private:
   ThreadsItem *_threads;
   LogView *_log;
+  bool _pendingLayoutThread;
   };
 
 class EventItem : public QGraphicsObject

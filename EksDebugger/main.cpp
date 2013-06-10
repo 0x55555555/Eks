@@ -66,8 +66,6 @@ int main(int argc, char *argv[])
   Watcher watch(&w);
   Eks::DebugManager m(false, &watch);
 
-
-
   w.show();
 
   return a.exec();
