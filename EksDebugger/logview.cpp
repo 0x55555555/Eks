@@ -518,7 +518,7 @@ LogView::LogView(QAbstractItemModel *model)
 
   setRenderHint(QPainter::Antialiasing);
 
-  connect(
+  /*connect(
     model,
     &QAbstractItemModel::rowsInserted,
     [this, model](QModelIndex parent, int rowStart, int rowEnd)
@@ -556,7 +556,7 @@ LogView::LogView(QAbstractItemModel *model)
 
       updateEnd(topLeft, d);
       }
-    );
+    );*/
 
   startTimer(updateTimeInterval);
 
