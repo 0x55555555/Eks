@@ -34,53 +34,14 @@ QDataStream &operator>>(QDataStream &s, DebugLogger::LogEntry &l)
   return s;
   }
 
-QDataStream &operator<<(QDataStream &s, const ThreadEventLogger::EventData &l)
-  {
-  if (l.hasEmbeddedLocation())
-    {
-    const CodeLocation &loc = l.location();
-    s << loc.file() << loc.line() << loc.function();
-    }
-  else if(l.hasAllocatedLocation())
-    {
-    auto &&loc = l.allocatedLocation();
-    QByteArray data = loc.file.toUtf8();
-
-    s << data.constData() << loc.line;
-
-    data = loc.function.toUtf8();
-    s << data.constData();
-    }
-  else
-    {
-    s << "" << (xsize)0 << "";
-    }
-
-  return s << l.data;
-  }
-
-QDataStream &operator>>(QDataStream &s, ThreadEventLogger::EventData &l)
-  {
-  ThreadEventLogger::EventData::Location loc;
-  QByteArray arr;
-  s >> arr >> loc.line;
-  loc.file = QString::fromUtf8(arr);
-  s >> arr;
-  loc.function = QString::fromUtf8(arr);
-
-  l.setAllocatedLocation(loc);
-  s >> l.data;
-
-  return s;
-  }
 QDataStream &operator<<(QDataStream &s, const ThreadEventLogger::EventItem &l)
   {
-  return s << l.time << (const xuint8&)l.type << l.data << l.id;
+  return s << l.time << (const xuint8&)l.type << l.location << l.id;
   }
 
 QDataStream &operator>>(QDataStream &s, ThreadEventLogger::EventItem &l)
   {
-  s >> l.time >> (xuint8&)l.type >> l.data >> l.id;
+  s >> l.time >> (xuint8&)l.type >> l.location >> l.id;
 
   return s;
   }
@@ -222,7 +183,9 @@ void DebugLogger::onLogMessage(const LogEntry &e)
 
     auto item = new QStandardItem(status + ":\n" + e.entry);
 
-    item->setData(QVariant::fromValue(ThreadEventLogger::EventData::Location()), Location);
+    DebugLocation *loc = nullptr;
+
+    item->setData(QVariant::fromValue(loc), Location);
     item->setData(QVariant::fromValue(e.time), MomentTime);
     item->setData(QVariant((xuint64)e.thread), Thread);
 
@@ -243,7 +206,9 @@ void DebugLogger::onEventList(const EventList &list)
         {
         auto item = new QStandardItem();
 
-        item->setData(QVariant::fromValue(evt.data.allocatedLocation()), Location);
+        auto location = findLocation(evt.location);
+
+        item->setData(QVariant::fromValue(location), Location);
 
         if(evt.type == ThreadEventLogger::EventType::Begin)
           {
@@ -260,14 +225,20 @@ void DebugLogger::onEventList(const EventList &list)
           }
 
         item->setData(QVariant((xuint64)list.thread), Thread);
-        if(!evt.data.data.isEmpty())
+        QString display;
+        if(!location)
           {
-          item->setData(QVariant::fromValue(evt.data.data), Qt::DisplayRole);
+          display = "No Data";
+          }
+        else if(location->data())
+          {
+          display = location->data();
           }
         else
           {
-          item->setData(QVariant::fromValue(evt.data.allocatedLocation().function), Qt::DisplayRole);
+          display = location->function();
           }
+        item->setData(QVariant::fromValue<QString>(display), Qt::DisplayRole);
 
         parentItem->appendRow(item);
         }

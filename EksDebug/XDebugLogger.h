@@ -83,6 +83,11 @@ public:
     Eks::UniquePointer<QStandardItemModel> model;
     };
 
+  class DebugLocation
+    {
+    };
+  const DebugLocation *findLocation(const EventLocation::ID id);
+
 protected:
   void onLogMessage(const LogEntry &e);
   void onEventList(const EventList &e);
