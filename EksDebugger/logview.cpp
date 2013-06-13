@@ -57,11 +57,11 @@ public:
     {
     QString location;
 
-    if(i->location().file != "")
+    if(i->location()->file() != "")
       {
-      location = "<i>" + i->location().file + ", " +
-                 i->location().function + ", on line " +
-                 QString::number(i->location().line) + "</i><br>";
+      location = "<i>" + i->location()->file() + ", " +
+                 i->location()->function() + ", on line " +
+                 QString::number(i->location()->line()) + "</i><br>";
       }
 
     QString time = i->formattedTime();
@@ -518,6 +518,7 @@ LogView::LogView(QAbstractItemModel *model)
 
   setRenderHint(QPainter::Antialiasing);
 
+  (void)model;
   /*connect(
     model,
     &QAbstractItemModel::rowsInserted,
@@ -604,7 +605,7 @@ void LogView::addDuration(
     const Eks::Time &t,
     const QString &disp,
     const quint64 thr,
-    const Location &l)
+    const Location *l)
   {
   auto thread = _timelineRoot->threads()->getThreadItem(thr);
   auto duration = thread->addDuration(t);
@@ -626,7 +627,7 @@ void LogView::addMoment(
     const Eks::Time &t,
     const QString &disp,
     const quint64 thr,
-    const Location &l)
+    const Location *l)
   {
   auto thread = _timelineRoot->threads()->getThreadItem(thr);
   auto moment = thread->addMoment(t);
@@ -669,6 +670,7 @@ void LogView::wheelEvent(QWheelEvent *event)
 
     auto xOffset = event->pos().x();
 
+    (void)xOffset;
     //_offset = ((_offset - xOffset) * scrollY) + xOffset;
 
     emit timeConversionChanged();

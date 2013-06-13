@@ -4,6 +4,7 @@
 #include "QtWidgets/QGraphicsView"
 #include "QtWidgets/QGraphicsItem"
 #include "XEventLogger"
+#include "XDebugLogger.h"
 #include "XUnorderedMap"
 #include "QtCore/QPersistentModelIndex"
 
@@ -23,7 +24,7 @@ class LogView : public QGraphicsView
   Q_OBJECT
 
 public:
-  typedef Eks::ThreadEventLogger::EventData::Location Location;
+  typedef Eks::DebugLogger::DebugLocationWithData Location;
 
   LogView(QAbstractItemModel *model);
 
@@ -47,13 +48,13 @@ private:
       const Eks::Time &t,
       const QString &disp,
       const quint64 thr,
-      const Location &l);
+      const Location *l);
   void addMoment(
       const QModelIndex &id,
       const Eks::Time &t,
       const QString &disp,
       const quint64 thr,
-      const Location &l);
+      const Location *l);
   void updateEnd(
       const QModelIndex &id,
       const Eks::Time &t);
@@ -113,7 +114,7 @@ class EventItem : public QGraphicsObject
 
 XProperties:
   XROProperty(ThreadItem *, thread);
-  XByRefProperty(LogView::Location, location, setLocation);
+  XProperty(const LogView::Location *, location, setLocation);
   XByRefProperty(QString, display, setDisplay);
 
 public:

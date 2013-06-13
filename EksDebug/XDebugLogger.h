@@ -69,6 +69,36 @@ public:
     ThreadEventLogger::EventVector inPlaceEvents;
     };
 
+
+  class DebugLocation
+    {
+  XProperties:
+    XProperty(QString, function, setFunction);
+    XProperty(xsize, line, setLine);
+    XProperty(QString, file, setFile);
+    };
+
+  class DebugLocationWithData : public DebugLocation
+    {
+  XProperties:
+    XProperty(QString, data, setData);
+    };
+
+  struct EventLocation
+    {
+    enum
+      {
+      DebugMessageType = 3
+      };
+
+    Eks::EventLocation::ID id;
+
+    const Eks::CodeLocation *codeLocation;
+    QString data;
+
+    DebugLocation allocatedLocation;
+    };
+
   void emitLogMessage(const LogEntry &e);
 
   struct ServerData
@@ -82,26 +112,28 @@ public:
     Eks::UnorderedMap <OpenEvent, QStandardItem *> openEvents;
     Eks::UniquePointer<QStandardItemModel> model;
     };
-
-  class DebugLocation
-    {
-    };
-  const DebugLocation *findLocation(const EventLocation::ID id);
+  const DebugLocationWithData *findLocation(const Eks::EventLocation::ID id);
 
 protected:
   void onLogMessage(const LogEntry &e);
   void onEventList(const EventList &e);
+  void onCodeLocation(const EventLocation &e);
 
   void timerEvent(QTimerEvent* event) X_OVERRIDE;
   void onEvents(
       const QThread *thread,
       const ThreadEventLogger::EventVector &) X_OVERRIDE;
+  Eks::EventLocation::ID onCreateLocation(const CodeLocation &l, const QString &data) X_OVERRIDE;
 
   friend bool operator==(const Eks::DebugLogger::ServerData::OpenEvent &a, const Eks::DebugLogger::ServerData::OpenEvent &b);
 
   Eks::UniquePointer<ServerData> _server;
+
+  Eks::EventLocation::ID _lastID;
+  Eks::Vector<DebugLocationWithData, 1024> _locations;
   };
 
+Q_DECLARE_METATYPE(const DebugLogger::DebugLocationWithData*)
 }
 
 #endif // XDEBUGLOGGER_H

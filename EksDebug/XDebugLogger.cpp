@@ -46,6 +46,25 @@ QDataStream &operator>>(QDataStream &s, ThreadEventLogger::EventItem &l)
   return s;
   }
 
+QDataStream &operator<<(QDataStream &s, const DebugLogger::EventLocation &l)
+  {
+  xAssert(l.codeLocation);
+  return s << l.data << l.codeLocation->file() << l.codeLocation->function() << l.codeLocation->line();
+  }
+
+QDataStream &operator>>(QDataStream &s, DebugLogger::EventLocation &l)
+  {
+  QString file, function;
+  xsize line;
+  s >> l.data >> file >> function >> line;
+
+  l.allocatedLocation.setFile(file);
+  l.allocatedLocation.setFunction(function);
+  l.allocatedLocation.setLine(line);
+
+  return s;
+  }
+
 QDataStream &operator<<(QDataStream &s, const DebugLogger::EventList &l)
   {
   return s << (xuint64)l.thread << *l.events;
@@ -91,6 +110,7 @@ void handler(QtMsgType t, const QMessageLogContext &c, const QString &m)
 X_IMPLEMENT_DEBUG_INTERFACE(DebugLogger)
 
 DebugLogger::DebugLogger(DebugManager *, bool client)
+    : _lastID(0)
   {
   // we need an instance to flush on close.
   xAssert(QApplication::instance());
@@ -98,7 +118,8 @@ DebugLogger::DebugLogger(DebugManager *, bool client)
   static Reciever recv[] =
     {
     recieveFunction<LogEntry, DebugLogger, &DebugLogger::onLogMessage>(),
-    recieveFunction<EventList, DebugLogger, &DebugLogger::onEventList>()
+    recieveFunction<EventList, DebugLogger, &DebugLogger::onEventList>(),
+    recieveFunction<EventLocation, DebugLogger, &DebugLogger::onCodeLocation>()
     };
 
   setRecievers(recv, X_ARRAY_COUNT(recv));
@@ -164,6 +185,16 @@ void DebugLogger::onEvents(const QThread *thread, const ThreadEventLogger::Event
   sendData(l);
   }
 
+Eks::EventLocation::ID DebugLogger::onCreateLocation(const CodeLocation &l, const QString &data)
+  {
+  Eks::EventLocation::ID id = _lastID++;
+
+  EventLocation loc = { id, &l, data };
+  sendData(loc);
+
+  return id;
+  }
+
 void DebugLogger::onLogMessage(const LogEntry &e)
   {
   if(_server)
@@ -183,7 +214,7 @@ void DebugLogger::onLogMessage(const LogEntry &e)
 
     auto item = new QStandardItem(status + ":\n" + e.entry);
 
-    DebugLocation *loc = nullptr;
+    const DebugLocationWithData *loc = nullptr;
 
     item->setData(QVariant::fromValue(loc), Location);
     item->setData(QVariant::fromValue(e.time), MomentTime);
@@ -230,7 +261,7 @@ void DebugLogger::onEventList(const EventList &list)
           {
           display = "No Data";
           }
-        else if(location->data())
+        else if(!location->data().isEmpty())
           {
           display = location->data();
           }
@@ -258,6 +289,27 @@ void DebugLogger::onEventList(const EventList &list)
         }
       }
     }
+  }
+
+void DebugLogger::onCodeLocation(const EventLocation &e)
+  {
+  _locations.resize(xMax(_locations.size(), e.id));
+
+  auto &location = _locations[e.id];
+  location.setFile(e.allocatedLocation.file());
+  location.setLine(e.allocatedLocation.line());
+  location.setFunction(e.allocatedLocation.function());
+  location.setData(e.data);
+  }
+
+const DebugLogger::DebugLocationWithData *DebugLogger::findLocation(Eks::EventLocation::ID id)
+  {
+  if(id > _locations.size())
+    {
+    return nullptr;
+    }
+
+  return &_locations[id];
   }
 
 }
