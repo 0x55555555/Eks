@@ -46,13 +46,13 @@ QDataStream &operator>>(QDataStream &s, ThreadEventLogger::EventItem &l)
   return s;
   }
 
-QDataStream &operator<<(QDataStream &s, const DebugLogger::EventLocation &l)
+QDataStream &operator<<(QDataStream &s, const EventLogger::LocationReference &l)
   {
   xAssert(l.codeLocation);
   return s << l.data << l.codeLocation->file() << l.codeLocation->function() << l.codeLocation->line();
   }
 
-QDataStream &operator>>(QDataStream &s, DebugLogger::EventLocation &l)
+QDataStream &operator>>(QDataStream &s, DebugLogger::LocationList &l)
   {
   QString file, function;
   xsize line;
@@ -110,7 +110,6 @@ void handler(QtMsgType t, const QMessageLogContext &c, const QString &m)
 X_IMPLEMENT_DEBUG_INTERFACE(DebugLogger)
 
 DebugLogger::DebugLogger(DebugManager *, bool client)
-    : _lastID(0)
   {
   // we need an instance to flush on close.
   xAssert(QApplication::instance());
@@ -119,7 +118,7 @@ DebugLogger::DebugLogger(DebugManager *, bool client)
     {
     recieveFunction<LogEntry, DebugLogger, &DebugLogger::onLogMessage>(),
     recieveFunction<EventList, DebugLogger, &DebugLogger::onEventList>(),
-    recieveFunction<EventLocation, DebugLogger, &DebugLogger::onCodeLocation>()
+    recieveFunction<LocationList, DebugLogger, &DebugLogger::onLocations>()
     };
 
   setRecievers(recv, X_ARRAY_COUNT(recv));
@@ -185,14 +184,10 @@ void DebugLogger::onEvents(const QThread *thread, const ThreadEventLogger::Event
   sendData(l);
   }
 
-Eks::EventLocation::ID DebugLogger::onCreateLocation(const CodeLocation &l, const QString &data)
+void DebugLogger::onLocations(const EventLogger::EventLocationVector &locations)
   {
-  Eks::EventLocation::ID id = _lastID++;
-
-  EventLocation loc = { id, &l, data };
-  sendData(loc);
-
-  return id;
+  LocationList l = { &locations };
+  sendData(l);
   }
 
 void DebugLogger::onLogMessage(const LogEntry &e)
@@ -291,9 +286,9 @@ void DebugLogger::onEventList(const EventList &list)
     }
   }
 
-void DebugLogger::onCodeLocation(const EventLocation &e)
+void DebugLogger::onCodeLocations(const LocationList &e)
   {
-  _locations.resize(xMax(_locations.size(), e.id));
+  _locations.resize(xMax(_locations.size(), (xsize)e.id));
 
   auto &location = _locations[e.id];
   location.setFile(e.allocatedLocation.file());

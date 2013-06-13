@@ -84,19 +84,14 @@ public:
     XProperty(QString, data, setData);
     };
 
-  struct EventLocation
+  struct LocationList
     {
     enum
       {
       DebugMessageType = 3
       };
 
-    Eks::EventLocation::ID id;
-
-    const Eks::CodeLocation *codeLocation;
-    QString data;
-
-    DebugLocation allocatedLocation;
+    const EventLogger::EventLocationVector *location;
     };
 
   void emitLogMessage(const LogEntry &e);
@@ -117,19 +112,18 @@ public:
 protected:
   void onLogMessage(const LogEntry &e);
   void onEventList(const EventList &e);
-  void onCodeLocation(const EventLocation &e);
+  void onCodeLocations(const LocationList &e);
 
   void timerEvent(QTimerEvent* event) X_OVERRIDE;
   void onEvents(
       const QThread *thread,
       const ThreadEventLogger::EventVector &) X_OVERRIDE;
-  Eks::EventLocation::ID onCreateLocation(const CodeLocation &l, const QString &data) X_OVERRIDE;
+  void onLocations(const EventLogger::EventLocationVector &) X_OVERRIDE;
 
   friend bool operator==(const Eks::DebugLogger::ServerData::OpenEvent &a, const Eks::DebugLogger::ServerData::OpenEvent &b);
 
   Eks::UniquePointer<ServerData> _server;
 
-  Eks::EventLocation::ID _lastID;
   Eks::Vector<DebugLocationWithData, 1024> _locations;
   };
 
