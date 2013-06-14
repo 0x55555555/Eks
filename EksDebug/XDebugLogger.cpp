@@ -48,22 +48,35 @@ QDataStream &operator>>(QDataStream &s, ThreadEventLogger::EventItem &l)
 
 QDataStream &operator<<(QDataStream &s, const EventLogger::LocationReference &l)
   {
-  xAssert(l.codeLocation);
-  return s << l.data << l.codeLocation->file() << l.codeLocation->function() << l.codeLocation->line();
+  return s << l.id << l.data << l.file << l.function << l.line;
+  }
+
+QDataStream &operator>>(QDataStream &s, DebugLogger::DebugLocationWithData &l)
+  {
+  QString file, function, data;
+  xsize line;
+  EventLocation::ID id;
+  s >> id >> data >> file >> function >> line;
+
+  l.setId(id);
+  l.setFile(file);
+  l.setFunction(function);
+  l.setLine(line);
+  l.setData(data);
+
+  return s;
+  }
+
+QDataStream &operator<<(QDataStream &s, const DebugLogger::LocationList &l)
+  {
+  return s << *l.embeddedLocations;
   }
 
 QDataStream &operator>>(QDataStream &s, DebugLogger::LocationList &l)
   {
-  QString file, function;
-  xsize line;
-  s >> l.data >> file >> function >> line;
-
-  l.allocatedLocation.setFile(file);
-  l.allocatedLocation.setFunction(function);
-  l.allocatedLocation.setLine(line);
-
-  return s;
+  return s >> l.allocatedLocations;
   }
+
 
 QDataStream &operator<<(QDataStream &s, const DebugLogger::EventList &l)
   {
@@ -118,7 +131,7 @@ DebugLogger::DebugLogger(DebugManager *, bool client)
     {
     recieveFunction<LogEntry, DebugLogger, &DebugLogger::onLogMessage>(),
     recieveFunction<EventList, DebugLogger, &DebugLogger::onEventList>(),
-    recieveFunction<LocationList, DebugLogger, &DebugLogger::onLocations>()
+    recieveFunction<LocationList, DebugLogger, &DebugLogger::onCodeLocations>()
     };
 
   setRecievers(recv, X_ARRAY_COUNT(recv));
@@ -288,23 +301,29 @@ void DebugLogger::onEventList(const EventList &list)
 
 void DebugLogger::onCodeLocations(const LocationList &e)
   {
-  _locations.resize(xMax(_locations.size(), (xsize)e.id));
+  xAssert(_server);
 
-  auto &location = _locations[e.id];
-  location.setFile(e.allocatedLocation.file());
-  location.setLine(e.allocatedLocation.line());
-  location.setFunction(e.allocatedLocation.function());
-  location.setData(e.data);
+  xForeach(const auto &ev, e.allocatedLocations)
+    {
+    auto id = (xsize)ev.id();
+    _server->_locations.resize(xMax(_server->_locations.size(), id));
+
+    auto &location = _server->_locations[id];
+    location.setFile(ev.file());
+    location.setLine(ev.line());
+    location.setFunction(ev.function());
+    location.setData(ev.data());
+    }
   }
 
 const DebugLogger::DebugLocationWithData *DebugLogger::findLocation(Eks::EventLocation::ID id)
   {
-  if(id > _locations.size())
+  if(id > _server->_locations.size())
     {
     return nullptr;
     }
 
-  return &_locations[id];
+  return &_server->_locations[id];
   }
 
 }

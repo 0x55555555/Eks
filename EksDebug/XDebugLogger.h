@@ -81,6 +81,7 @@ public:
   class DebugLocationWithData : public DebugLocation
     {
   XProperties:
+    XProperty(xuint32, id, setId);
     XProperty(QString, data, setData);
     };
 
@@ -91,7 +92,8 @@ public:
       DebugMessageType = 3
       };
 
-    const EventLogger::EventLocationVector *location;
+    const EventLogger::EventLocationVector *embeddedLocations;
+    Eks::Vector<DebugLocationWithData, 1024> allocatedLocations;
     };
 
   void emitLogMessage(const LogEntry &e);
@@ -106,6 +108,7 @@ public:
 
     Eks::UnorderedMap <OpenEvent, QStandardItem *> openEvents;
     Eks::UniquePointer<QStandardItemModel> model;
+    Eks::Vector<DebugLocationWithData, 1024> _locations;
     };
   const DebugLocationWithData *findLocation(const Eks::EventLocation::ID id);
 
@@ -123,8 +126,6 @@ protected:
   friend bool operator==(const Eks::DebugLogger::ServerData::OpenEvent &a, const Eks::DebugLogger::ServerData::OpenEvent &b);
 
   Eks::UniquePointer<ServerData> _server;
-
-  Eks::Vector<DebugLocationWithData, 1024> _locations;
   };
 
 Q_DECLARE_METATYPE(const DebugLogger::DebugLocationWithData*)
