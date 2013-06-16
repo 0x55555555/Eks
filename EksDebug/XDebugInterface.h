@@ -38,7 +38,7 @@ class EKSDEBUG_EXPORT DebugInterface
   {
 XProperties:
   XProperty(xuint32, interfaceID, setInterfaceID);
-  XROProperty(QAbstractItemModel *, dataModel);
+  XROProperty(QObject *, dataModel);
 
 public:
   virtual ~DebugInterface();

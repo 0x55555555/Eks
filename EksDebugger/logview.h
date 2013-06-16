@@ -26,7 +26,7 @@ class LogView : public QGraphicsView
 public:
   typedef Eks::DebugLogger::DebugLocationWithData Location;
 
-  LogView(QAbstractItemModel *model);
+  LogView(QObject *model);
 
   const Eks::Time &start();
 
@@ -44,19 +44,19 @@ signals:
 
 private:
   void addDuration(
-      const QModelIndex &id,
+      const xsize id,
       const Eks::Time &t,
       const QString &disp,
-      const quint64 thr,
+      const xuint64 thr,
       const Location *l);
   void addMoment(
-      const QModelIndex &id,
       const Eks::Time &t,
       const QString &disp,
-      const quint64 thr,
+      const xuint64 thr,
       const Location *l);
   void updateEnd(
-      const QModelIndex &id,
+      const xsize id,
+      const xuint64 thr,
       const Eks::Time &t);
 
   void wheelEvent(QWheelEvent *event) X_OVERRIDE;
@@ -64,7 +64,9 @@ private:
   void mousePressEvent(QMouseEvent *event) X_OVERRIDE;
   void mouseReleaseEvent(QMouseEvent *event) X_OVERRIDE;
 
-  Eks::UnorderedMap<QPersistentModelIndex, DurationItem *> _openEvents;
+  typedef QPair<xuint64, xsize> OpenEvent;
+
+  Eks::UnorderedMap<OpenEvent, DurationItem *> _openEvents;
   QGraphicsScene _scene;
 
   TimelineItem *_timelineRoot;

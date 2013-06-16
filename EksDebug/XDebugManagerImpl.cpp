@@ -39,10 +39,14 @@ DebugManagerImpl::DebugManagerImpl(DebugManager *m, bool client)
 
 DebugManagerImpl::~DebugManagerImpl()
   {
-  _client->flush();
-  _client->waitForBytesWritten(100);
+  if(_client)
+    {
+    _client->flush();
+    _client->waitForBytesWritten(100);
 
-  _client = 0;
+    _client = 0;
+    }
+
   _server = 0;
   clear();
   }

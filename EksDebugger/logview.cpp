@@ -57,7 +57,7 @@ public:
     {
     QString location;
 
-    if(i->location()->file() != "")
+    if(i->location() && i->location()->file() != "")
       {
       location = "<i>" + i->location()->file() + ", " +
                  i->location()->function() + ", on line " +
@@ -153,7 +153,6 @@ public:
 class MomentItem : public EventItem
   {
 XProperties:
-  XROProperty(ThreadItem *, thread);
   XROByRefProperty(Eks::Time, time);
 
 public:
@@ -504,7 +503,7 @@ float EventItem::timeToX(const Eks::Time &t) const
   }
 
 
-LogView::LogView(QAbstractItemModel *model)
+LogView::LogView(QObject *model)
   : _selected(0),
     _info(0),
     _scale(1.0f),
@@ -518,46 +517,35 @@ LogView::LogView(QAbstractItemModel *model)
 
   setRenderHint(QPainter::Antialiasing);
 
-  (void)model;
-  /*connect(
-    model,
-    &QAbstractItemModel::rowsInserted,
-    [this, model](QModelIndex parent, int rowStart, int rowEnd)
+  connect(
+    qobject_cast<Eks::DebugLoggerData*>(model),
+    &Eks::DebugLoggerData::eventCreated,
+    [this, model](const Eks::Time &time,
+        Eks::ThreadEventLogger::EventType type,
+        xuint64 thread,
+        const QString &display,
+        const xsize durationId,
+        const Eks::DebugLogger::DebugLocationWithData *loc)
       {
-      xAssert(rowEnd == rowStart);
-      (void)rowEnd;
-      auto idx = model->index(rowStart, 0, parent);
-      auto display = model->data(idx, Qt::DisplayRole).toString();
-      auto thread = model->data(idx, Eks::DebugLogger::Thread).toULongLong();
-      auto loc = model->data(idx, Eks::DebugLogger::Location).value<Location>();
-
-      auto d = model->data(idx, Eks::DebugLogger::MomentTime);
-      if (d.isValid())
+      if (type == Eks::ThreadEventLogger::EventType::Moment)
         {
-        auto &&t = d.value<Eks::Time>();
-        addMoment(idx, t, display, thread, loc);
+        addMoment(time, display, thread, loc);
         }
       else
         {
-        auto &&d = model->data(idx, Eks::DebugLogger::StartTime).value<Eks::Time>();
-        addDuration(idx, d, display, thread, loc);
+        addDuration(durationId, time, display, thread, loc);
         }
       }
     );
 
   connect(
-    model,
-    &QAbstractItemModel::dataChanged,
-    [this, model](const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &)
+    qobject_cast<Eks::DebugLoggerData*>(model),
+    &Eks::DebugLoggerData::eventEndUpdated,
+    [this, model](const xsize id, const xsize thread, const Eks::Time &endTime)
       {
-      xAssert(topLeft == bottomRight);
-      (void)bottomRight;
-
-      auto d = model->data(topLeft, Eks::DebugLogger::EndTime).value<Eks::Time>();
-
-      updateEnd(topLeft, d);
+      updateEnd(id, thread, endTime);
       }
-    );*/
+    );
 
   startTimer(updateTimeInterval);
 
@@ -601,10 +589,10 @@ Eks::Time LogView::timeFromX(float x, bool offset) const
   }
 
 void LogView::addDuration(
-    const QModelIndex &id,
+    const xsize id,
     const Eks::Time &t,
     const QString &disp,
-    const quint64 thr,
+    const xuint64 thr,
     const Location *l)
   {
   auto thread = _timelineRoot->threads()->getThreadItem(thr);
@@ -618,15 +606,16 @@ void LogView::addDuration(
   duration->setLocation(l);
   duration->setDisplay(disp);
 
-  _openEvents[id] = duration;
+  OpenEvent ev(thr, id);
+
+  _openEvents[ev] = duration;
   _timelineRoot->layoutThreads();
   }
 
 void LogView::addMoment(
-    const QModelIndex &,
     const Eks::Time &t,
     const QString &disp,
-    const quint64 thr,
+    const xuint64 thr,
     const Location *l)
   {
   auto thread = _timelineRoot->threads()->getThreadItem(thr);
@@ -643,10 +632,13 @@ void LogView::addMoment(
   }
 
 void LogView::updateEnd(
-    const QModelIndex &id,
+    const xsize id,
+    const xuint64 thr,
     const Eks::Time &t)
   {
-  auto item = _openEvents[id];
+  OpenEvent ev(thr, id);
+
+  auto item = _openEvents[ev];
   xAssert(item);
 
   _min = xMin(_min, t);
@@ -655,7 +647,7 @@ void LogView::updateEnd(
   auto thread = item->thread();
   thread->endDuration(item, t);
 
-  _openEvents.remove(id);
+  _openEvents.remove(ev);
   _timelineRoot->layoutThreads();
   }
 

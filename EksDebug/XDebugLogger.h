@@ -15,6 +15,8 @@ class QStandardItemModel;
 namespace Eks
 {
 
+class DebugLoggerData;
+
 class EKSDEBUG_EXPORT DebugLogger
     : public QObject,
       public DebugInterface,
@@ -26,15 +28,6 @@ class EKSDEBUG_EXPORT DebugLogger
 
 public:
   ~DebugLogger();
-
-  enum Role
-    {
-    MomentTime = Qt::UserRole,
-    StartTime,
-    EndTime,
-    Thread,
-    Location
-    };
 
   struct LogEntry
     {
@@ -106,8 +99,8 @@ public:
       ThreadEventLogger::EventID id;
       };
 
-    Eks::UnorderedMap <OpenEvent, QStandardItem *> openEvents;
-    Eks::UniquePointer<QStandardItemModel> model;
+    Eks::UnorderedMap <OpenEvent, xsize> openEvents;
+    Eks::UniquePointer<DebugLoggerData> model;
     Eks::Vector<DebugLocationWithData, 1024> _locations;
     };
   const DebugLocationWithData *findLocation(const Eks::EventLocation::ID id);
@@ -126,6 +119,22 @@ protected:
   friend bool operator==(const Eks::DebugLogger::ServerData::OpenEvent &a, const Eks::DebugLogger::ServerData::OpenEvent &b);
 
   Eks::UniquePointer<ServerData> _server;
+  };
+
+class EKSDEBUG_EXPORT DebugLoggerData : public QObject
+  {
+  Q_OBJECT
+
+signals:
+  void eventCreated(
+      const Eks::Time &time,
+      ThreadEventLogger::EventType type,
+      xuint64 thread,
+      const QString &display,
+      const xsize durationId,
+      const DebugLogger::DebugLocationWithData *location);
+
+  void eventEndUpdated(const xsize id, const xsize thread, const Eks::Time &endTime);
   };
 
 Q_DECLARE_METATYPE(const DebugLogger::DebugLocationWithData*)

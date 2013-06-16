@@ -53,16 +53,33 @@ QDataStream &operator<<(QDataStream &s, const EventLogger::LocationReference &l)
 
 QDataStream &operator>>(QDataStream &s, DebugLogger::DebugLocationWithData &l)
   {
+  auto readStr = [&s]()
+    {
+    quint32 len;
+    s >> len;
+
+    char *data = (char *)alloca(len);
+    s.readRawData(data, len);
+
+    if(len > 1)
+      {
+      return QString::fromUtf8(data, len - 1);
+      }
+
+    return QString();
+    };
+
   QString file, function, data;
-  xsize line;
+  decltype(EventLogger::LocationReference::line) line;
   EventLocation::ID id;
-  s >> id >> data >> file >> function >> line;
+  s >> id;
+  l.setData(readStr());
+  l.setFile(readStr());
+  l.setFunction(readStr());
+  s >> line;
 
   l.setId(id);
-  l.setFile(file);
-  l.setFunction(function);
   l.setLine(line);
-  l.setData(data);
 
   return s;
   }
@@ -149,9 +166,7 @@ DebugLogger::DebugLogger(DebugManager *, bool client)
   else
     {
     _server.create<ServerData>(Eks::Core::defaultAllocator());
-    _server->model = createDataModel<QStandardItemModel>();
-
-    _server->model->setHorizontalHeaderLabels(QStringList() << "Message");
+    _server->model = createDataModel<DebugLoggerData>();
     }
 
 #if X_EVENT_LOGGING_ENABLED
@@ -216,19 +231,13 @@ void DebugLogger::onLogMessage(const LogEntry &e)
       "System"
       };
 
-    QStandardItem *parentItem = _server->model->invisibleRootItem();
-
-    const QString &status = statuses[e.level];
-
-    auto item = new QStandardItem(status + ":\n" + e.entry);
-
-    const DebugLocationWithData *loc = nullptr;
-
-    item->setData(QVariant::fromValue(loc), Location);
-    item->setData(QVariant::fromValue(e.time), MomentTime);
-    item->setData(QVariant((xuint64)e.thread), Thread);
-
-    parentItem->appendRow(item);
+    emit _server->model->eventCreated(
+          e.time,
+          ThreadEventLogger::EventType::Moment,
+          (xuint64)e.thread,
+          statuses[e.level] + ":\n" + e.entry,
+          X_SIZE_SENTINEL,
+          nullptr);
     }
   }
 
@@ -236,50 +245,41 @@ void DebugLogger::onEventList(const EventList &list)
   {
   if (_server)
     {
-    QStandardItem *parentItem = _server->model->invisibleRootItem();
-
     xForeach(const auto &evt, *list.events)
       {
       if(evt.type == ThreadEventLogger::EventType::Begin ||
          evt.type == ThreadEventLogger::EventType::Moment)
         {
-        auto item = new QStandardItem();
-
         auto location = findLocation(evt.location);
 
-        item->setData(QVariant::fromValue(location), Location);
+        xsize item = evt.id;
+
+        QString display = QStringLiteral("No Data");
+        if(location)
+          {
+          if(!location->data().isEmpty())
+            {
+            display = location->data();
+            }
+          else
+            {
+            display = location->function();
+            }
+          }
 
         if(evt.type == ThreadEventLogger::EventType::Begin)
           {
-          ServerData::OpenEvent e;
-          e.thread = list.thread;
-          e.id = evt.id;
-
-          item->setData(QVariant::fromValue(evt.time), StartTime);
+          ServerData::OpenEvent e = { list.thread, evt.id };
           _server->openEvents[e] = item;
           }
-        else if(evt.type == ThreadEventLogger::EventType::Moment)
-          {
-          item->setData(QVariant::fromValue(evt.time), MomentTime);
-          }
 
-        item->setData(QVariant((xuint64)list.thread), Thread);
-        QString display;
-        if(!location)
-          {
-          display = "No Data";
-          }
-        else if(!location->data().isEmpty())
-          {
-          display = location->data();
-          }
-        else
-          {
-          display = location->function();
-          }
-        item->setData(QVariant::fromValue<QString>(display), Qt::DisplayRole);
-
-        parentItem->appendRow(item);
+        emit _server->model->eventCreated(
+              evt.time,
+              evt.type,
+              (xuint64)list.thread,
+              display,
+              item,
+              location);
         }
       else if(evt.type == ThreadEventLogger::EventType::End)
         {
@@ -287,11 +287,11 @@ void DebugLogger::onEventList(const EventList &list)
         e.thread = list.thread;
         e.id = evt.id;
 
-        QStandardItem *item = _server->openEvents[e];
-        xAssert(item);
-        if(item)
+        xsize item = _server->openEvents.value(e, X_SIZE_SENTINEL);
+        xAssert(item != X_SIZE_SENTINEL);
+        if(item != X_SIZE_SENTINEL)
           {
-          item->setData(QVariant::fromValue(evt.time), EndTime);
+          emit _server->model->eventEndUpdated(item, (xuint64)list.thread, evt.time);
           _server->openEvents.remove(e);
           }
         }
@@ -306,7 +306,7 @@ void DebugLogger::onCodeLocations(const LocationList &e)
   xForeach(const auto &ev, e.allocatedLocations)
     {
     auto id = (xsize)ev.id();
-    _server->_locations.resize(xMax(_server->_locations.size(), id));
+    _server->_locations.resize(xMax(_server->_locations.size(), id+1));
 
     auto &location = _server->_locations[id];
     location.setFile(ev.file());
