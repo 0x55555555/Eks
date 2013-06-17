@@ -7,6 +7,7 @@
 #include "XDebugLogger.h"
 #include "XUnorderedMap"
 #include "QtCore/QPersistentModelIndex"
+#include "XShared"
 
 class QGraphicsScene;
 class QAbstractItemModel;
@@ -28,7 +29,7 @@ public:
 
   LogView(QObject *model);
 
-  const Eks::Time &start();
+  const Eks::Time &start() const;
 
   void selectEvent(EventItem *item, const QPointF &scenePos);
   float xOffset() const { return _offset; }
@@ -66,7 +67,15 @@ private:
 
   typedef QPair<xuint64, xsize> OpenEvent;
 
-  Eks::UnorderedMap<OpenEvent, DurationItem *> _openEvents;
+  struct ActiveDuration
+    {
+    ActiveDuration(ThreadItem *t=0, DurationItem *d=0) : thread(t), duration(d) { }
+    ThreadItem *thread;
+    DurationItem *duration;
+    };
+
+
+  Eks::UnorderedMap<OpenEvent, ActiveDuration> _openEvents;
   QGraphicsScene _scene;
 
   TimelineItem *_timelineRoot;
@@ -110,28 +119,39 @@ private:
   bool _pendingLayoutThread;
   };
 
-class EventItem : public QGraphicsObject
+class EventContainer
   {
-  Q_OBJECT
+public:
+  typedef Eks::Vector<Eks::SharedPointer<DurationItem>> DurationVector;
+  typedef Eks::Vector<Eks::SharedPointer<MomentItem>> MomentVector;
 
 XProperties:
-  XROProperty(ThreadItem *, thread);
-  XProperty(const LogView::Location *, location, setLocation);
-  XByRefProperty(QString, display, setDisplay);
+  XProperty(Eks::Time, start, setStart);
+  XProperty(Eks::Time, end, setEnd);
+
+  XROProperty(xsize, maxChildStackSize);
+  XROByRefProperty(DurationVector, durationChildren);
+  XROByRefProperty(MomentVector, momentChildren);
 
 public:
-  EventItem(QGraphicsItem *parent, ThreadItem *t);
+  void addMoment(MomentItem *item);
+  void addDuration(DurationItem *item);
+  };
 
+class EventItem : public Eks::detail::SharedData
+  {
+XProperties:
+  XProperty(const LogView::Location *, location, setLocation);
+  XByRefProperty(QString, display, setDisplay);
+  XProperty(bool, isSelected, setSelected);
 
-  virtual QString formattedTime() = 0;
+public:
+  EventItem();
 
-  Eks::Time relativeTime(const Eks::Time &t) const;
-  void mousePressEvent(QGraphicsSceneMouseEvent *);
-  void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
-  float timeToX(const Eks::Time &t) const;
+  virtual QString formattedTime(const LogView *thr) = 0;
+  virtual void paint(const ThreadItem *t, QPainter *p, const Eks::Time &begin, const Eks::Time &end) = 0;
 
-public slots:
-  void timeConversionChanged();
+  Eks::Time relativeTime(const LogView *thr, const Eks::Time &t) const;
   };
 
 class ThreadItem : public QGraphicsObject
@@ -150,7 +170,6 @@ public:
   void setCurrentTime(const Eks::Time &t);
 
   MomentItem *addMoment(const Eks::Time &t);
-
   DurationItem *addDuration(const Eks::Time &start);
 
   void endDuration(DurationItem *e, const Eks::Time &time);
@@ -165,8 +184,8 @@ public slots:
   void timeConversionChanged();
 
 private:
-  std::multimap<Eks::Time, DurationItem *> _durationItems;
-  std::vector<DurationItem *> _openDurations;
+  Eks::Vector <EventContainer *> _containers;
+  Eks::Vector <DurationItem *> _openDurations;
   };
 
 #endif // LOGVIEW_H
