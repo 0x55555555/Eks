@@ -7,7 +7,8 @@
 #include "XDebugLogger.h"
 #include "XUnorderedMap"
 #include "QtCore/QPersistentModelIndex"
-#include "XShared"
+#include "XSharedPointer"
+#include "XBucketAllocator"
 
 class QGraphicsScene;
 class QAbstractItemModel;
@@ -98,7 +99,7 @@ class TimelineItem : public QGraphicsObject
   Q_OBJECT
 
 public:
-  TimelineItem(LogView *log);
+  TimelineItem(Eks::AllocatorBase *allocator, LogView *log);
 
   QRectF boundingRect() const X_OVERRIDE;
   void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) X_OVERRIDE;
@@ -127,15 +128,15 @@ public:
 
 XProperties:
   XProperty(Eks::Time, start, setStart);
-  XProperty(Eks::Time, end, setEnd);
 
-  XROProperty(xsize, maxChildStackSize);
   XROByRefProperty(DurationVector, durationChildren);
   XROByRefProperty(MomentVector, momentChildren);
 
 public:
-  void addMoment(MomentItem *item);
-  void addDuration(DurationItem *item);
+  EventContainer(Eks::AllocatorBase *alloc);
+
+  void addMoment(const Eks::SharedPointer<MomentItem> &item);
+  void addDuration(const Eks::SharedPointer<DurationItem> &item);
   };
 
 class EventItem : public Eks::detail::SharedData
@@ -163,7 +164,7 @@ XProperties:
   XROByRefProperty(Eks::Time, currentTime);
 
 public:
-  ThreadItem(LogView *l, QGraphicsItem *parent);
+  ThreadItem(Eks::AllocatorBase *alloc, LogView *l, QGraphicsItem *parent);
 
   float timeToX(const Eks::Time &t) const;
 
@@ -184,8 +185,16 @@ public slots:
   void timeConversionChanged();
 
 private:
-  Eks::Vector <EventContainer *> _containers;
-  Eks::Vector <DurationItem *> _openDurations;
+  EventContainer *getCurrentContainer(const Eks::Time &now);
+
+  EventContainer *_currentContainer;
+
+  Eks::AllocatorBase *_allocator;
+  Eks::FixedSizeBucketAllocator _momentAlloc;
+  Eks::FixedSizeBucketAllocator _durationAlloc;
+
+  Eks::Vector <Eks::UniquePointer<EventContainer>> _containers;
+  Eks::Vector <Eks::SharedPointer<DurationItem>> _openDurations;
   };
 
 #endif // LOGVIEW_H

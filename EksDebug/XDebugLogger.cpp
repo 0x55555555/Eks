@@ -165,7 +165,7 @@ DebugLogger::DebugLogger(DebugManager *, bool client)
     }
   else
     {
-    _server.create<ServerData>(Eks::Core::defaultAllocator());
+    _server = Eks::Core::defaultAllocator()->createUnique<ServerData>();
     _server->model = createDataModel<DebugLoggerData>();
     }
 

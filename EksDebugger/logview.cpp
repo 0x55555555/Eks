@@ -17,13 +17,15 @@ static const float infoPad = 3;
 static const float timelinePad = 10;
 static const float updateTimeInterval = 100;
 static const float timelineTextDrop = 30;
+static const float maxContainerMs = 500;
 
 class ThreadsItem : public QGraphicsItem
   {
 public:
-  ThreadsItem(LogView *log)
-      : _threads(Eks::Core::defaultAllocator()),
-        _threadList(Eks::Core::defaultAllocator()),
+  ThreadsItem(Eks::AllocatorBase *alloc, LogView *log)
+      : _threads(alloc),
+        _threadList(alloc),
+        _allocator(alloc),
         _log(log)
     {
     }
@@ -44,6 +46,7 @@ private:
   Eks::Vector<ThreadItem *> _threadList;
   Eks::UnorderedMap<quint64, ThreadItem *> _threads;
   LogView *_log;
+  Eks::AllocatorBase *_allocator;
   };
 
 class InfoItem : public QGraphicsTextItem
@@ -173,12 +176,16 @@ public:
     }
   };
 
-ThreadItem::ThreadItem(LogView *l, QGraphicsItem *parent)
+ThreadItem::ThreadItem(Eks::AllocatorBase *alloc, LogView *l, QGraphicsItem *parent)
     : QGraphicsObject(parent),
       _log(l),
-      _currentTime(Eks::Time::now())
+      _currentTime(Eks::Time::now()),
+      _containers(alloc),
+      _currentContainer(nullptr),
+      _allocator(alloc),
+      _durationAlloc(alloc, Eks::ResourceDescriptionTypeHelper<DurationItem>::createFor()),
+      _momentAlloc(alloc, Eks::ResourceDescriptionTypeHelper<MomentItem>::createFor())
   {
-
   }
 
 float ThreadItem::timeToX(const Eks::Time &t) const
@@ -200,47 +207,53 @@ void ThreadItem::setCurrentTime(const Eks::Time &t)
 
 MomentItem *ThreadItem::addMoment(const Eks::Time &t)
   {
-  EventContainerItem *last = this;
-  if(_openDurations.size())
-    {
-    last = _openDurations.back();
-    }
+  EventContainer *cont = getCurrentContainer(t);
 
-  auto i = new MomentItem;
+  auto i = _momentAlloc.createShared<MomentItem>();
   i->setTime(t);
 
-  last->addMoment(i);
+  cont->addMoment(i);
 
   return i;
   }
 
 DurationItem *ThreadItem::addDuration(const Eks::Time &start)
   {
-  EventContainerItem *last = this;
-  if(_openDurations.size())
-    {
-    last = _openDurations.back();
-    }
+  EventContainer *cont = getCurrentContainer(start);
 
-  auto d = new DurationItem;
-  _openDurations.push_back(d);
+  auto d = _durationAlloc.createShared<DurationItem>();
+  cont->addDuration(d);
+
+  _openDurations << d;
   d->setStartAndEnd(start);
 
-  last->addDuration(d);
-
   return d;
+  }
+
+EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
+  {
+  if(!_currentContainer || (now - _currentContainer->start()).milliseconds() > maxContainerMs)
+    {
+    auto &elem = _containers.createBack();
+
+    elem = _allocator->createUnique<EventContainer>(_allocator);
+    _currentContainer = elem;
+
+    xForeach(auto ev, _openDurations)
+      {
+      _currentContainer->addDuration(ev);
+      }
+
+    _currentContainer->setStart(now);
+    }
+
+  return _currentContainer;
   }
 
 void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
   {
   e->setEnd(time);
-  auto it = std::find(_openDurations.begin(), _openDurations.end(), e);
-  if(it == _openDurations.end())
-    {
-    return;
-    }
-
-  _openDurations.erase(it);
+  _openDurations.removeAll(Eks::SharedPointer<DurationItem>(e));
   }
 
 void ThreadItem::selectEvent(EventItem *item, const QPointF &pos)
@@ -278,20 +291,24 @@ void ThreadItem::timeConversionChanged()
   prepareGeometryChange();
   }
 
-EventContainerItem::EventContainerItem()
+EventContainer::EventContainer(Eks::AllocatorBase *alloc)
+    : _durationChildren(alloc),
+      _momentChildren(alloc)
   {
-  _maxChildStackSize = 0;
   }
 
-void EventContainerItem::addMoment(MomentItem *item)
+void EventContainer::addMoment(const Eks::SharedPointer<MomentItem> &item)
   {
   _momentChildren.pushBack(Eks::SharedPointer<MomentItem>(item));
   }
 
-void EventContainerItem::addDuration(DurationItem *item)
+void EventContainer::addDuration(const Eks::SharedPointer<DurationItem> &item)
   {
-  _maxChildStackSize = xMax(_maxChildStackSize, 1 + item->maxChildStackSize());
   _durationChildren.pushBack(Eks::SharedPointer<DurationItem>(item));
+  }
+
+EventItem::EventItem() : _location(0), _isSelected(false)
+  {
   }
 
 Eks::Time EventItem::relativeTime(const LogView *thr, const Eks::Time &t) const
@@ -305,7 +322,7 @@ ThreadItem *ThreadsItem::getThreadItem(quint64 t)
   auto item = _threads[t];
   if(!item)
     {
-    item = new ThreadItem(_log, this);
+    item = new ThreadItem(_allocator, _log, this);
     _threads[t] = item;
     _threadList << item;
 
@@ -315,11 +332,11 @@ ThreadItem *ThreadsItem::getThreadItem(quint64 t)
   return item;
   }
 
-TimelineItem::TimelineItem(LogView *log) : _log(log)
+TimelineItem::TimelineItem(Eks::AllocatorBase *alloc, LogView *log) : _log(log)
   {
   _pendingLayoutThread = false;
 
-  _threads = new ThreadsItem(log);
+  _threads = new ThreadsItem(alloc, log);
   _threads->setParentItem(this);
 
   setFlag(QGraphicsItem::ItemUsesExtendedStyleOption, true);
@@ -507,7 +524,7 @@ LogView::LogView(QObject *model)
 
   startTimer(updateTimeInterval);
 
-  _timelineRoot = new TimelineItem(this);
+  _timelineRoot = new TimelineItem(Eks::Core::defaultAllocator(), this);
   _scene.addItem(_timelineRoot);
 
   connect(this, SIGNAL(timeConversionChanged()), _timelineRoot, SLOT(timeConversionChanged()));

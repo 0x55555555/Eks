@@ -97,8 +97,7 @@ protected:
 
   template <typename T> Eks::UniquePointer<T> createDataModel()
     {
-    Eks::UniquePointer<T> res;
-    res.create(Eks::Core::defaultAllocator());
+    auto res = Eks::Core::defaultAllocator()->createUnique<T>();
     _dataModel = res.value();
     return res;
     }
