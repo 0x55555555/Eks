@@ -192,7 +192,7 @@ private:
 
   EventContainer *_currentContainer;
 
-  void cacheAndRenderBetween(const Eks::Time &begin, const Eks::Time &end);
+  void cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end);
   void clearCache();
 
   struct ImageCache

@@ -231,6 +231,8 @@ MomentItem *ThreadItem::addMoment(const Eks::Time &t)
 
   cont->addMoment(i);
 
+  clearCache(i);
+
   return i;
   }
 
@@ -245,6 +247,8 @@ DurationItem *ThreadItem::addDuration(const Eks::Time &start)
   d->setStartAndEnd(start);
 
   _maxDurationEvents = xMax(_maxDurationEvents, _openDurations.size());
+
+  clearCache(d);
 
   return d;
   }
@@ -273,15 +277,24 @@ void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
   {
   e->setEnd(time);
   _openDurations.removeAll(Eks::SharedPointer<DurationItem>(e));
+
+  clearCache(e);
   }
 
-void ThreadItem::cacheAndRenderBetween(const Eks::Time &begin, const Eks::Time &end)
+void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end)
   {
-  xForeach(const ImageCache& item, _cachedImages)
-    {
-    if(item.end > begin && item.begin < end)
-      {
+  Eks::Time renderPosition = begin;
 
+  while(renderPosition < end)
+    {
+    xForeach(const ImageCache& item, _cachedImages)
+      {
+      if(item.begin <= renderPosition && item.end > renderPosition)
+        {
+        p->drawImage(item.image);
+        renderPosition = item.end;
+        continue;
+        }
       }
     }
   }
@@ -321,7 +334,7 @@ void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWid
   auto left = _log->timeFromX(exposed.left(), false);
   auto right = _log->timeFromX(exposed.right(), false);
 
-  cacheAndRenderBetween(left, right);
+  cacheAndRenderBetween(p, left, right);
 
   r.adjust(-threadPad, -threadPad, threadPad, threadPad);
 
