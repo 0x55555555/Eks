@@ -100,6 +100,10 @@ XProperties:
   XROByRefProperty(Eks::Time, end);
 
 public:
+  DurationItem()
+    {
+    }
+
   void setStartAndEnd(const Eks::Time &t)
     {
     _start = _end = t;
@@ -136,6 +140,9 @@ public:
     p->setBrush(Qt::white);
     p->drawRect(r);
     }
+
+private:
+  X_DISABLE_COPY(DurationItem)
   };
 
 class MomentItem : public EventItem
@@ -144,6 +151,10 @@ XProperties:
   XROByRefProperty(Eks::Time, time);
 
 public:
+  MomentItem()
+    {
+    }
+
   void setTime(const Eks::Time &t)
     {
     _time = t;
@@ -174,6 +185,9 @@ public:
     p->setBrush(Qt::white);
     p->drawRect(r);
     }
+
+private:
+  X_DISABLE_COPY(MomentItem)
   };
 
 ThreadItem::ThreadItem(Eks::AllocatorBase *alloc, LogView *l, QGraphicsItem *parent)
@@ -183,6 +197,7 @@ ThreadItem::ThreadItem(Eks::AllocatorBase *alloc, LogView *l, QGraphicsItem *par
       _containers(alloc),
       _currentContainer(nullptr),
       _allocator(alloc),
+      _openDurations(alloc),
       _durationAlloc(alloc, Eks::ResourceDescriptionTypeHelper<DurationItem>::createFor()),
       _momentAlloc(alloc, Eks::ResourceDescriptionTypeHelper<MomentItem>::createFor())
   {

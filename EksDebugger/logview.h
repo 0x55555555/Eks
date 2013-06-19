@@ -153,6 +153,9 @@ public:
   virtual void paint(const ThreadItem *t, QPainter *p, const Eks::Time &begin, const Eks::Time &end) = 0;
 
   Eks::Time relativeTime(const LogView *thr, const Eks::Time &t) const;
+
+private:
+  X_DISABLE_COPY(EventItem);
   };
 
 class ThreadItem : public QGraphicsObject
@@ -194,7 +197,7 @@ private:
   Eks::FixedSizeBucketAllocator _durationAlloc;
 
   Eks::Vector <Eks::UniquePointer<EventContainer>> _containers;
-  Eks::Vector <Eks::SharedPointer<DurationItem>> _openDurations;
+  Eks::Vector <Eks::SharedPointer<DurationItem>, 64> _openDurations;
   };
 
 #endif // LOGVIEW_H
