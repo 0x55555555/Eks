@@ -318,7 +318,7 @@ void DebugLogger::onCodeLocations(const LocationList &e)
 
 const DebugLogger::DebugLocationWithData *DebugLogger::findLocation(Eks::EventLocation::ID id)
   {
-  if(id > _server->_locations.size())
+  if(id >= _server->_locations.size())
     {
     return nullptr;
     }

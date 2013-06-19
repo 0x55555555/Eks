@@ -199,8 +199,10 @@ ThreadItem::ThreadItem(Eks::AllocatorBase *alloc, LogView *l, QGraphicsItem *par
       _allocator(alloc),
       _openDurations(alloc),
       _durationAlloc(alloc, Eks::ResourceDescriptionTypeHelper<DurationItem>::createFor()),
-      _momentAlloc(alloc, Eks::ResourceDescriptionTypeHelper<MomentItem>::createFor())
+      _momentAlloc(alloc, Eks::ResourceDescriptionTypeHelper<MomentItem>::createFor()),
+      _maxDurationEvents(0)
   {
+  setFlag(QGraphicsItem::ItemUsesExtendedStyleOption, true);
   }
 
 float ThreadItem::timeToX(const Eks::Time &t) const
@@ -242,6 +244,8 @@ DurationItem *ThreadItem::addDuration(const Eks::Time &start)
   _openDurations << d;
   d->setStartAndEnd(start);
 
+  _maxDurationEvents = xMax(_maxDurationEvents, _openDurations.size());
+
   return d;
   }
 
@@ -271,6 +275,22 @@ void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
   _openDurations.removeAll(Eks::SharedPointer<DurationItem>(e));
   }
 
+void ThreadItem::cacheAndRenderBetween(const Eks::Time &begin, const Eks::Time &end)
+  {
+  xForeach(const ImageCache& item, _cachedImages)
+    {
+    if(item.end > begin && item.begin < end)
+      {
+
+      }
+    }
+  }
+
+void ThreadItem::clearCache()
+  {
+  _cachedImages.clear();
+  }
+
 void ThreadItem::selectEvent(EventItem *item, const QPointF &pos)
   {
   log()->selectEvent(item, pos);
@@ -278,21 +298,30 @@ void ThreadItem::selectEvent(EventItem *item, const QPointF &pos)
 
 QRectF ThreadItem::boundingRect() const
   {
-  QRectF r(childrenBoundingRect());
+  QRectF r;
 
-  r.adjust(-threadPad, -threadPad, threadPad, threadPad);
+  r.setBottom(0);
+  r.setTop(durationHeight * _maxDurationEvents);
 
   r.setLeft(timeToX(_log->start()));
   r.setRight(timeToX(currentTime()));
+
+  r.adjust(-threadPad, -threadPad, threadPad, threadPad);
 
   return r;
   }
 
-void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
+void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
   {
   QRectF r(childrenBoundingRect());
   r.setLeft(timeToX(_log->start()));
   r.setRight(timeToX(currentTime()));
+
+  auto exposed = option->exposedRect;
+  auto left = _log->timeFromX(exposed.left(), false);
+  auto right = _log->timeFromX(exposed.right(), false);
+
+  cacheAndRenderBetween(left, right);
 
   r.adjust(-threadPad, -threadPad, threadPad, threadPad);
 
@@ -456,7 +485,7 @@ void TimelineItem::layoutThreads()
   if(!_pendingLayoutThread)
     {
     _pendingLayoutThread = true;
-    startTimer(0);
+    startTimer(25);
     }
   }
 
@@ -549,7 +578,7 @@ LogView::LogView(QObject *model)
 
 void LogView::timerEvent(QTimerEvent *)
   {
-  //_timelineRoot->setCurrentTime(Eks::Time::now());
+  _timelineRoot->setCurrentTime(Eks::Time::now());
 
   setSceneRect(_scene.itemsBoundingRect());
   }
@@ -584,11 +613,12 @@ void LogView::addDuration(
     const xuint64 thr,
     const Location *l)
   {
+  _min = xMin(_min, t);
+  _max = xMax(_max, t);
+
   auto thread = _timelineRoot->threads()->getThreadItem(thr);
   auto duration = thread->addDuration(t);
 
-  _min = xMin(_min, t);
-  _max = xMax(_max, t);
 
   duration->setLocation(l);
   duration->setDisplay(disp);
@@ -622,8 +652,9 @@ void LogView::updateEnd(
     const Eks::Time &t)
   {
   OpenEvent ev(thr, id);
-
   auto item = _openEvents[ev];
+  _openEvents.remove(ev);
+
   xAssert(item.duration);
 
   _min = xMin(_min, t);
@@ -631,7 +662,6 @@ void LogView::updateEnd(
 
   item.thread->endDuration(item.duration, t);
 
-  _openEvents.remove(ev);
   _timelineRoot->layoutThreads();
   }
 

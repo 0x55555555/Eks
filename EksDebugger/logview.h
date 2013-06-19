@@ -192,9 +192,23 @@ private:
 
   EventContainer *_currentContainer;
 
+  void cacheAndRenderBetween(const Eks::Time &begin, const Eks::Time &end);
+  void clearCache();
+
+  struct ImageCache
+    {
+    Eks::Time begin;
+    Eks::Time end;
+    QImage cached;
+    };
+
+  Eks::Vector<ImageCache> _cachedImages;
+
   Eks::AllocatorBase *_allocator;
   Eks::FixedSizeBucketAllocator _momentAlloc;
   Eks::FixedSizeBucketAllocator _durationAlloc;
+
+  xsize _maxDurationEvents;
 
   Eks::Vector <Eks::UniquePointer<EventContainer>> _containers;
   Eks::Vector <Eks::SharedPointer<DurationItem>, 64> _openDurations;
