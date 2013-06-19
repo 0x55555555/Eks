@@ -18,6 +18,7 @@ static const float timelinePad = 10;
 static const float updateTimeInterval = 100;
 static const float timelineTextDrop = 30;
 static const float maxContainerMs = 500;
+static const int cachedImageWidth = 256;
 
 class ThreadsItem : public QGraphicsItem
   {
@@ -114,16 +115,20 @@ public:
     _end = t;
     }
 
+  bool endTime(Eks::Time &e) X_OVERRIDE
+    {
+    e = end();
+    return true;
+    }
+
   QString formattedTime(const LogView *thr) X_OVERRIDE
     {
     return QString::number(relativeTime(thr, start()).milliseconds()) + "ms to " +
            QString::number(relativeTime(thr, end()).milliseconds()) + "ms";
     }
 
-  void paint(const ThreadItem *thr, QPainter *p, const Eks::Time &begin, const Eks::Time &e) X_OVERRIDE
+  void paint(const ThreadItem *thr, QPainter *p) X_OVERRIDE
     {
-    xAssertFail();
-    (void)begin;(void)e;
     float t = thr->timeToX(start());
     QRectF r(t, 0.0f, thr->timeToX(end()) - t, durationHeight);
 
@@ -160,16 +165,18 @@ public:
     _time = t;
     }
 
+  bool endTime(Eks::Time &) X_OVERRIDE
+    {
+    return false;
+    }
+
   QString formattedTime(const LogView *t)
     {
     return QString::number(relativeTime(t, time()).milliseconds()) + "ms";
     }
 
-  void paint(const ThreadItem *t, QPainter *p, const Eks::Time &begin, const Eks::Time &end) X_OVERRIDE
+  void paint(const ThreadItem *t, QPainter *p) X_OVERRIDE
     {
-    xAssertFail();
-    (void)begin;(void)end;
-
     QRectF r(t->timeToX(time()), 0.0f, 1.0f, durationHeight);
 
     if(isSelected())
@@ -231,7 +238,7 @@ MomentItem *ThreadItem::addMoment(const Eks::Time &t)
 
   cont->addMoment(i);
 
-  clearCache(i);
+  clearCache(cont);
 
   return i;
   }
@@ -248,7 +255,7 @@ DurationItem *ThreadItem::addDuration(const Eks::Time &start)
 
   _maxDurationEvents = xMax(_maxDurationEvents, _openDurations.size());
 
-  clearCache(d);
+  clearCache(cont);
 
   return d;
   }
@@ -278,7 +285,7 @@ void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
   e->setEnd(time);
   _openDurations.removeAll(Eks::SharedPointer<DurationItem>(e));
 
-  clearCache(e);
+  clearCache(_currentContainer);
   }
 
 void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end)
@@ -287,21 +294,112 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
 
   while(renderPosition < end)
     {
-    xForeach(const ImageCache& item, _cachedImages)
+    xForeach(const ImageCache* item, _cachedImages)
       {
-      if(item.begin <= renderPosition && item.end > renderPosition)
+      if(item->begin <= renderPosition && item->end > renderPosition)
         {
-        p->drawImage(item.image);
-        renderPosition = item.end;
+        p->drawImage(_log->timeToX(item->begin), 0.0f, item->image);
+        renderPosition = item->end;
         continue;
         }
       }
+
+    Eks::UniquePointer<ImageCache> cache;
+    if(_reservedImages.size())
+      {
+      cache = _reservedImages.popBack();
+      }
+    else
+      {
+      cache = _allocator->createUnique<ImageCache>();
+      }
+    xAssert(cache);
+
+    cache->begin = _log->start() + renderPosition;
+    renderPosition += _log->timeFromWidth(cachedImageWidth);
+    cache->end = _log->start() + renderPosition;
+
+    Eks::TemporaryAllocator alloc(Eks::Core::temporaryAllocator());
+    std::map<
+        Eks::Time,
+        EventItem *,
+        std::less<Eks::Time>,
+        Eks::TypedAllocator<std::pair<const Eks::Time, EventItem *>>> events(&alloc);
+
+    Eks::UnorderedMap<const DurationItem *, bool> found(&alloc);
+
+    xForeach(const auto &cont, _containers)
+      {
+      xForeach(const auto &dur, cont->durationChildren())
+        {
+        if(dur->start() < cache->end &&
+           dur->end() > cache->begin &&
+           !found.contains(dur))
+          {
+          found.insert(dur, true);
+          events[dur->start()] = dur.ptr();
+          }
+        }
+
+      xForeach(const auto &mom, cont->momentChildren())
+        {
+        if((mom->time() > cache->begin && mom->time() < cache->end))
+          {
+          events[mom->time()] = mom.ptr();
+          }
+        }
+      }
+
+    Eks::Vector<Eks::Time> activeStack(&alloc);
+    for(auto it = events.begin(), end = events.end(); it != end; ++it)
+      {
+      const auto &t = it->first;
+      const auto &ev = it->second;
+
+      if(activeStack.size() && t > activeStack.back())
+        {
+        activeStack.popBack();
+        }
+
+      ev->paint(this, p);
+
+      Eks::Time endTime;
+      if(ev->endTime(endTime))
+        {
+        activeStack << endTime;
+        }
+      }
+
+    _cachedImages << std::move(cache);
     }
   }
 
 void ThreadItem::clearCache()
   {
   _cachedImages.clear();
+  }
+
+void ThreadItem::clearCache(const EventContainer *e)
+  {
+  for(auto it = _cachedImages.begin(), end = _cachedImages.end();
+      it != end;
+      ++it)
+    {
+    xForeach(const EventContainer *c, (*it)->events)
+      {
+      if(e == c)
+        {
+        it = _cachedImages.remove(it);
+        end = _cachedImages.end();
+        break;
+        }
+      }
+
+    if(it == end)
+      {
+      break;
+      }
+    }
   }
 
 void ThreadItem::selectEvent(EventItem *item, const QPointF &pos)
@@ -326,7 +424,7 @@ QRectF ThreadItem::boundingRect() const
 
 void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
   {
-  QRectF r(childrenBoundingRect());
+  QRectF r(boundingRect());
   r.setLeft(timeToX(_log->start()));
   r.setRight(timeToX(currentTime()));
 
@@ -346,6 +444,7 @@ void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWid
 void ThreadItem::timeConversionChanged()
   {
   prepareGeometryChange();
+  clearCache();
   }
 
 EventContainer::EventContainer(Eks::AllocatorBase *alloc)
@@ -616,6 +715,13 @@ Eks::Time LogView::timeFromX(float x, bool offset) const
     return t + _min;
     }
 
+  return t;
+  }
+
+Eks::Time LogView::timeFromWidth(float w) const
+  {
+  float scaledX = (w) / _scale;
+  auto t = Eks::Time::fromMilliseconds(scaledX);
   return t;
   }
 

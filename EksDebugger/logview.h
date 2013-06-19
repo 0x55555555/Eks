@@ -37,6 +37,7 @@ public:
   float timeToX(const Eks::Time &t) const;
   float timeToXNoOffset(const Eks::Time &t) const;
   Eks::Time timeFromX(float x, bool offset) const;
+  Eks::Time timeFromWidth(float x) const;
 
 protected:
   void timerEvent(QTimerEvent *) X_OVERRIDE;
@@ -137,6 +138,7 @@ public:
 
   void addMoment(const Eks::SharedPointer<MomentItem> &item);
   void addDuration(const Eks::SharedPointer<DurationItem> &item);
+
   };
 
 class EventItem : public Eks::detail::SharedData
@@ -150,7 +152,9 @@ public:
   EventItem();
 
   virtual QString formattedTime(const LogView *thr) = 0;
-  virtual void paint(const ThreadItem *t, QPainter *p, const Eks::Time &begin, const Eks::Time &end) = 0;
+  virtual void paint(const ThreadItem *t, QPainter *p) = 0;
+
+  virtual bool endTime(Eks::Time &) = 0;
 
   Eks::Time relativeTime(const LogView *thr, const Eks::Time &t) const;
 
@@ -194,15 +198,23 @@ private:
 
   void cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end);
   void clearCache();
+  void clearCache(const EventContainer *c);
 
   struct ImageCache
     {
     Eks::Time begin;
     Eks::Time end;
-    QImage cached;
+    QImage image;
+    Eks::Vector<const EventContainer*> events;
     };
 
-  Eks::Vector<ImageCache> _cachedImages;
+  enum
+    {
+    MaxImages = 32
+    };
+
+  Eks::Vector<Eks::UniquePointer<ImageCache>, MaxImages> _cachedImages;
+  Eks::Vector<Eks::UniquePointer<ImageCache>> _reservedImages;
 
   Eks::AllocatorBase *_allocator;
   Eks::FixedSizeBucketAllocator _momentAlloc;
