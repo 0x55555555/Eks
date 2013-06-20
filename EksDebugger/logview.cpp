@@ -296,12 +296,18 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
     {
     xForeach(const ImageCache* item, _cachedImages)
       {
-      if(item->begin <= renderPosition && item->end > renderPosition)
+      if(item->begin <= renderPosition &&
+         item->end > renderPosition)
         {
         p->drawImage(_log->timeToX(item->begin), 0.0f, item->image);
         renderPosition = item->end;
-        continue;
+        break;
         }
+      }
+
+    if(renderPosition >= end)
+      {
+      break;
       }
 
     Eks::UniquePointer<ImageCache> cache;
@@ -315,9 +321,9 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
       }
     xAssert(cache);
 
-    cache->begin = _log->start() + renderPosition;
+    cache->begin = renderPosition;
     renderPosition += _log->timeFromWidth(cachedImageWidth);
-    cache->end = _log->start() + renderPosition;
+    cache->end = renderPosition;
 
     Eks::TemporaryAllocator alloc(Eks::Core::temporaryAllocator());
     std::map<
