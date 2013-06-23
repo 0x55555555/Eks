@@ -40,6 +40,8 @@ public:
     {
     }
 
+  float getZeroX(QGraphicsItem *to);
+
   ThreadItem *getThreadItem(quint64 t);
   const Eks::Vector<ThreadItem *> &threads() { return _threadList; }
 
@@ -207,7 +209,8 @@ ThreadItem::ThreadItem(Eks::AllocatorBase *alloc, LogView *l, QGraphicsItem *par
       _openDurations(alloc),
       _durationAlloc(alloc, Eks::ResourceDescriptionTypeHelper<DurationItem>::createFor()),
       _momentAlloc(alloc, Eks::ResourceDescriptionTypeHelper<MomentItem>::createFor()),
-      _maxDurationEvents(0)
+      _maxDurationEvents(0),
+      _currentEventCache(alloc)
   {
   setFlag(QGraphicsItem::ItemUsesExtendedStyleOption, true);
   }
@@ -238,7 +241,7 @@ MomentItem *ThreadItem::addMoment(const Eks::Time &t)
 
   cont->addMoment(i);
 
-  clearCache(cont);
+  clearCurrentContainerCache();
 
   return i;
   }
@@ -255,7 +258,7 @@ DurationItem *ThreadItem::addDuration(const Eks::Time &start)
 
   _maxDurationEvents = xMax(_maxDurationEvents, _openDurations.size());
 
-  clearCache(cont);
+  clearCurrentContainerCache();
 
   return d;
   }
@@ -264,6 +267,11 @@ EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
   {
   if(!_currentContainer || (now - _currentContainer->start()).milliseconds() > maxContainerMs)
     {
+    if(_currentContainer)
+      {
+      clearCurrentContainerCache();
+      }
+
     auto &elem = _containers.createBack();
 
     elem = _allocator->createUnique<EventContainer>(_allocator);
@@ -285,14 +293,15 @@ void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
   e->setEnd(time);
   _openDurations.removeAll(Eks::SharedPointer<DurationItem>(e));
 
-  clearCache(_currentContainer);
+  clearCurrentContainerCache();
   }
 
 void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end)
   {
-  Eks::Time renderPosition = begin;
+  Eks::Time renderPosition = _log->start() + begin;
+  Eks::Time renderEnd = _log->start() + end;
 
-  while(renderPosition < end)
+  while(renderPosition < renderEnd)
     {
     xForeach(const ImageCache* item, _cachedImages)
       {
@@ -305,7 +314,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
         }
       }
 
-    if(renderPosition >= end)
+    if(renderPosition >= renderEnd)
       {
       break;
       }
@@ -322,8 +331,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
     xAssert(cache);
 
     cache->begin = renderPosition;
-    renderPosition += _log->timeFromWidth(cachedImageWidth);
-    cache->end = renderPosition;
+    cache->end = renderPosition = cache->begin + _log->timeFromWidth(cachedImageWidth);
 
     Eks::TemporaryAllocator alloc(Eks::Core::temporaryAllocator());
     std::map<
@@ -334,8 +342,14 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
 
     Eks::UnorderedMap<const DurationItem *, bool> found(&alloc);
 
+    bool current = false;
     xForeach(const auto &cont, _containers)
       {
+      if(cont == _currentContainer)
+        {
+        current = true;
+        }
+
       xForeach(const auto &dur, cont->durationChildren())
         {
         if(dur->start() < cache->end &&
@@ -355,6 +369,18 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
           }
         }
       }
+
+    if(current)
+      {
+      _currentEventCache << cache;
+      }
+
+    cache->image = QImage(
+      cachedImageWidth,
+      durationHeight *_maxDurationEvents,
+      QImage::Format_ARGB32_Premultiplied);
+
+    cache->image.fill(Qt::blue);
 
     Eks::Vector<Eks::Time> activeStack(&alloc);
     for(auto it = events.begin(), end = events.end(); it != end; ++it)
@@ -382,30 +408,28 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
 
 void ThreadItem::clearCache()
   {
+  _currentEventCache.clear();
   _cachedImages.clear();
   }
 
-void ThreadItem::clearCache(const EventContainer *e)
+void ThreadItem::clearCurrentContainerCache()
   {
-  for(auto it = _cachedImages.begin(), end = _cachedImages.end();
-      it != end;
-      ++it)
+  xForeach(auto *cache, _currentEventCache)
     {
-    xForeach(const EventContainer *c, (*it)->events)
+    for(auto it = _cachedImages.begin(), end = _cachedImages.end();
+        it != end;
+        ++it)
       {
-      if(e == c)
+      if(cache == *it)
         {
         it = _cachedImages.remove(it);
         end = _cachedImages.end();
         break;
         }
       }
-
-    if(it == end)
-      {
-      break;
-      }
     }
+
+  _currentEventCache.clear();
   }
 
 void ThreadItem::selectEvent(EventItem *item, const QPointF &pos)
@@ -416,9 +440,9 @@ void ThreadItem::selectEvent(EventItem *item, const QPointF &pos)
 QRectF ThreadItem::boundingRect() const
   {
   QRectF r;
-
+  
+  r.setTop(-durationHeight * _maxDurationEvents);
   r.setBottom(0);
-  r.setTop(durationHeight * _maxDurationEvents);
 
   r.setLeft(timeToX(_log->start()));
   r.setRight(timeToX(currentTime()));
@@ -431,16 +455,12 @@ QRectF ThreadItem::boundingRect() const
 void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *)
   {
   QRectF r(boundingRect());
-  r.setLeft(timeToX(_log->start()));
-  r.setRight(timeToX(currentTime()));
 
   auto exposed = option->exposedRect;
   auto left = _log->timeFromX(exposed.left(), false);
   auto right = _log->timeFromX(exposed.right(), false);
 
   cacheAndRenderBetween(p, left, right);
-
-  r.adjust(-threadPad, -threadPad, threadPad, threadPad);
 
   p->setPen(Qt::red);
   p->setBrush(Qt::white);
@@ -477,6 +497,17 @@ Eks::Time EventItem::relativeTime(const LogView *thr, const Eks::Time &t) const
   {
   auto &&s = thr->start();
   return (t - s);
+  }
+
+float ThreadsItem::getZeroX(QGraphicsItem *to)
+  {
+  if(!_threads.size())
+    {
+    return 0.0f;
+    }
+
+  QGraphicsItem *item = _threadList.front();
+  return item->mapToItem(to, 0.0, 0.0).x();
   }
 
 ThreadItem *ThreadsItem::getThreadItem(quint64 t)
@@ -559,11 +590,12 @@ void TimelineItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *i, Q
                       scale > 10   ? 1 :
                                      0;
 
+  auto start = _threads->getZeroX(this);
   auto pos = startPosition;
   for(int i = 0; i < 10; ++i, pos += increment)
     {
     auto t = _log->timeFromX(pos, false);
-    float x = pos;
+    float x = start + pos;
 
     auto sec = t.seconds();
     auto msec = t.milliseconds();

@@ -138,7 +138,6 @@ public:
 
   void addMoment(const Eks::SharedPointer<MomentItem> &item);
   void addDuration(const Eks::SharedPointer<DurationItem> &item);
-
   };
 
 class EventItem : public Eks::detail::SharedData
@@ -198,14 +197,13 @@ private:
 
   void cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end);
   void clearCache();
-  void clearCache(const EventContainer *c);
+  void clearCurrentContainerCache();
 
   struct ImageCache
     {
     Eks::Time begin;
     Eks::Time end;
     QImage image;
-    Eks::Vector<const EventContainer*> events;
     };
 
   enum
@@ -222,6 +220,7 @@ private:
 
   xsize _maxDurationEvents;
 
+  Eks::Vector <ImageCache *> _currentEventCache;
   Eks::Vector <Eks::UniquePointer<EventContainer>> _containers;
   Eks::Vector <Eks::SharedPointer<DurationItem>, 64> _openDurations;
   };
