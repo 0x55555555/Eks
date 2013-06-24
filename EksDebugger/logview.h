@@ -67,17 +67,6 @@ private:
   void mousePressEvent(QMouseEvent *event) X_OVERRIDE;
   void mouseReleaseEvent(QMouseEvent *event) X_OVERRIDE;
 
-  typedef QPair<xuint64, xsize> OpenEvent;
-
-  struct ActiveDuration
-    {
-    ActiveDuration(ThreadItem *t=0, DurationItem *d=0) : thread(t), duration(d) { }
-    ThreadItem *thread;
-    DurationItem *duration;
-    };
-
-
-  Eks::UnorderedMap<OpenEvent, ActiveDuration> _openEvents;
   QGraphicsScene _scene;
 
   TimelineItem *_timelineRoot;
@@ -177,9 +166,8 @@ public:
   void setCurrentTime(const Eks::Time &t);
 
   MomentItem *addMoment(const Eks::Time &t);
-  DurationItem *addDuration(const Eks::Time &start);
-
-  void endDuration(DurationItem *e, const Eks::Time &time);
+  DurationItem *addDuration(xsize id, const Eks::Time &start);
+  void endDuration(xsize id, const Eks::Time &time);
 
   void selectEvent(EventItem *item, const QPointF &pos);
 
@@ -222,7 +210,15 @@ private:
 
   Eks::Vector <ImageCache *> _currentEventCache;
   Eks::Vector <Eks::UniquePointer<EventContainer>> _containers;
-  Eks::Vector <Eks::SharedPointer<DurationItem>, 64> _openDurations;
+
+
+  struct DurationStruct
+    {
+    Eks::SharedPointer<DurationItem> item;
+    xsize id;
+    };
+
+  Eks::Vector <DurationStruct, 64> _openDurations;
   };
 
 #endif // LOGVIEW_H

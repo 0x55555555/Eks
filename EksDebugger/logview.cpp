@@ -224,9 +224,9 @@ void ThreadItem::setCurrentTime(const Eks::Time &t)
   {
   _currentTime = t;
 
-  xForeach(auto d, _openDurations)
+  xForeach(auto &d, _openDurations)
     {
-    d->setEnd(t);
+    d.item->setEnd(t);
     }
 
   prepareGeometryChange();
@@ -246,14 +246,17 @@ MomentItem *ThreadItem::addMoment(const Eks::Time &t)
   return i;
   }
 
-DurationItem *ThreadItem::addDuration(const Eks::Time &start)
+DurationItem *ThreadItem::addDuration(xsize id, const Eks::Time &start)
   {
   EventContainer *cont = getCurrentContainer(start);
 
   auto d = _durationAlloc.createShared<DurationItem>();
   cont->addDuration(d);
 
-  _openDurations << d;
+  auto &created = _openDurations.createBack();
+  created.item = d;
+  created.id = id;
+
   d->setStartAndEnd(start);
 
   _maxDurationEvents = xMax(_maxDurationEvents, _openDurations.size());
@@ -261,6 +264,30 @@ DurationItem *ThreadItem::addDuration(const Eks::Time &start)
   clearCurrentContainerCache();
 
   return d;
+  }
+
+void ThreadItem::endDuration(xsize id, const Eks::Time &time)
+  {
+  DurationItem *e = nullptr;
+
+  for(xsize i = _openDurations.size()-1; i != X_SIZE_SENTINEL; --i)
+    {
+    auto &dur = _openDurations[i];
+    if(dur.id == id)
+      {
+      e = dur.item;
+      _openDurations.removeAt(i);
+      break;
+      }
+    }
+
+  if(!e)
+    {
+    xAssertFail();
+    }
+  e->setEnd(time);
+
+  clearCurrentContainerCache();
   }
 
 EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
@@ -279,7 +306,7 @@ EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
 
     xForeach(auto ev, _openDurations)
       {
-      _currentContainer->addDuration(ev);
+      _currentContainer->addDuration(ev.item);
       }
 
     _currentContainer->setStart(now);
@@ -288,21 +315,21 @@ EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
   return _currentContainer;
   }
 
-void ThreadItem::endDuration(DurationItem *e, const Eks::Time &time)
-  {
-  e->setEnd(time);
-  _openDurations.removeAll(Eks::SharedPointer<DurationItem>(e));
-
-  clearCurrentContainerCache();
-  }
-
 void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end)
   {
   Eks::Time renderPosition = _log->start() + begin;
   Eks::Time renderEnd = _log->start() + end;
+  
+  qDebug() << "Render timeline between" << begin.milliseconds() << "and" << end.milliseconds();
 
   while(renderPosition < renderEnd)
     {
+    xForeach(const ImageCache* item, _cachedImages)
+      {
+      qDebug() << "Cache available between" << (item->begin - _log->start()).milliseconds() << 
+        "and" << (item->end - _log->start()).milliseconds();
+      }
+
     xForeach(const ImageCache* item, _cachedImages)
       {
       if(item->begin <= renderPosition &&
@@ -310,6 +337,10 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
         {
         p->drawImage(_log->timeToX(item->begin), 0.0f, item->image);
         renderPosition = item->end;
+        
+        qDebug() << "Render cached image between" << (item->begin - _log->start()).milliseconds() << 
+          "and" << (item->end - _log->start()).milliseconds();
+
         break;
         }
       }
@@ -318,6 +349,9 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
       {
       break;
       }
+
+    qDebug() << "Cache between" << (renderPosition - _log->start()).milliseconds() << 
+      "and" << ((renderPosition + _log->timeFromWidth(cachedImageWidth)) - _log->start()).milliseconds();
 
     Eks::UniquePointer<ImageCache> cache;
     if(_reservedImages.size())
@@ -345,11 +379,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
     bool current = false;
     xForeach(const auto &cont, _containers)
       {
-      if(cont == _currentContainer)
-        {
-        current = true;
-        }
-
+      bool eventsInContainer = false;
       xForeach(const auto &dur, cont->durationChildren())
         {
         if(dur->start() < cache->end &&
@@ -358,6 +388,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
           {
           found.insert(dur, true);
           events[dur->start()] = dur.ptr();
+          eventsInContainer = true;
           }
         }
 
@@ -366,11 +397,17 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
         if((mom->time() > cache->begin && mom->time() < cache->end))
           {
           events[mom->time()] = mom.ptr();
+          eventsInContainer = true;
           }
+        }
+
+      if(eventsInContainer && cont == _currentContainer)
+        {
+        current = true;
         }
       }
 
-    if(current)
+    if(current && events.size())
       {
       _currentEventCache << cache;
       }
@@ -408,6 +445,8 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
 
 void ThreadItem::clearCache()
   {
+  qDebug() << "Clear all cached images";
+
   _currentEventCache.clear();
   _cachedImages.clear();
   }
@@ -422,6 +461,8 @@ void ThreadItem::clearCurrentContainerCache()
       {
       if(cache == *it)
         {
+        qDebug() << "Clear cached segment between" << (cache->begin - _log->start()).milliseconds() << 
+          "and" << (cache->end - _log->start()).milliseconds();;
         it = _cachedImages.remove(it);
         end = _cachedImages.end();
         break;
@@ -774,15 +815,12 @@ void LogView::addDuration(
   _max = xMax(_max, t);
 
   auto thread = _timelineRoot->threads()->getThreadItem(thr);
-  auto duration = thread->addDuration(t);
+  auto duration = thread->addDuration(id, t);
 
 
   duration->setLocation(l);
   duration->setDisplay(disp);
 
-  OpenEvent ev(thr, id);
-
-  _openEvents[ev] = ActiveDuration(thread, duration);
   _timelineRoot->layoutThreads();
   }
 
@@ -808,16 +846,12 @@ void LogView::updateEnd(
     const xuint64 thr,
     const Eks::Time &t)
   {
-  OpenEvent ev(thr, id);
-  auto item = _openEvents[ev];
-  _openEvents.remove(ev);
-
-  xAssert(item.duration);
+  auto thread = _timelineRoot->threads()->getThreadItem(thr);
 
   _min = xMin(_min, t);
   _max = xMax(_max, t);
 
-  item.thread->endDuration(item.duration, t);
+  thread->endDuration(id, t);
 
   _timelineRoot->layoutThreads();
   }

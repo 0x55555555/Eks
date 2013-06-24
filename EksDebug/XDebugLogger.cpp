@@ -6,20 +6,8 @@
 #include "QtWidgets/QApplication"
 #include "QThread"
 
-uint qHash(const Eks::DebugLogger::ServerData::OpenEvent &ev)
-  {
-  return qHash(QPair<const void *, Eks::ThreadEventLogger::EventID>(ev.thread, ev.id));
-  }
-
 namespace Eks
 {
-
-bool operator==(
-    const Eks::DebugLogger::ServerData::OpenEvent &a,
-    const Eks::DebugLogger::ServerData::OpenEvent &b)
-  {
-  return a.id == b.id && a.thread && b.thread;
-  }
 
 QDataStream &operator<<(QDataStream &s, const DebugLogger::LogEntry &l)
   {
@@ -252,8 +240,6 @@ void DebugLogger::onEventList(const EventList &list)
         {
         auto location = findLocation(evt.location);
 
-        xsize item = evt.id;
-
         QString display = QStringLiteral("No Data");
         if(location)
           {
@@ -267,33 +253,17 @@ void DebugLogger::onEventList(const EventList &list)
             }
           }
 
-        if(evt.type == ThreadEventLogger::EventType::Begin)
-          {
-          ServerData::OpenEvent e = { list.thread, evt.id };
-          _server->openEvents[e] = item;
-          }
-
         emit _server->model->eventCreated(
               evt.time,
               evt.type,
               (xuint64)list.thread,
               display,
-              item,
+              evt.id,
               location);
         }
       else if(evt.type == ThreadEventLogger::EventType::End)
         {
-        ServerData::OpenEvent e;
-        e.thread = list.thread;
-        e.id = evt.id;
-
-        xsize item = _server->openEvents.value(e, X_SIZE_SENTINEL);
-        xAssert(item != X_SIZE_SENTINEL);
-        if(item != X_SIZE_SENTINEL)
-          {
-          emit _server->model->eventEndUpdated(item, (xuint64)list.thread, evt.time);
-          _server->openEvents.remove(e);
-          }
+        emit _server->model->eventEndUpdated(evt.id, (xuint64)list.thread, evt.time);
         }
       }
     }

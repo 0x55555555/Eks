@@ -93,13 +93,6 @@ public:
 
   struct ServerData
     {
-    struct OpenEvent
-      {
-      const void *thread;
-      ThreadEventLogger::EventID id;
-      };
-
-    Eks::UnorderedMap <OpenEvent, xsize> openEvents;
     Eks::UniquePointer<DebugLoggerData> model;
     Eks::Vector<DebugLocationWithData, 1024> _locations;
     };
@@ -115,8 +108,6 @@ protected:
       const QThread *thread,
       const ThreadEventLogger::EventVector &) X_OVERRIDE;
   void onLocations(const EventLogger::EventLocationVector &) X_OVERRIDE;
-
-  friend bool operator==(const Eks::DebugLogger::ServerData::OpenEvent &a, const Eks::DebugLogger::ServerData::OpenEvent &b);
 
   Eks::UniquePointer<ServerData> _server;
   };
