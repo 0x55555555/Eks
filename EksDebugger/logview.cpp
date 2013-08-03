@@ -146,6 +146,20 @@ public:
 
     p->setBrush(Qt::white);
     p->drawRect(r);
+
+    QRectF textRect = r;
+    textRect.adjust(5, 5, -5, -5);
+
+    if (textRect.width() > 10)
+      {
+      QFontMetrics fnt = QFontMetrics(p->font());
+
+      QString clippedText = fnt.elidedText(display(), Qt::ElideRight, textRect.width());
+
+      QTextOption opts;
+      opts.setAlignment(Qt::AlignVCenter|Qt::AlignLeft);
+      p->drawText(textRect, clippedText, opts);
+      }
     }
 
 private:
@@ -317,41 +331,33 @@ EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
 
 void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, const Eks::Time &end)
   {
+  return;
+  static float padd = 2.0f;
   Eks::Time renderPosition = _log->start() + begin;
   Eks::Time renderEnd = _log->start() + end;
   
-  qDebug() << "Render timeline between" << begin.milliseconds() << "and" << end.milliseconds();
-
   while(renderPosition < renderEnd)
     {
-    xForeach(const ImageCache* item, _cachedImages)
-      {
-      qDebug() << "Cache available between" << (item->begin - _log->start()).milliseconds() << 
-        "and" << (item->end - _log->start()).milliseconds();
-      }
-
+    bool rendered = false;
     xForeach(const ImageCache* item, _cachedImages)
       {
       if(item->begin <= renderPosition &&
          item->end > renderPosition)
         {
-        p->drawImage(_log->timeToX(item->begin), 0.0f, item->image);
+        float realY = -item->image.height() - padd;
+        float x = _log->timeToX(item->begin) - padd;
+        p->drawImage(x, realY, item->image);
         renderPosition = item->end;
         
-        qDebug() << "Render cached image between" << (item->begin - _log->start()).milliseconds() << 
-          "and" << (item->end - _log->start()).milliseconds();
-
+        rendered = true;
         break;
         }
       }
 
-    if(renderPosition >= renderEnd)
+    if (rendered)
       {
-      break;
+      continue;
       }
-
-    qDebug() << "Cache between" << (renderPosition - _log->start()).milliseconds() << 
-      "and" << ((renderPosition + _log->timeFromWidth(cachedImageWidth)) - _log->start()).milliseconds();
 
     Eks::UniquePointer<ImageCache> cache;
     if(_reservedImages.size())
@@ -412,33 +418,54 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
       _currentEventCache << cache;
       }
 
+    int imageHeight = durationHeight * _maxDurationEvents;
     cache->image = QImage(
-      cachedImageWidth,
-      durationHeight *_maxDurationEvents,
+      cachedImageWidth + 2*padd,
+      imageHeight + 2*padd,
       QImage::Format_ARGB32_Premultiplied);
 
-    cache->image.fill(Qt::blue);
+    cache->image.fill(Qt::lightGray);
+    QPainter imagePainter(&cache->image);
+    imagePainter.translate(padd, padd);
+    
+    imagePainter.setPen(Qt::red);
+    imagePainter.drawRect(0, 0, cachedImageWidth-1, imageHeight-1);
+
+    imagePainter.setRenderHint(QPainter::Antialiasing, true);
+
+    imagePainter.setPen(Qt::black);
+    imagePainter.translate(-_log->timeToX(cache->begin), 0);
 
     Eks::Vector<Eks::Time> activeStack(&alloc);
     for(auto it = events.begin(), end = events.end(); it != end; ++it)
       {
+      imagePainter.save();
+
       const auto &t = it->first;
       const auto &ev = it->second;
 
-      if(activeStack.size() && t > activeStack.back())
+      while(activeStack.size() && t > activeStack.back())
         {
         activeStack.popBack();
         }
 
-      ev->paint(this, p);
+      imagePainter.translate(0, imageHeight - ((1 + activeStack.size()) * durationHeight));
+
+      ev->paint(this, &imagePainter);
 
       Eks::Time endTime;
       if(ev->endTime(endTime))
         {
         activeStack << endTime;
         }
+
+      imagePainter.restore();
       }
 
+    if (_cachedImages.size() == MaxImages)
+      {
+      _cachedImages.clear();
+      }
     _cachedImages << std::move(cache);
     }
   }
@@ -501,11 +528,11 @@ void ThreadItem::paint(QPainter *p, const QStyleOptionGraphicsItem *option, QWid
   auto left = _log->timeFromX(exposed.left(), false);
   auto right = _log->timeFromX(exposed.right(), false);
 
-  cacheAndRenderBetween(p, left, right);
-
   p->setPen(Qt::red);
   p->setBrush(Qt::white);
   p->drawRoundedRect(r, threadPad, threadPad);
+  
+  cacheAndRenderBetween(p, left, right);
   }
 
 void ThreadItem::timeConversionChanged()
@@ -764,6 +791,8 @@ LogView::LogView(QObject *model)
 
   connect(this, SIGNAL(timeConversionChanged()), _timelineRoot, SLOT(timeConversionChanged()));
 
+  setDragMode(QGraphicsView::ScrollHandDrag);
+
   setScene(&_scene);
   }
 
@@ -865,10 +894,9 @@ void LogView::wheelEvent(QWheelEvent *event)
     float scrollY = 1.0f + ((numDegrees.x() + numDegrees.y()) / 150.0f);
     _scale *= scrollY;
 
-    auto xOffset = event->pos().x();
+    auto scaleX = event->pos().x() + _offset;
 
-    (void)xOffset;
-    //_offset = ((_offset - xOffset) * scrollY) + xOffset;
+    _offset = ((_offset - scaleX) * scrollY) + scaleX;
 
     emit timeConversionChanged();
     }
@@ -883,7 +911,6 @@ void LogView::mousePressEvent(QMouseEvent *event)
 
   if(_dragging)
     {
-    _lastDragX = event->pos().x();
     selectEvent(0, QPointF(0, 0));
     }
   else
@@ -894,30 +921,12 @@ void LogView::mousePressEvent(QMouseEvent *event)
 
 void LogView::mouseMoveEvent(QMouseEvent *event)
   {
-  if(_dragging)
-    {
-    auto bar = verticalScrollBar();
-
-    bar->setValue(bar->value() + event->pos().x() - _lastDragX);
-
-    _lastDragX = event->pos().x();
-    }
-  else
-    {
-    QGraphicsView::mouseMoveEvent(event);
-    }
+  QGraphicsView::mouseMoveEvent(event);
   }
 
 void LogView::mouseReleaseEvent(QMouseEvent *event)
   {
-  if(_dragging)
-    {
-    _dragging = false;
-    }
-  else
-    {
-    QGraphicsView::mouseReleaseEvent(event);
-    }
+  QGraphicsView::mouseReleaseEvent(event);
   }
 
 const Eks::Time &LogView::start() const
