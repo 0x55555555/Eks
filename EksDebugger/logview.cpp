@@ -371,7 +371,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
     xAssert(cache);
 
     cache->begin = renderPosition;
-    cache->end = renderPosition = cache->begin + _log->timeFromWidth(cachedImageWidth);
+    cache->end = renderPosition = cache->begin + _log->timeFromTimelineX(cachedImageWidth);
 
     Eks::TemporaryAllocator alloc(Eks::Core::temporaryAllocator());
     std::map<
@@ -634,6 +634,9 @@ void TimelineItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *i, Q
   float scale = 1.0f;
   float xMs = end.milliseconds() - begin.milliseconds();
 
+  // adjust the time here - if adjustedDist is
+  // big, make it smaller, and increase scale.
+  // if small, make it bigger and decrease scale.
   float adjustedDist = xMs;
   while(adjustedDist > 1.0f)
     {
@@ -646,23 +649,27 @@ void TimelineItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *i, Q
     adjustedDist *= 10.0f;
     }
 
-  float clip = scale / 10.0f;
-  float startPosition = floorf(xMax(0.0, beginX) / clip) * clip + xPos;
-  float increment = _log->timeToXNoOffset(Eks::Time::fromMilliseconds(clip));
-
-  painter->setPen(Qt::black);
-  painter->setBrush(Qt::black);
-
   const int secMode = scale > 1000 ? 3 :
                       scale > 100  ? 2 :
                       scale > 10   ? 1 :
                                      0;
 
-  auto start = _threads->getZeroX(this);
+  painter->setPen(Qt::black);
+  painter->setBrush(Qt::black);
+
+  float clip = scale / 10.0f;
+  float startPosition = 0;
+  float increment = _log->timeToXNoOffset(Eks::Time::fromMilliseconds(clip));
+
   auto pos = startPosition;
-  for(int i = 0; i < 10; ++i, pos += increment)
+  for(; pos < beginX; pos += increment)
     {
-    auto t = _log->timeFromX(pos, false);
+    }
+  
+  auto start = _threads->getZeroX(this);
+  for(; pos < endX; pos += increment)
+    {
+    auto t = _log->timeFromTimelineX(pos);
     float x = start + pos;
 
     auto sec = t.seconds();
@@ -826,7 +833,7 @@ Eks::Time LogView::timeFromX(float x, bool offset) const
   return t;
   }
 
-Eks::Time LogView::timeFromWidth(float w) const
+Eks::Time LogView::timeFromTimelineX(float w) const
   {
   float scaledX = (w) / _scale;
   auto t = Eks::Time::fromMilliseconds(scaledX);
@@ -894,9 +901,9 @@ void LogView::wheelEvent(QWheelEvent *event)
     float scrollY = 1.0f + ((numDegrees.x() + numDegrees.y()) / 150.0f);
     _scale *= scrollY;
 
-    auto scaleX = event->pos().x() + _offset;
+    float scalePos = mapToScene(event->pos().x(), 0).x();
 
-    _offset = ((_offset - scaleX) * scrollY) + scaleX;
+    _offset = ((_offset - scalePos) * scrollY) + scalePos;
 
     emit timeConversionChanged();
     }

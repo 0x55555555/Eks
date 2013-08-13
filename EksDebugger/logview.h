@@ -37,7 +37,7 @@ public:
   float timeToX(const Eks::Time &t) const;
   float timeToXNoOffset(const Eks::Time &t) const;
   Eks::Time timeFromX(float x, bool offset) const;
-  Eks::Time timeFromWidth(float x) const;
+  Eks::Time timeFromTimelineX(float x) const;
 
 protected:
   void timerEvent(QTimerEvent *) X_OVERRIDE;
