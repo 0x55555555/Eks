@@ -316,7 +316,7 @@ EventContainer *ThreadItem::getCurrentContainer(const Eks::Time &now)
     auto &elem = _containers.createBack();
 
     elem = _allocator->createUnique<EventContainer>(_allocator);
-    _currentContainer = elem;
+    _currentContainer = elem.value();
 
     xForeach(auto ev, _openDurations)
       {
@@ -339,7 +339,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
   while(renderPosition < renderEnd)
     {
     bool rendered = false;
-    xForeach(const ImageCache* item, _cachedImages)
+    xForeach(const auto &item, _cachedImages)
       {
       if(item->begin <= renderPosition &&
          item->end > renderPosition)
@@ -407,7 +407,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
           }
         }
 
-      if(eventsInContainer && cont == _currentContainer)
+      if(eventsInContainer && cont.value() == _currentContainer)
         {
         current = true;
         }
@@ -415,7 +415,7 @@ void ThreadItem::cacheAndRenderBetween(QPainter *p, const Eks::Time &begin, cons
 
     if(current && events.size())
       {
-      _currentEventCache << cache;
+      _currentEventCache << cache.value();
       }
 
     int imageHeight = durationHeight * _maxDurationEvents;
@@ -480,13 +480,13 @@ void ThreadItem::clearCache()
 
 void ThreadItem::clearCurrentContainerCache()
   {
-  xForeach(auto *cache, _currentEventCache)
+  xForeach(auto cache, _currentEventCache)
     {
     for(auto it = _cachedImages.begin(), end = _cachedImages.end();
         it != end;
         ++it)
       {
-      if(cache == *it)
+      if(cache == it->value())
         {
         qDebug() << "Clear cached segment between" << (cache->begin - _log->start()).milliseconds() << 
           "and" << (cache->end - _log->start()).milliseconds();;
