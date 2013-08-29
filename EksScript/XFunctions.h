@@ -153,6 +153,11 @@ template <typename T, typename Sig> struct XMethodForwarderHelperVoid : Sig
     T::CallNative( self, func, args );
     }
 
+  static void Call( ThisType & self, FunctionType func, internal::ReflectArguments & argv )
+    {
+    T::CallNative( self, func, argv );
+    }
+
   static Value Call( FunctionType func, internal::JSArguments const & argv )
     {
     ThisType *self = Convert::from<ThisType>(argv.calleeThis());
@@ -176,6 +181,17 @@ template <typename T, typename Sig> struct XMethodForwarderHelperVoid : Sig
 
     T::CallNative(*self, func, args);
     }
+
+  static void Call( FunctionType func, internal::ReflectArguments &argv )
+    {
+    ThisType *self = argv.calleeThis<ThisType>();
+    if(!self)
+      {
+      throw std::exception("Missing this");
+      }
+
+    T::CallNative(*self, func, argv);
+    }
   };
 
 template <typename T, typename Sig> struct XMethodForwarderHelper : Sig
@@ -191,6 +207,13 @@ template <typename T, typename Sig> struct XMethodForwarderHelper : Sig
     }
 
   static void Call( ThisType & self, FunctionType func, internal::DartArguments const & argv )
+    {
+    internal::DartArgumentsNoThis args(argv);
+    try { return CastToJS( T :: CallNative( self, func, args ) ); }
+    HANDLE_PROPAGATE_EXCEPTION;
+    }
+
+  static void Call( ThisType & self, FunctionType func, internal::ReflectArguments &argv )
     {
     internal::DartArgumentsNoThis args(argv);
     try { return CastToJS( T :: CallNative( self, func, args ) ); }
@@ -216,6 +239,19 @@ template <typename T, typename Sig> struct XMethodForwarderHelper : Sig
       argv.setReturnValue(tossMissingThis<T>());
       }
     argv.setReturnValue(Convert::to( T::CallNative(*self, func, args) ));
+    }
+
+  static void Call( FunctionType func, internal::ReflectArguments &argv )
+    {
+    ThisType *self = argv.calleeThis<ThisType>();
+    if(!self)
+      {
+      throw std::exception("Missing This.");
+      }
+
+    auto result = T::CallNative(*self, func, argv);
+
+    argv.setReturnValue(QVariant::fromValue(result));
     }
   };
 
@@ -689,6 +725,10 @@ struct FunctionToInCa : XFunctionPtr<Sig,Func>
     {
     Proxy::Call( Func, argv );
     }
+  static void CallReflect( internal::ReflectArguments &argv )
+    {
+    Proxy::Call( Func, argv );
+    }
   ASSERT_UNLOCK_SANITY_CHECK;
   };
 
@@ -723,6 +763,10 @@ struct FunctionToInCaVoid : XFunctionPtr<Sig,Func>
       {
       Proxy::Call( Func, argv );
       }
+    static void CallReflect( internal::ReflectArguments &argv )
+      {
+      Proxy::Call( Func, argv );
+      }
   ASSERT_UNLOCK_SANITY_CHECK;
   };
 
@@ -752,6 +796,10 @@ struct MethodToInCa : XMethodPtr<T,Sig, Func>
     return Proxy::Call( Func, argv );
     }
   static void CallDart( internal::DartArguments argv )
+    {
+    Proxy::Call( Func, argv );
+    }
+  static void CallReflect( internal::ReflectArguments &argv )
     {
     Proxy::Call( Func, argv );
     }
@@ -791,6 +839,10 @@ struct MethodToInCaVoid : XMethodPtr<T,Sig,Func>
     {
     Proxy::Call( Func, argv );
     }
+  static void CallReflect( internal::ReflectArguments &argv )
+    {
+    Proxy::Call( Func, argv );
+    }
   static Value Call( T & self, internal::JSArguments const & argv )
     {
     return Proxy::Call( self, Func, argv );
@@ -827,6 +879,10 @@ struct ConstMethodToInCa : XConstMethodPtr<T,Sig, Func>
     {
     Proxy::Call( Func, argv );
     }
+  static void CallReflect( internal::ReflectArguments &argv )
+    {
+    Proxy::Call( Func, argv );
+    }
   static Value Call( T const & self, internal::JSArguments const & argv )
     {
     return Proxy::Call( self, Func, argv );
@@ -857,6 +913,10 @@ struct ConstMethodToInCaVoid : XConstMethodPtr<T,Sig,Func>
     return Proxy::Call( Func, argv );
     }
   static void CallDart( internal::DartArguments argv )
+    {
+    Proxy::Call( Func, argv );
+    }
+  static void CallReflect( internal::ReflectArguments &argv )
     {
     Proxy::Call( Func, argv );
     }
@@ -1854,10 +1914,9 @@ public:
   typedef typename std::remove_reference<ResultType>::type StoredNonRefType;
   typedef typename std::remove_const<StoredNonRefType>::type StoredType;
 
-  ArgumentUnpacker(const ArgsType &v, xsize idx)// : val(std::move())
+  ArgumentUnpacker(const ArgsType &v, xsize idx)
     {
-    ResultType t = Convert::from<Type>(v.at(idx));
-    val = std::move(t);
+    val = v.at<Type, StoredType>(idx);
     }
 
   StoredType& operator()() { return val; }

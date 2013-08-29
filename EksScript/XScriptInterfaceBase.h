@@ -64,11 +64,13 @@ struct FunctionDef
       const char *n,
       FunctionJS v,
       FunctionDart d,
+      FunctionReflection r,
       xuint8 c,
       bool s)
     : name(n),
       functionV8(v),
       functionDart(d),
+      functionReflection(r),
       argCount(c),
       isStatic(s)
     {
@@ -77,6 +79,7 @@ struct FunctionDef
   const char *name;
   FunctionJS functionV8;
   FunctionDart functionDart;
+  FunctionReflection functionReflection;
   xuint8 argCount;
   bool isStatic;
   };
@@ -243,6 +246,8 @@ public:
   Object newInstance(int argc, Value argv[], const QString& name="") const;
   //void set(const char *name, Value val);
 
+  void invoke(const FunctionDef &def, void* thisVal) const;
+
   typedef Value (*NamedGetter)(Value, const internal::JSAccessorInfo& info);
   typedef Value (*IndexedGetter)(xuint32, const internal::JSAccessorInfo& info);
 
@@ -324,6 +329,7 @@ public:
       name,
       FunctionType::Call,
       FunctionType::CallDart,
+      FunctionType::CallReflect,
       FunctionType::Arity,
       false // not static method
       );
@@ -342,6 +348,7 @@ public:
       name,
       FunctionType::Call,
       FunctionType::CallDart,
+      FunctionType::CallReflect,
       FunctionType::Arity,
       true // is static method
       );

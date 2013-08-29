@@ -9,6 +9,8 @@
 # define EKSSCRIPT_EXPORT X_DECL_IMPORT
 #endif
 
+class QVariant;
+
 namespace XScript
 {
 
@@ -23,13 +25,15 @@ namespace internal
 {
 class JSArguments;
 class DartArguments;
+class ReflectArguments;
 class JSAccessorInfo;
 }
 
 class Value;
 
-typedef Value (*FunctionJS)( internal::JSArguments const & argv );
-typedef void (*FunctionDart)( internal::DartArguments argv );
+typedef Value (*FunctionJS)(internal::JSArguments const & argv);
+typedef void (*FunctionDart)(internal::DartArguments argv);
+typedef void (*FunctionReflection)(internal::ReflectArguments &argv);
 
 typedef Value (*GetterFn)(Value property, const internal::JSAccessorInfo& info);
 typedef void (*SetterFn)(Value property, Value value, const internal::JSAccessorInfo& info);

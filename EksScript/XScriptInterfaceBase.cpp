@@ -140,6 +140,13 @@ Object InterfaceBase::newInstance(int argc, Value argv[], const QString& name) c
   return obj;
   }
 
+void InterfaceBase::invoke(const FunctionDef &def, void* thisVal) const
+  {
+  QVariant result;
+  internal::ReflectArguments args = { thisVal, 0, 0, &result };
+  def.functionReflection(args);
+  }
+
 void InterfaceBase::buildInterface(
     const ConstructorDef *ctors,
     xsize ctorCount,
