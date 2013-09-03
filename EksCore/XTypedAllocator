@@ -67,6 +67,7 @@ public:
   typedef TypedAllocatorBase<TypedAllocator<T>, T> Base;
   typedef typename Base::value_type& reference;
   typedef const typename Base::value_type& const_reference;
+  typedef typename Base::value_type&& rvalue_reference;
 
   TypedAllocator(AllocatorBase *alloc=0)
     {
@@ -82,6 +83,11 @@ public:
   void construct(typename Base::pointer p, const_reference val)
     {
     new(p) T(val);
+    }
+
+  void construct(typename Base::pointer p, rvalue_reference val)
+    {
+    new(p) T(std::move(val));
     }
 
   template <typename U> void destroy(U *p)

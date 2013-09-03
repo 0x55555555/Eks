@@ -2,141 +2,151 @@
 #define XEVENTLOGGER_H
 
 #include "XGlobal"
-
-#ifdef X_ENABLE_EVENT_LOGGING
-
 #include "XTime"
-#include "XAssert"
-#include "XStringSimple"
-#include "QtCore/QMetaType"
+#include "XUniquePointer"
+#include "XVector"
+#include <atomic>
 
-template <typename T> struct EKSCORE_EXPORT XEventLoggerPair
-  {
-  XTime time;
-  T value;
-  };
 
-class EKSCORE_EXPORT XEventLoggerInternal
-  {
-public:
-  XEventLoggerInternal(const char *name, int type, xsize size, xsize count, const char *units);
+namespace Eks
+{
 
-  Eks::StringBase<Eks::Char, 32> name;
-  Eks::StringBase<Eks::Char, 32> units;
-  int type;
-  xsize size;
-  xsize count;
-  XEventLoggerInternal *next;
+class AllocatorBase;
 
-  xuint8 *firstData;
-  xuint8 *nextData;
-  xuint8 data[1];
-
-  xsize used() const;
-  const void *at(xsize index) const;
-  const void *dataAt(xsize index) const;
-  const void *last() const;
-  void *last();
-  void add();
-
-  template <typename T> static XEventLoggerInternal *init(const char *name, xsize size, const char *units)
-    {
-    typedef XEventLoggerPair<T> Pair;
-    XEventLoggerInternal *ev = (XEventLoggerInternal *)malloc(sizeof(XEventLoggerInternal)+(sizeof(Pair)*size));
-    new(ev) XEventLoggerInternal(name, qMetaTypeId<T>(), sizeof(Pair), size, units);
-    return ev;
-    }
-  };
-
-template <typename T> class XEventLogger
+class EKSCORE_EXPORT EventLocation
   {
 public:
-  enum
+  typedef xuint32 ID;
+
+XProperties:
+  XProperty(ID, id, setId);
+
+public:
+  EventLocation(const CodeLocation &l, const char *data = "");
+  };
+
+class EKSCORE_EXPORT ThreadEventLogger
+  {
+XProperties:
+  XROProperty(QThread *, thread);
+  XProperty(ThreadEventLogger *, next, setNext);
+
+public:
+
+  enum class EventType : xuint8
     {
-    Small = 128,
-    Large = 1024
+    Begin,
+    End,
+    Moment
     };
 
-  typedef XEventLoggerPair<T> Pair;
-
-  XEventLogger(XEventLoggerInternal *l) : _logger(l)
+  typedef xsize EventID;
+  struct EventItem
     {
-    xAssert(l->type == qMetaTypeId<T>());
-    }
+    Eks::Time time;
+    EventType type;
+    EventLocation::ID location;
+    EventID id;
+    };
+  typedef Eks::Vector<EventItem, 1024> EventVector;
 
-  xsize size() const
-    {
-    return _logger->used();
-    }
+  ThreadEventLogger(QThread *thread, Eks::AllocatorBase *allocator);
+  ~ThreadEventLogger();
 
-  const Pair &at(xsize index) const
-    {
-    void *p = _logger->at(index);
-    return *(Pair*)p;
-    }
+  EventID beginDurationEvent(const EventLocation::ID location);
+  void endDurationEvent(EventID id);
 
-  Pair &last()
-    {
-    void *p = _logger->last();
-    Pair *pair = (Pair*)p;
-    return *pair;
-    }
+  void momentEvent(const EventLocation::ID location);
 
-  const Pair &last() const
-    {
-    const void *p = _logger->last();
-    const Pair *pair = (Pair*)p;
-    return *pair;
-    }
+  EventVector *swapEventVector(EventVector *vec);
 
-  Pair &addNext()
-    {
-    _logger->add();
-    return last();
-    }
+  EventVector *getAvailableEvents();
+  void setAvailableEvents(EventVector *);
 
-  void log(const T &t, const XTime& time)
-    {
-    Pair &p(addNext());
-    p.time = time;
-    p.value = t;
-    }
-
-  void logNow(const T &t)
-    {
-    log(t, XTime::now());
-    }
+  void *operator new(size_t, void *w);
+  void operator delete(void *ptr, void *);
+  void operator delete(void* ptr);
 
 private:
-  XEventLoggerInternal *_logger;
+  void addItem(EventType type, const EventLocation::ID d, xsize id);
+
+  Eks::AllocatorBase *_allocator;
+  EventID _currentID;
+
+  std::atomic<EventVector *> _events;
+  EventVector * _availableEvents;
+
+  EventVector _primaryVector;
+  EventVector _secondaryVector;
   };
 
-class EKSCORE_EXPORT XEventManager
+class EKSCORE_EXPORT EventLogger
   {
 public:
-  static void totalAvailableTime(XTime &min, XTime &max);
+  EventLogger(Eks::AllocatorBase *);
+  ~EventLogger();
 
-  static XEventLoggerInternal *firstEvent();
-  static void addEvent(XEventLoggerInternal *);
+  ThreadEventLogger *threadLogger();
+
+  void createLocation(EventLocation *, const CodeLocation &loc, const char *data);
+
+  struct LocationReference
+    {
+    EventLocation::ID id;
+    const char *file;
+    xuint32 line;
+    const char *function;
+    const char *data;
+    };
+
+  typedef Eks::Vector<LocationReference, 1024> EventLocationVector;
+
+  class Watcher
+    {
+  public:
+    virtual void onEvents(
+        const QThread *thread,
+        const ThreadEventLogger::EventVector &) = 0;
+
+    virtual void onLocations(const EventLocationVector &) = 0;
+    };
+
+  void setEventWatcher(Watcher *w);
+
+  void syncCachedEvents();
+
+  Eks::AllocatorBase *deleteThread(ThreadEventLogger *t);
+
+private:
+  class Impl;
+  Eks::UniquePointer<Impl> _impl;
   };
 
-#define X_IMPLEMENT_LOGGER(name, type, size, units) XEventLoggerInternal *name = XEventLoggerInternal::init<type>(#name, size, units)
-#define X_DECLARE_LOGGER(exp, name) exp extern XEventLoggerInternal *name
-#define X_MEMORY_LOGGER_ALLOC(name, s) { XEventLogger<xsize> l(name); if(l.size()) { l.logNow(s + l.last().value); } else { l.logNow(s); } }
-#define X_MEMORY_LOGGER_FREE(name, s) { XEventLogger<xsize> l(name); xAssert(l.size()); l.logNow(l.last().value - s); }
+#if X_EVENT_LOGGING_ENABLED
+
+class EKSCORE_EXPORT ScopedEvent
+  {
+public:
+  ScopedEvent(const EventLocation *);
+  ~ScopedEvent();
+
+private:
+  ThreadEventLogger::EventID _id;
+  };
+
+# define X_EVENT_FUNCTION \
+  static const Eks::EventLocation __loc##__LINE__(X_CURRENT_CODE_LOCATION); Eks::ScopedEvent _EVENT_##__LINE__(&__loc##__LINE__)
+
+# define X_EVENT_BLOCK(data) \
+  static const Eks::EventLocation __loc##__LINE__(X_CURRENT_CODE_LOCATION, data); Eks::ScopedEvent _EVENT_##__LINE__(&__loc##__LINE__)
 
 #else
-#define X_IMPLEMENT_LOGGER(name, type, size, units)
-#define X_DECLARE_LOGGER(exp, name)
 
-#define X_MEMORY_LOGGER_ALLOC(name, s)
-#define X_MEMORY_LOGGER_FREE(name, s)
+# define X_EVENT_FUNCTION
+# define X_EVENT_BLOCK(data)
 
 #endif
 
-#define X_IMPLEMENT_MEMORY_LOGGER(name) X_IMPLEMENT_LOGGER(name, xsize, XEventLogger<xsize>::Large, "bytes")
-#define X_DECLARE_MEMORY_LOGGER(exp, name) X_DECLARE_LOGGER(exp, name)
-
-X_DECLARE_MEMORY_LOGGER(EKSCORE_EXPORT, xTotalGlobalAllocatorSize);
+}
 
 #endif // XEVENTLOGGER_H

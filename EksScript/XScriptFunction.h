@@ -83,6 +83,11 @@ public:
   xsize length() const;
   Value at(xsize i) const;
 
+  template <typename T, typename Ret>Ret at(xsize idx) const
+    {
+    return Convert::from<T>(at(idx));
+    }
+
 private:
   JSArguments();
   ~JSArguments();
@@ -116,6 +121,11 @@ public:
     {
     }
 
+  template <typename T, typename Ret>Ret at(xsize idx) const
+    {
+    return Convert::from<T>(at(idx));
+    }
+
   Value at(xsize idx) const;
   xsize length() const;
 
@@ -133,6 +143,72 @@ public:
     }
 
   Object calleeThis();
+  };
+
+template <typename In, typename Out> struct ConvertArg
+  {
+  static Out conv(In &a)
+    {
+    return (Out)a;
+    }
+  };
+
+template <typename In> struct ConvertArg<In, In>
+  {
+  static In &conv(In &a)
+    {
+    return a;
+    }
+  };
+
+template <typename In> struct ConvertArg<const In &, In>
+  {
+  static In conv(const In &a)
+    {
+    return a;
+    }
+  };
+
+template <typename In> struct ConvertArg<In, In*>
+  {
+  static In *conv(In &a)
+    {
+    return &a;
+    }
+  };
+
+class ReflectArguments
+  {
+public:
+  void* ths;
+  QVariant* args;
+  xsize argCount;
+  QVariant *result;
+
+  template <typename T, typename Ret>Ret at(xsize idx) const
+    {
+    typedef typename std::remove_reference<T>::type NoRefType;
+    typedef typename std::remove_const<NoRefType>::type NoConstNoRefType;
+
+    xAssert(idx < argCount);
+    T thing = args[idx].value<Ret>();
+
+    return ConvertArg<T, Ret>::conv(thing);
+    }
+  xsize length() const
+    {
+    return argCount;
+    }
+
+  void setReturnValue(const QVariant& val)
+    {
+    *result = val;
+    }
+
+  template <typename T> T* calleeThis()
+    {
+    return static_cast<T*>(ths);
+    }
   };
 }
 

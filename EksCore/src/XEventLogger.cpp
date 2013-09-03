@@ -1,156 +1,285 @@
 #include "XEventLogger"
+#include "QtCore/QThreadStorage"
+#include "QtCore/QThread"
+#include "XCore"
+#include "XStringSimple"
 
-#ifdef X_ENABLE_EVENT_LOGGING
-
-void XEventManager::totalAvailableTime(XTime &min, XTime &max)
+bool loggingEnabled()
   {
-  min = XTime();
-  max = XTime();
-  bool init = false;
-  XEventLoggerInternal *e = firstEvent();
-  while(e)
+  return false;
+  }
+
+namespace Eks
+{
+
+EventLocation::EventLocation(const CodeLocation &l, const char *data)
+  {
+  xAssert(Core::eventLogger());
+  Core::eventLogger()->createLocation(this, l, data);
+  }
+
+ThreadEventLogger::ThreadEventLogger(QThread *t, Eks::AllocatorBase *alloc)
+    : _primaryVector(alloc),
+      _secondaryVector(alloc)
+  {
+  _thread = t;
+  _allocator = alloc;
+  _currentID = 0;
+
+  _events = &_primaryVector;
+  _availableEvents = &_secondaryVector;
+  }
+
+ThreadEventLogger::~ThreadEventLogger()
+  {
+  }
+
+void *ThreadEventLogger::operator new(size_t, void *w)
+  {
+  return w;
+  }
+
+void ThreadEventLogger::operator delete(void *, void *)
+  {
+  xAssertFail();
+  }
+
+void ThreadEventLogger::operator delete(void* ptr)
+  {
+  auto a = Core::eventLogger()->deleteThread(static_cast<ThreadEventLogger*>(ptr));
+
+  a->free(ptr);
+  }
+
+ThreadEventLogger::EventID ThreadEventLogger::beginDurationEvent(const EventLocation::ID location)
+  {
+  if(!loggingEnabled())
     {
-    if(e->used() > 0)
+    return 0;
+    }
+
+  xAssert(_currentID < X_SIZE_SENTINEL);
+
+  xsize id = _currentID++;
+  addItem(EventType::Begin, location, id);
+
+  return id;
+  }
+
+void ThreadEventLogger::endDurationEvent(EventID id)
+  {
+  if(!loggingEnabled())
+    {
+    return;
+    }
+
+  addItem(EventType::End, X_UINT32_SENTINEL, id);
+
+  if(id == (_currentID - 1))
+    {
+    --_currentID;
+    }
+  }
+
+void ThreadEventLogger::momentEvent(const EventLocation::ID loc)
+  {
+  if(!loggingEnabled())
+    {
+    return;
+    }
+
+  addItem(EventType::Moment, loc, X_SIZE_SENTINEL);
+  }
+
+ThreadEventLogger::EventVector *ThreadEventLogger::swapEventVector(EventVector *vec)
+  {
+  auto i = _events.exchange(vec);
+  return i;
+  }
+
+ThreadEventLogger::EventVector *ThreadEventLogger::getAvailableEvents()
+  {
+  return _availableEvents;
+  }
+
+void ThreadEventLogger::setAvailableEvents(EventVector *e)
+  {
+  xAssert(e);
+  _availableEvents = e;
+  }
+
+void ThreadEventLogger::addItem(EventType type, const EventLocation::ID d, xsize id)
+  {
+  auto locked = _events.exchange(0);
+  // at this point _events may be written over,
+  // we must ignore any value in there until we put back our value.
+
+  xAssert(locked);
+
+  locked->resize(locked->size() + 1);
+
+  auto &item = locked->back();
+  item.time = Time::now();
+  item.type = type;
+  item.id = id;
+  item.location = d;
+
+  // spin to ensure we set correctly,
+  // below if syncing we swap the vector out
+  // and put it back if zero.
+  _events.exchange(locked);
+  }
+
+class EventLogger::Impl
+  {
+public:
+  Eks::AllocatorBase *_allocator;
+  EventLogger::Watcher *_watcher;
+  QThreadStorage<ThreadEventLogger*> _logger;
+
+  std::atomic_flag _locationLock;
+  EventLogger::EventLocationVector _locations;
+  EventLocation::ID _locationID;
+
+  std::atomic_flag _loggerLock;
+  ThreadEventLogger *_lastLogger;
+  };
+
+EventLogger::EventLogger(Eks::AllocatorBase *allocator)
+  {
+  _impl = allocator->createUnique<Impl>();
+  _impl->_allocator = allocator;
+  _impl->_lastLogger = 0;
+  _impl->_loggerLock.clear();
+  _impl->_locationLock.clear();
+
+  _impl->_locationID = 0;
+
+  _impl->_watcher = 0;
+  }
+
+EventLogger::~EventLogger()
+  {
+  }
+
+ThreadEventLogger *EventLogger::threadLogger()
+  {
+  if(!_impl->_logger.hasLocalData())
+    {
+    ThreadEventLogger *logger =
+        _impl->_allocator->create<ThreadEventLogger>(
+          QThread::currentThread(),
+          _impl->_allocator);
+    _impl->_logger.setLocalData(logger);
+
+    logger->setNext(_impl->_lastLogger);
+    _impl->_lastLogger = logger;
+    }
+
+  return _impl->_logger.localData();
+  }
+
+void EventLogger::setEventWatcher(Watcher *w)
+  {
+  xAssert(!_impl->_watcher || !w);
+  _impl->_watcher = w;
+  }
+
+void EventLogger::createLocation(EventLocation *loc, const CodeLocation &locData, const char *data)
+  {
+  while (_impl->_locationLock.test_and_set(std::memory_order_acquire)) ; // spin
+  loc->setId(_impl->_locationID++);
+
+  LocationReference ref = { loc->id(), locData.file(), locData.line(), locData.function(), data };
+
+  _impl->_locations << ref;
+  _impl->_locationLock.clear(std::memory_order_release);
+  }
+
+void EventLogger::syncCachedEvents()
+  {
+  if(_impl->_watcher)
+    {
+    while (_impl->_locationLock.test_and_set(std::memory_order_acquire)) ; // spin
+
+    if(_impl->_locations.size())
       {
-      const void *data = e->at(0);
-      xAssert(data);
-      const XTime *t = (const XTime *)data;
-
-      if(*t < min || init == false)
-        {
-        min = *t;
-        }
-
-      data = e->last();
-      xAssert(data);
-      t = (XTime *)data;
-
-      if(*t > max || init == false)
-        {
-        max = *t;
-        }
-
-      if(init == false)
-        {
-        init = true;
-        }
+      _impl->_watcher->onLocations(_impl->_locations);
+      _impl->_locations.clear();
       }
 
-    e = e->next;
+    _impl->_locationLock.clear(std::memory_order_release);
     }
+
+  while (_impl->_loggerLock.test_and_set(std::memory_order_acquire)) ; // spin
+
+  auto w = _impl->_lastLogger;
+  while(w)
+    {
+    ThreadEventLogger::EventVector *availableEvents = w->getAvailableEvents();
+    xAssert(availableEvents);
+    xAssert(availableEvents->isEmpty());
+    
+    auto vec = w->swapEventVector(availableEvents);
+
+    // if there is no vector, its locked for writing, continue,
+    // assume our vector is cleared in a sec, dont write over the memory,
+    // as it may already be cleared.
+    if(!vec)
+      {
+      xAssert(availableEvents->isEmpty());
+      continue;
+      }
+
+    xAssert(vec != availableEvents || vec->size() == 0);
+    w->setAvailableEvents(vec);
+
+    if(_impl->_watcher && vec->size())
+      {
+      _impl->_watcher->onEvents(w->thread(), *vec);
+      }
+
+    vec->clear();
+
+    w = w->next();
+    }
+
+  _impl->_loggerLock.clear(std::memory_order_release);
   }
 
-XEventLoggerInternal *g_firstEvent = 0;
-XEventLoggerInternal *XEventManager::firstEvent()
+Eks::AllocatorBase *EventLogger::deleteThread(ThreadEventLogger *t)
   {
-  return g_firstEvent;
+  while (_impl->_loggerLock.test_and_set(std::memory_order_acquire)) ; // spin
+
+  auto w = &_impl->_lastLogger;
+  while(*w)
+    {
+    if(*w == t)
+      {
+      (*w) = (*w)->next();
+      break;
+      }
+
+    *w = (*w)->next();
+    }
+
+  _impl->_loggerLock.clear(std::memory_order_release);
+
+  return _impl->_allocator;
   }
 
-void XEventManager::addEvent(XEventLoggerInternal *e)
+#if X_EVENT_LOGGING_ENABLED
+
+ScopedEvent::ScopedEvent(const EventLocation *loc)
   {
-  xAssert(e->next == 0); // double add?
-  e->next = g_firstEvent;
-  g_firstEvent = e;
+  auto locationId = loc->id();
+  _id = Core::eventLogger()->threadLogger()->beginDurationEvent(locationId);
   }
 
-XEventLoggerInternal::XEventLoggerInternal(const char *n, int t, xsize s, xsize c, const char *units)
-    : name(n), units(units), type(t), size(s), count(c), next(0), firstData(0), nextData(data)
+ScopedEvent::~ScopedEvent()
   {
-  XEventManager::addEvent(this);
-  }
-
-
-xsize XEventLoggerInternal::used() const
-  {
-  if(firstData == 0)
-    {
-    return 0;
-    }
-
-  if(nextData == firstData)
-    {
-    return count;
-    }
-
-  return (nextData - firstData) / size;
-  }
-
-const void *XEventLoggerInternal::at(xsize index) const
-  {
-  xAssert(firstData);
-  xuint8 *d = firstData + (index * size);
-
-  const xsize s = (count * size);
-  if(d > (data + s))
-    {
-    d -= s;
-    }
-
-  return d;
-  }
-
-const void *XEventLoggerInternal::dataAt(xsize index) const
-  {
-  const void *d = at(index);
-  if(d)
-    {
-    d = (xuint8*)d + sizeof(XTime);
-    }
-
-  return d;
-  }
-
-const void *XEventLoggerInternal::last() const
-  {
-  if(firstData == 0)
-    {
-    return 0;
-    }
-
-  xuint8 *p = nextData - size;
-  if(p < data)
-    {
-    p += (used() * size);
-    }
-
-  return p;
-  }
-
-void *XEventLoggerInternal::last()
-  {
-  if(firstData == 0)
-    {
-    return 0;
-    }
-
-  xuint8 *p = nextData - size;
-  if(p < data)
-    {
-    p += (used() * size);
-    }
-
-  return p;
-  }
-
-void XEventLoggerInternal::add()
-  {
-  bool syncFirst = nextData == firstData;
-
-  if(!firstData)
-    {
-    firstData = data;
-    }
-
-  nextData += size;
-  if(nextData > (data + count * size))
-    {
-    nextData = data;
-    }
-
-  if(syncFirst)
-    {
-    firstData = nextData;
-    }
+  Core::eventLogger()->threadLogger()->endDurationEvent(_id);
   }
 
 #endif
+}

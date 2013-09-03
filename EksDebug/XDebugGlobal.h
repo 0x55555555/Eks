@@ -1,0 +1,14 @@
+#ifndef EKSDEBUG_GLOBAL_H
+#define EKSDEBUG_GLOBAL_H
+
+#include "XGlobal"
+
+#if defined(EKSDEBUG_BUILD)
+#  define EKSDEBUG_EXPORT Q_DECL_EXPORT
+#else
+#  define EKSDEBUG_EXPORT Q_DECL_IMPORT
+#endif
+
+#define X_ENABLE_APPLICATION_DEBUGGING
+
+#endif // EKSDEBUG_GLOBAL_H

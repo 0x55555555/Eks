@@ -19,7 +19,6 @@ win32 {
 SOURCES += \
     ../src/XFileSequence.cpp \
     ../src/XTime.cpp \
-    ../src/XProfiler.cpp \
     ../src/XUnorderedMap.cpp \
     ../src/XEventLogger.cpp \
     ../src/XBucketAllocator.cpp \
@@ -41,7 +40,6 @@ HEADERS += \
     ../XColour \
     ../XQuaternion \
     ../XFileSequence \
-    ../XShared \
     ../XFlags \
     ../XWeakShared \
     ../XTime \
@@ -164,7 +162,8 @@ HEADERS += \
     ../QtHelper/XQWidget \
     ../QtHelper/XQApplication \
     ../QtHelper/XQWidgets \
-    ../XFrame
+    ../XFrame \
+    ../XSharedPointer
 
 
 

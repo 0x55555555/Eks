@@ -5,6 +5,7 @@
 #include "XAssert"
 #include "XAllocatorBase"
 #include "XTypedAllocator"
+#include "XResourceDescription"
 #include <algorithm>
 
 namespace Eks
@@ -18,13 +19,13 @@ template <typename T, xsize Size, typename Alloc> class VectorStorage : public A
 public:
   VectorStorage(const Alloc& a)
       : Alloc(a),
-        _first(data),
-        _last(data+Size),
-        _end(data)
+        _first(reinterpret_cast<T*>(data)),
+        _last(_first+Size),
+        _end(_first)
     {
     }
 
-  bool isUsingEmbeddedStorage() const { return _first == data; }
+  bool isUsingEmbeddedStorage() const { return _first == reinterpret_cast<const T*>(data); }
 
   // the first member of the vector
   T *_first;
@@ -34,7 +35,7 @@ public:
   T *_end;
 
 private:
-  T data[Size];
+  typename ResourceDescriptionTypeHelper<T>::Storage data[Size];
   };
 
 template <typename T, typename Alloc> class VectorStorage<T, 0, Alloc> : public Alloc
@@ -174,7 +175,7 @@ public:
 
   ThisType& operator<<(T &&t)
     {
-    pushBack(t);
+    pushBack(std::move(t));
     return *this;
     }
 
@@ -235,7 +236,7 @@ public:
 
     T *newData = ThisBase::allocate(newBestCapacity, AlignmentOf<T>::Alignment);
 
-    move(newData, newData+s, ThisBase::_first);
+    moveConstruct(newData, newData+s, ThisBase::_first);
 
     // destroy the old data
     for(size_type i = 0; i < s; ++i)
@@ -272,8 +273,8 @@ public:
       {
       T *newData = ThisBase::allocate(newCapacity);
 
-      // copy the new elements
-      copy(newData, newData+s, ThisBase::_first);
+      // move the new elements
+      move(newData, newData+s, ThisBase::_first);
 
       // destroy the old data
       for(size_type i = 0; i < s; ++i)
@@ -297,29 +298,25 @@ public:
       }
     }
 
-  void resize(size_type newSize, const T &val = T())
+  void resize(size_type newSize, const T &val)
     {
-    size_type s = size();
-
-    // destroy extra members
-    for(size_type i = newSize; i < s; ++i)
-      {
-      destroy(&at(i));
-      }
-
-    // adjust the end
-    ThisBase::_end = ThisBase::_first + xMin(s, newSize);
-
-    // now expand, copying the needed members
-    reserve(newSize);
-
-    // adjust the new end
-    ThisBase::_end = ThisBase::_first + newSize;
+    size_type oldSize = resizeBase(newSize);
 
     // construct the extra members
-    for(size_type i = s; i < newSize; ++i)
+    for(size_type i = oldSize; i < newSize; ++i)
       {
       construct(&at(i), val);
+      }
+    }
+
+  void resize(size_type newSize)
+    {
+    size_type oldSize = resizeBase(newSize);
+
+    // construct the extra members
+    for(size_type i = oldSize; i < newSize; ++i)
+      {
+      construct(&at(i), T());
       }
     }
 
@@ -414,15 +411,18 @@ public:
     return indexOf(t) != X_SIZE_SENTINEL;
     }
 
-  void popBack()
+  T popBack()
     {
     xAssert(ThisBase::_end);
 
     --ThisBase::_end;
 
+    T bck = std::move(*ThisBase::_end);
+
     // destroy extra member
     destroy(ThisBase::_end);
 
+    return bck;
     }
 
   void pushBack(const T &t)
@@ -438,7 +438,7 @@ public:
     ThisBase::_end++;
     }
 
-  void pushBack(const T &&t)
+  void pushBack(T &&t)
     {
     const size_type s = size();
     if(s == capacity())
@@ -447,8 +447,14 @@ public:
       }
 
     xAssert(ThisBase::_end < ThisBase::_last);
-    construct(ThisBase::_end, t);
+    construct(ThisBase::_end, std::move(t));
     ThisBase::_end++;
+    }
+
+  T &createBack()
+    {
+    pushBack(T());
+    return back();
     }
 
   template <typename X> void append(X vals, size_type count)
@@ -596,9 +602,47 @@ public:
         {
         i = remove(i);
         e = end();
+
+        if(i == e)
+          {
+          break;
+          }
         }
       }
     }
+
+private:
+  size_type resizeBase(size_type newSize)
+    {
+    size_type s = size();
+
+    // destroy extra members
+    for(size_type i = newSize; i < s; ++i)
+      {
+      destroy(&at(i));
+      }
+
+    // adjust the end
+    ThisBase::_end = ThisBase::_first + xMin(s, newSize);
+
+    // now expand, copying the needed members
+    reserve(newSize);
+
+    // adjust the new end
+    ThisBase::_end = ThisBase::_first + newSize;
+
+    return s;
+    }
+
+  template <typename X>
+      void moveConstruct(const iterator &begin, const iterator &end, X from)
+    {
+    for(iterator it = begin; it != end; ++it, ++from)
+      {
+      new(&(*it)) T(std::move(*from));
+      }
+    }
+
   };
 
 namespace detail
@@ -625,7 +669,8 @@ xCompileTimeAssert(sizeof(Vector <int, 6, TypedAllocator<int> >)
 #include "QtCore/QTextStream"
 #include "QtCore/QDataStream"
 
-template <typename T> QTextStream &operator>>(QTextStream &str, Eks::Vector<T> &vec)
+template <typename T, xsize S, typename A>
+    QTextStream &operator>>(QTextStream &str, Eks::Vector<T, S, A> &vec)
   {
   xuint64 size = 0;
   str >> size;
@@ -638,7 +683,8 @@ template <typename T> QTextStream &operator>>(QTextStream &str, Eks::Vector<T> &
   return str;
   }
 
-template <typename T> QTextStream &operator<<(QTextStream &str, const Eks::Vector<T> &vec)
+template <typename T, xsize S, typename A>
+    QTextStream &operator<<(QTextStream &str, const Eks::Vector<T, S, A> &vec)
   {
   str << (xuint64)vec.length() << " ";
 
@@ -649,7 +695,8 @@ template <typename T> QTextStream &operator<<(QTextStream &str, const Eks::Vecto
   return str;
   }
 
-template <typename T> QDataStream &operator>>(QDataStream &str, Eks::Vector<T> &vec)
+template <typename T, xsize S, typename A>
+    QDataStream &operator>>(QDataStream &str, Eks::Vector<T, S, A> &vec)
   {
   xuint64 size = 0;
   str >> size;
@@ -664,7 +711,8 @@ template <typename T> QDataStream &operator>>(QDataStream &str, Eks::Vector<T> &
   return str;
   }
 
-template <typename T> QDataStream &operator<<(QDataStream &str, const Eks::Vector<T> &vec)
+template <typename T, xsize S, typename A>
+    QDataStream &operator<<(QDataStream &str, const Eks::Vector<T, S, A> &vec)
   {
   str << (xuint64)vec.length();
 

@@ -3,6 +3,8 @@
 #include "XInterface.h"
 #include "XScriptConstructors.h"
 
+Q_DECLARE_METATYPE(QIODevice::OpenMode)
+
 namespace XScript
 {
 namespace Convert

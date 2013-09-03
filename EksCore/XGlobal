@@ -41,13 +41,17 @@
 # define X_ASSERTS_ENABLED 1
 
 # ifndef X_ARCH_ARM
+#  define X_EVENT_LOGGING_ENABLED 1
+
 #  define X_PROFILING_ENABLED
-#  define X_ENABLE_EVENT_LOGGING
 #  define X_ENABLE_HEAP_CHECK
 # endif
 
 #endif
 
+#ifndef X_EVENT_LOGGING_ENABLED
+# define X_EVENT_LOGGING_ENABLED 0
+#endif
 
 #ifdef X_ENABLE_HEAP_CHECK
 # define X_HEAP_CHECK { xAssert(_heapchk() == _HEAPOK); xAssert(_CrtCheckMemory()); }
@@ -107,8 +111,10 @@ typedef unsigned long long xuint64; /* 64 bit unsigned */
 #define X_UINT32_SENTINEL ((xuint32)-1)
 #define X_UINT16_SENTINEL ((xuint16)-1)
 #define X_UINT8_SENTINEL ((xuint8)-1)
-#define X_INT16_MAX (32767)
-#define X_INT16_MIN (-32768)
+#define X_INT16_MAX ((xint16)32767)
+#define X_INT16_MIN ((xint16)-32768)
+#define X_INT64_MAX (X_INT64_C(9223372036854775807))
+#define X_INT64_MIN (X_INT64_C(-9223372036854775808))
 
 #ifdef X_CPPOX_OVERRIDE_SUPPORT
 # define X_OVERRIDE override
@@ -126,7 +132,9 @@ typedef unsigned long long xuint64; /* 64 bit unsigned */
 
 inline void xNoop() { }
 
-#define X_CONST_EXPR Q_DECL_CONSTEXPR
+#define X_HACK(level, why, suggestion)
+
+#define X_CONST_EXPR //Q_DECL_CONSTEXPR
 
 #define X_ARRAY_COUNT(x) (sizeof(x)/sizeof(x[0]))
 
