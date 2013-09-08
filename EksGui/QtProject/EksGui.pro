@@ -28,7 +28,7 @@ HEADERS += \
 
 LIBS += -lEksCore
 
-INCLUDEPATH += $$ROOT/Eks/EksCore \
+INCLUDEPATH += $$ROOT/Eks/EksCore/include \
     ../
 
 

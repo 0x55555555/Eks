@@ -25,5 +25,5 @@ FORMS    +=
 
 LIBS += -lEksCore -lEksDebug
 
-INCLUDEPATH += $$ROOT/Eks/EksCore \
+INCLUDEPATH += $$ROOT/Eks/EksCore/include \
         $$ROOT/Eks/EksDebug
