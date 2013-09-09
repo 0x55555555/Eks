@@ -1,22 +1,20 @@
 import qbs 1.0
 import "Utils.js" as Utils;
 
-DynamicLibrary {
+Base {
+    type: "dynamiclibrary"
     property bool debug: qbs.buildVariant == "debug"
 
     Depends { name: "cpp" }
     files: [ "include/**/*", "src/**/*" ]
+    cpp.includePaths: ["include"]
+
+    moduleSearchPaths: toRoot
 
     /*Group {
 
         condition: qbs.buildVariant == "debug"
     }*/
-
-    root: "../"
-    thisRoot: {
-        print(buildDirectory);
-        throw "PORK";
-    }
 
     property var commonDefines: [ name.toUpperCase() + "_BUILD" ]
     Properties {
