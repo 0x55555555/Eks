@@ -2,12 +2,14 @@ import qbs 1.0
 import "Utils.js" as Utils;
 
 Base {
-    type: "dynamiclibrary"
     property bool debug: qbs.buildVariant == "debug"
+    property bool staticLib: false
+
+    type: staticLib ? "staticlibrary" : "dynamiclibrary"
 
     Depends { name: "cpp" }
     files: [ "include/**/*", "src/**/*" ]
-    cpp.includePaths: ["include"]
+    //cpp.includePaths: base.concat( [ "include" ] )
 
     moduleSearchPaths: toRoot
 

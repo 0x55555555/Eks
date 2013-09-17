@@ -1,3 +1,4 @@
+#include "XGlobal"
 #include "XVector4DWidget"
 #include "XFloatWidget"
 #include "QtHelper/XQWidgets"

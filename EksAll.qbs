@@ -6,7 +6,7 @@ Eks.SubModule {
     references: [
         "EksCore/EksCore.qbs",
         "EksGui/EksGui.qbs",
-        "Eks3D/Eks3D.qbs",
-        "EksDebug/EksDebug.qbs"
+        //"Eks3D/Eks3D.qbs",
+        //"EksDebug/EksDebug.qbs"
     ]
 }

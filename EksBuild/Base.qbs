@@ -6,5 +6,5 @@ Product {
 
     moduleSearchPaths: toRoot
 
-    property var commonDefines: [ name.toUpperCase() + "_BUILD" ]
+    properaty var commonDefines: [ name.toUpperCase() + "_BUILD" ]
 }
