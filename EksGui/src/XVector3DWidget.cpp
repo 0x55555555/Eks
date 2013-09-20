@@ -1,5 +1,5 @@
-#include "XVector3DWidget"
-#include "XFloatWidget"
+#include "XVector3DWidget.h"
+#include "XFloatWidget.h"
 #include "QtHelper/XQWidgets"
 #include "QKeyEvent"
 

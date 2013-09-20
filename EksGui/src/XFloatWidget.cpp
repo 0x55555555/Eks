@@ -1,4 +1,4 @@
-#include "XFloatWidget"
+#include "XFloatWidget.h"
 #include "QtHelper/XQWidgets"
 #include "math.h"
 

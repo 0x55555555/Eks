@@ -1,12 +1,12 @@
 import "../EksBuild" as Eks;
 
 Eks.Library {
-    name: "EksDebug"
-    toRoot: "../../"
+  name: "EksDebug"
+  toRoot: "../../"
 
-    Depends { name: "Qt.network" }
+  Depends { name: "Qt.network" }
 
-    Export {
-        cpp.includePaths: ["include"]
-    }
+  Export {
+    cpp.includePaths: ["include"]
+  }
 }

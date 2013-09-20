@@ -1,7 +1,7 @@
 #ifndef COLOURWIDGET_H
 #define COLOURWIDGET_H
 
-#include "XGuiGlobal"
+#include "XGuiGlobal.h"
 #include "QtHelper/XQWidget"
 #include "XColour"
 #include "XMathVector"

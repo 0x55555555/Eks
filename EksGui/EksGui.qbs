@@ -1,27 +1,30 @@
-import qbs 1.0
-//import "../EksBuild" as Eks;
+import "../EksBuild" as Eks;
 
-DynamicLibrary {
-    name: "EksGui"
-    //toRoot: "../../"
+Eks.Library {
+  name: "EksGui"
+  toRoot: "../../"
 
-    Depends { name: "cpp" }
-    files: [ "include/**/*", "src/**/*" ]
+  files: [ "include/**/*", "src/**/*" ]
+
+  Depends {
+    name: "EksCore"
+  }
+
+  Depends {
+    name: "Qt"
+    submodules: [ "gui", "widgets" ]
+  }
+
+  Export {
+    cpp.includePaths: ["include"]
 
     Depends {
-        name: "EksCore"
+      name: "EksCore"
     }
 
-    /*Export {
-        cpp.includePaths: ["include"]
-
-        Depends {
-            name: "EksCore"
-        }
-
-        Depends {
-            name: "Qt"
-            submodules: [ "gui", "widgets" ]
-        }
-    }*/
+    Depends {
+      name: "Qt"
+      submodules: [ "gui", "widgets" ]
+    }
+}
 }

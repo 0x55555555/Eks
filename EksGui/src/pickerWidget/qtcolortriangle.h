@@ -47,7 +47,7 @@
 #ifndef QTCOLORTRIANGLE_H
 #define QTCOLORTRIANGLE_H
 
-#include "XGuiGlobal"
+#include "XGuiGlobal.h"
 #include <QtGui/QImage>
 #include "QtHelper/XQWidget"
 

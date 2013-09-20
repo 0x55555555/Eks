@@ -1,7 +1,7 @@
 #ifndef FLOATWIDGET_H
 #define FLOATWIDGET_H
 
-#include "XGuiGlobal"
+#include "XGuiGlobal.h"
 #include "QtHelper/XQWidget"
 
 class QHBoxLayout;

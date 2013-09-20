@@ -1,7 +1,7 @@
 #ifndef VECTOR4DWIDGET_H
 #define VECTOR4DWIDGET_H
 
-#include "XGuiGlobal"
+#include "XGuiGlobal.h"
 #include "QtHelper/XQWidget"
 #include "XMathVector"
 

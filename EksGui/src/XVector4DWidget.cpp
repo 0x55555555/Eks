@@ -1,6 +1,6 @@
 #include "XGlobal"
-#include "XVector4DWidget"
-#include "XFloatWidget"
+#include "XVector4DWidget.h"
+#include "XFloatWidget.h"
 #include "QtHelper/XQWidgets"
 #include "QKeyEvent"
 
