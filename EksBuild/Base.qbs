@@ -12,8 +12,6 @@ Product {
 
   cpp.treatWarningsAsErrors: true
 
-  moduleSearchPaths: toRoot
-
   property var commonDefines: [ name.toUpperCase() + "_BUILD" ]
   Properties {
     condition: debug

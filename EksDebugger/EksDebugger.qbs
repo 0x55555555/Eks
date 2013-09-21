@@ -6,7 +6,8 @@ Eks.Application {
 
   files: [ "*.h", "*.cpp" ]
 
-  Depends { name: "Qt.network" }
+  Depends { name: "Qt.widgets" }
+  Depends { name: "Qt.gui" }
 
   Depends { name: "EksCore" }
   Depends { name: "EksDebug" }

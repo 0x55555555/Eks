@@ -2,6 +2,7 @@ import "EksBuild" as Eks;
 
 Eks.SubModule {
     name: "Eks"
+    toRoot: "../"
 
     references: [
         "EksCore/EksCore.qbs",

@@ -6,9 +6,11 @@ Eks.Library {
 
   property var engines: [ ] // [ "Dart", "Javascript" ]
 
-  files: [ "*.h", "*.cpp" ]
+  files: [ "*.h", "*.cpp", "Engines/*" ]
 
   Depends { name: "Qt.network" }
+  Depends { name: "Qt.widgets" }
+  Depends { name: "Qt.gui" }
 
   Depends { name: "EksCore" }
 
@@ -27,7 +29,6 @@ Eks.Library {
       "libdart_vm",
       "libjscre"
     ] )
-    files: [ "Engines/*Dart*" ]
   }
 
   Group {
@@ -35,8 +36,6 @@ Eks.Library {
     condition: engines.indexOf("Javascript") != -1
 
     cpp.defines: base.concat( [ "X_SCRIPT_ENGINE_ENABLE_JAVASCRIPT" ] )
-
-    files: [ "Engines/*Javascript*" ]
   }
 
   Export {
