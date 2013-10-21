@@ -6,7 +6,9 @@ SUBDIRS = EksCore/QtProject/EksCore.pro \
           Eks3D/QtProject/Eks3D.pro \
           EksScript/EksScript.pro \
           EksDebug \
-          EksDebugger
+          EksDebugger \
+          EksReflex \
+          EksReflex\test\EksReflexTest.pro
 
 
 !minimal_eks {
