@@ -1,5 +1,8 @@
 #include "XReflex.h"
 
+namespace Eks
+{
+
 namespace Reflex
 {
 
@@ -20,11 +23,14 @@ const Type *findEmbeddedType(EmbeddedType t)
     TYPE(bool),
     TYPE(int),
     TYPE(float),
+    TYPE(double),
   };
 
   return &(embedded[t]);
 #undef TYPE
   }
+
+}
 
 }
 
