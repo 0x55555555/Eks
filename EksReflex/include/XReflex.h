@@ -50,53 +50,50 @@ EMBEDDED_TYPE(double)
 
 #undef EMBEDDED_TYPE
 
-template <typename ArgTuple> class ArgumentHelper
-  {
-public:
-  template <typename Inv, typename... Unpacked> static void invoke(Inv &i)
-    {
-    typedef build_indices<std::tuple_size<ArgTuple>::value> indices;
-
-    invokeImpl(i, indices());
-    }
-
-private:
-  template <xsize... Is> struct indices { };
-  template <xsize N, xsize... Is> struct build_indices : build_indices<N-1, N-1, Is...> { };
-  template <xsize... Is> struct build_indices<0, Is...> : indices<Is...> { };
-
-  template <typename Inv, typename xsize... Indices> static void invokeImpl(
-        Inv &i,
-        indices<Indices...>)
-    {
-    i(i.unpack<Indices>()...);
-    }
-  };
-
 template <typename InvHelper, typename FunctionHelper, typename FunctionHelper::Signature Fn>
     struct CallHelper
   {
-  static void functionWrap(typename InvHelper::CallData data)
-    {
-    CallHelper callHelper{ data };
+  typedef typename InvHelper::CallData CallerData;
 
-    detail::ArgumentHelper<FunctionHelper::Arguments>::invoke<CallHelper>(callHelper);
+  static void call(CallerData data)
+    {
+    typedef BuildIndices<std::tuple_size<typename FunctionHelper::Arguments>::value> IndicesForFunction;
+
+    typedef ReturnDispatch<typename FunctionHelper::ReturnType> Dispatch;
+
+    Dispatch::call(data, IndicesForFunction());
     }
 
+private:
+  template <xsize... Is> struct Indices { };
+  template <xsize N, xsize... Is> struct BuildIndices : BuildIndices<N-1, N-1, Is...> { };
+  template <xsize... Is> struct BuildIndices<0, Is...> : Indices<Is...> { };
+
+  template <typename T> struct ReturnDispatch
+    {
+    template <typename xsize... Idx> static void call(CallerData data, Indices<Idx...>)
+      {
+      auto ths = InvHelper::getThis<FunctionHelper::Class*>(data);
+      auto result = FunctionHelper::call<Fn>(ths, unpack<Idx>(data)...);
+
+      InvHelper::packReturn<typename FunctionHelper::ReturnType>(data, result);
+      }
+    };
+
+  template <> struct ReturnDispatch<void>
+    {
+    template <typename xsize... Idx> static void call(CallerData data, Indices<Idx...>)
+      {
+      auto ths = InvHelper::getThis<FunctionHelper::Class*>(data);
+      FunctionHelper::call<Fn>(ths, unpack<Idx>(data)...);
+      }
+    };
+
   template <xsize Index>
-      typename std::tuple_element<Index, typename FunctionHelper::Arguments>::type unpack()
+      static typename std::tuple_element<Index, typename FunctionHelper::Arguments>::type unpack(CallerData data)
     {
     return InvHelper::unpackArgument<Index, FunctionHelper::Arguments>(data);
     }
-
-  template <typename... Args> void operator()(Args... args)
-    {
-    auto ths = InvHelper::getThis<FunctionHelper::Class*>(data);
-
-    FunctionHelper::call<Fn>(ths, std::forward<Args>(args)...);
-    }
-
-  typename InvHelper::CallData &data;
   };
 
 template <typename FnType> class FunctionHelper;
@@ -149,7 +146,7 @@ template <typename Rt, typename... Args>
   typedef std::tuple<Args...> Arguments;
   typedef ReturnType (*Signature)(Args...);
 
-  template <Signature Fn, typename... Args> static ReturnType call(Class* cls, Args... args)
+  template <Signature Fn, typename... Args> static ReturnType call(Class*, Args... args)
     {
     return Fn(std::forward<Args>(args)...);
     }
@@ -190,7 +187,8 @@ public:
 
   template <typename T> typename T::Signature buildInvocation()
     {
-    return detail::CallHelper<T, Helper, Fn>::functionWrap;
+    typedef detail::CallHelper<T, Helper, Fn> Builder;
+    return T::call<Builder>;
     }
 
 private:
