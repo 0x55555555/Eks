@@ -9,10 +9,15 @@ TEMPLATE = lib
 include("../EksCore/GeneralOptions.pri")
 
 SOURCES += \
-    src/XReflex.cpp
+    src/EmbeddedTypes.cpp
 
 HEADERS += \
-    include/XReflex.h
+    include/Reflex/Type.h \
+    include/Reflex/Function.h \
+    include/Reflex/EmbeddedTypes.h \
+    include/Reflex/Global.h \
+    include/Reflex/BasicBuilder.h \
+    include/Reflex/Class.h
 
 INCLUDEPATH += include/ \
     $$ROOT/Eks/EksCore/include/

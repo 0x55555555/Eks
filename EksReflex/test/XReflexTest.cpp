@@ -1,5 +1,7 @@
 #include "XReflexTest.h"
-#include "XReflex.h"
+#include "Reflex/Function.h"
+#include "Reflex/Class.h"
+#include "Reflex/EmbeddedTypes.h"
 #include <QtTest>
 
 #define FLOAT_VAL 5.0f
