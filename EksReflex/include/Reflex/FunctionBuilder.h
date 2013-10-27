@@ -162,7 +162,7 @@ template <typename Rt, typename... Args>
 ///        typedefing ReflexClass to generate a FunctionWrap.
 ///        Call buildInvocation on this function to build a reflected call
 ///        to the function.
-template <typename FnType, FnType Fn> class FunctionWrap
+template <typename FnType, FnType Fn> class FunctionBuilder
   {
 public:
   typedef detail::FunctionHelper<FnType> Helper;
@@ -186,17 +186,19 @@ public:
   ///        Builder must be a class containing required functions
   ///        to build calls.
   /// \sa    BasicBuilder.h
-  template <typename T> typename T::Signature buildInvocation()
+  template <typename T> typename T::Result buildInvocation() const
     {
     typedef detail::CallHelper<T, Helper, Fn> Builder;
-    return T::call<Builder>;
+    return T::build<Builder>();
     }
 
   /// \internal
   /// \brief Use REFLEX_METHOD and partners to create a FunctionWrap.
-  FunctionWrap(const char* name) : _name(name)
+  FunctionBuilder(const char* name) : _name(name)
     {
     }
+
+  const char* name() const { return _name; }
 
 private:
   const char* _name;
@@ -204,7 +206,7 @@ private:
 
 #define REFLEX_FUNCTION_HELPER(cls) typedef cls ReflexClass
 #define REFLEX_METHOD_PTR(name) & ReflexClass::name
-#define REFLEX_METHOD(name) Eks::Reflex::FunctionWrap<decltype(REFLEX_METHOD_PTR(name)), REFLEX_METHOD_PTR(name)>(#name)
+#define REFLEX_METHOD(name) Eks::Reflex::FunctionBuilder<decltype(REFLEX_METHOD_PTR(name)), REFLEX_METHOD_PTR(name)>(#name)
 
 }
 }

@@ -1,6 +1,7 @@
 #include "XReflexTest.h"
-#include "Reflex/Function.h"
-#include "Reflex/Class.h"
+#include "Reflex/FunctionBuilder.h"
+#include "Reflex/ClassBuilder.h"
+#include "Reflex/NamespaceBuilder.h"
 #include "Reflex/EmbeddedTypes.h"
 #include <QtTest>
 
@@ -74,7 +75,17 @@ public:
     };
   typedef Arguments *CallData;
 
-  typedef void (*Signature)(CallData);
+  struct Result
+    {
+    typedef void (*Signature)(CallData);
+    Signature fn;
+    };
+
+  template <typename Builder> static Result build()
+    {
+    Result r = { call<Builder> };
+    return r;
+    }
 
   template <typename Builder> static void call(CallData data)
     {
@@ -97,6 +108,17 @@ public:
   template <typename Return, typename T> static void packReturn(CallData data, T &&result)
     {
     *(Return*)data->_result = result;
+    }
+  };
+
+class ClassBuilder
+  {
+public:
+  typedef InvocationBuilder::Result Function;
+
+  template <typename Fn> static Function build(const Fn &fn)
+    {
+    return fn.buildInvocation<InvocationBuilder>();
     }
   };
 
@@ -174,9 +196,9 @@ void EksReflexTest::functionInvokeTest()
 
   try
     {
-    inv1(&data1);
-    inv2(&data2);
-    inv3(&data3);
+    inv1.fn(&data1);
+    inv2.fn(&data2);
+    inv3.fn(&data3);
     }
   catch(...)
     {
@@ -188,7 +210,8 @@ void EksReflexTest::functionInvokeTest()
 
 void EksReflexTest::classWrapTest()
   {
-  auto cls = REFLEX_CLASS(A);
+  auto ns = REFLEX_GLOBAL_NAMESPACE("");
+  auto cls = REFLEX_CLASS(ClassBuilder, A, ns);
 
   auto method1 = REFLEX_METHOD(pork1);
   auto method2 = REFLEX_METHOD(pork2);

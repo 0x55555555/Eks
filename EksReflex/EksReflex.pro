@@ -13,11 +13,13 @@ SOURCES += \
 
 HEADERS += \
     include/Reflex/Type.h \
-    include/Reflex/Function.h \
     include/Reflex/EmbeddedTypes.h \
     include/Reflex/Global.h \
     include/Reflex/BasicBuilder.h \
-    include/Reflex/Class.h
+    include/Reflex/FunctionBuilder.h \
+    include/Reflex/ClassBuilder.h \
+    include/Reflex/Symbol.h \
+    include/Reflex/NamespaceBuilder.h
 
 INCLUDEPATH += include/ \
     $$ROOT/Eks/EksCore/include/
