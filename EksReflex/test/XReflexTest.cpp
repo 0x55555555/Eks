@@ -63,6 +63,13 @@ template <> struct TypeResolver<A>
 }
 }
 
+class TestBuilder : public Eks::Reflex::BuilderBase
+  {
+  Symbol lookupSymbol(const char*) X_OVERRIDE;
+
+  Eks::UnorderedMap<Eks::String*, SymbolData> symbols;
+  };
+
 class InvocationBuilder
   {
 public:
@@ -210,7 +217,8 @@ void EksReflexTest::functionInvokeTest()
 
 void EksReflexTest::classWrapTest()
   {
-  auto ns = REFLEX_GLOBAL_NAMESPACE("");
+  auto owner = TestBuilder();
+  auto ns = REFLEX_NAMESPACE("", owner);
   auto cls = REFLEX_CLASS(ClassBuilder, A, ns);
 
   auto method1 = REFLEX_METHOD(pork1);

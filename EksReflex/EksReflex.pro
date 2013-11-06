@@ -9,7 +9,8 @@ TEMPLATE = lib
 include("../EksCore/GeneralOptions.pri")
 
 SOURCES += \
-    src/EmbeddedTypes.cpp
+    src/EmbeddedTypes.cpp \
+    src/NamespaceBuilder.cpp
 
 HEADERS += \
     include/Reflex/Type.h \

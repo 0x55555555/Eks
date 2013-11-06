@@ -1,25 +1,32 @@
 #pragma once
 
 #include "Reflex/Symbol.h"
+#include "XGlobal"
 
 namespace Eks
 {
 namespace Reflex
 {
 
-class NamespaceBuilder
+class BuilderBase
   {
 public:
-  NamespaceBuilder(const char* name, NamespaceBuilder *parent)
-      : _parent(parent),
+  Symbol lookupSymbol(const char*) = 0;
+  };
+
+class NamespaceBuilder : public BuilderBase
+  {
+public:
+  NamespaceBuilder(const char* name, BuilderBase &parent)
+      : _parent(&parent),
         _name(lookupSymbol(name))
     {
     }
 
-  Symbol lookupSymbol(const char*);
+  Symbol lookupSymbol(const char*) X_OVERRIDE;
 
 private:
-  NamespaceBuilder *_parent;
+  BuilderBase *_parent;
   Symbol _name;
   };
 
@@ -27,4 +34,3 @@ private:
 }
 
 #define REFLEX_NAMESPACE(name, parent) Eks::Reflex::NamespaceBuilder(name, parent)
-#define REFLEX_GLOBAL_NAMESPACE(name) REFLEX_NAMESPACE(name, nullptr)

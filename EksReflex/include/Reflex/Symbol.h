@@ -1,5 +1,12 @@
 #pragma once
+#include "XSharedPointer"
 
-class Symbol
+class Symbol : private ConstSharedPointer<SymbolData>
+  {
+public:
+  Symbol();
+  };
+
+class SymbolData : Eks::detail::SharedData
   {
   };
