@@ -3,18 +3,14 @@
 
 #include "XGlobal"
 
-#if WIN32
-#   if defined(EKSGUI_STATIC)
-#       define EKSGUI_EXPORT extern
-#   else
-#       if defined(EKSGUI_BUILD)
-#           define EKSGUI_EXPORT __declspec(dllexport)
-#       else
-#           define EKSGUI_EXPORT __declspec(dllimport)
-#       endif
-#   endif
+#if defined(EKSGUI_STATIC)
+# define EKSGUI_EXPORT extern
 #else
-#   define EKSGUI_EXPORT
+# if defined(EKSGUI_BUILD)
+#  define EKSGUI_EXPORT X_DECL_EXPORT
+# else
+#  define EKSGUI_EXPORT X_DECL_IMPORT
+# endif
 #endif
 
 #endif // WIDGETLIBRARYGLOBAL_H

@@ -11,10 +11,10 @@ namespace Reflex
 class BuilderBase
   {
 public:
-  Symbol lookupSymbol(const char*) = 0;
+  virtual Symbol lookupSymbol(const char*) = 0;
   };
 
-class NamespaceBuilder : public BuilderBase
+class REFLEX_EXPORT NamespaceBuilder : public BuilderBase
   {
 public:
   NamespaceBuilder(const char* name, BuilderBase &parent)

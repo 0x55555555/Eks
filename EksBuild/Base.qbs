@@ -1,9 +1,10 @@
-import qbs 1.0
+import qbs
 
 Product {
   Depends { name: "cpp" }
+  Depends { name: "qbs" }
 
-  property bool debug: cpp.debugInformation
+  property bool debug: true
 
   property string toRoot: ""
 
@@ -20,5 +21,10 @@ Product {
   Properties {
     condition: !debug
     cpp.defines: commonDefines
+  }
+  
+  Properties {
+    condition: true //qbs.toolchain == "msvc"
+	cpp.cxxFlags: base.concat( [ "/FS" ] )
   }
 }

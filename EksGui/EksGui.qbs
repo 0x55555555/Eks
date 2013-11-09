@@ -18,10 +18,8 @@ Eks.Library {
   Export {
     cpp.includePaths: ["include"]
 
-    Depends {
-      name: "EksCore"
-    }
-
+    Depends { name: "cpp" }
+    Depends { name: "EksCore" }	
     Depends {
       name: "Qt"
       submodules: [ "gui", "widgets" ]

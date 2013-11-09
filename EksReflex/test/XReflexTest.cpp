@@ -1,4 +1,5 @@
 #include "XReflexTest.h"
+#include "XUnorderedMap"
 #include "Reflex/FunctionBuilder.h"
 #include "Reflex/ClassBuilder.h"
 #include "Reflex/NamespaceBuilder.h"
@@ -65,9 +66,13 @@ template <> struct TypeResolver<A>
 
 class TestBuilder : public Eks::Reflex::BuilderBase
   {
-  Symbol lookupSymbol(const char*) X_OVERRIDE;
+  Eks::Reflex::Symbol lookupSymbol(const char*) X_OVERRIDE
+    {
+    xAssertFail();
+    return Eks::Reflex::Symbol();
+    }
 
-  Eks::UnorderedMap<Eks::String*, SymbolData> symbols;
+  Eks::UnorderedMap<Eks::String*, Eks::Reflex::SymbolData> symbols;
   };
 
 class InvocationBuilder
