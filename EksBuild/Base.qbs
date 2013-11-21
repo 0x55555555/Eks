@@ -23,8 +23,8 @@ Product {
     cpp.defines: commonDefines
   }
   
-  Properties {
+  /*Properties {
     condition: true //qbs.toolchain == "msvc"
 	cpp.cxxFlags: base.concat( [ "/FS" ] )
-  }
+  }*/
 }

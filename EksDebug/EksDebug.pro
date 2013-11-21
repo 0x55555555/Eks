@@ -12,21 +12,21 @@ TEMPLATE = lib
 include("../EksCore/GeneralOptions.pri")
 
 SOURCES += \
-    XDebugManager.cpp \
-    XDebugInterface.cpp \
-    XDebugLogger.cpp \
-    XDebugManagerImpl.cpp \
-    XDebugController.cpp
+    src/XDebugManager.cpp \
+    src/XDebugInterface.cpp \
+    src/XDebugLogger.cpp \
+    src/XDebugManagerImpl.cpp \
+    src/XDebugController.cpp
 
 HEADERS += \
-    XDebugGlobal.h \
-    XDebugManager.h \
-    XDebugInterface.h \
-    XDebugLogger.h \
-    XDebugManagerImpl.h \
-    XDebugController.h
+    include/XDebugGlobal.h \
+    include/XDebugManager.h \
+    include/XDebugInterface.h \
+    include/XDebugLogger.h \
+    include/XDebugManagerImpl.h \
+    include/XDebugController.h
 
 
 LIBS += -lEksCore
 
-INCLUDEPATH += $$ROOT/Eks/EksCore/include
+INCLUDEPATH += $$ROOT/Eks/EksCore/include $$ROOT/Eks/EksDebug/include

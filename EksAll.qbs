@@ -9,8 +9,8 @@ Eks.SubModule {
         "EksGui/EksGui.qbs",
         "Eks3D/Eks3D.qbs",
         "EksScript/EksScript.qbs",
-        "EksReflex/EksReflex.qbs",
+        //"EksReflex/EksReflex.qbs",
         "EksDebug/EksDebug.qbs",
-        "EksDebugger/EksDebugger.qbs",
+        //"EksDebugger/EksDebugger.qbs",
     ]
 }

@@ -18,17 +18,17 @@ SOURCES += ../src/XFloatWidget.cpp \
     ../src/pickerWidget/qtcolortriangle.cpp
 
 HEADERS += \
-    ../XFloatWidget \
-    ../XVector2DWidget \
-    ../XVector3DWidget \
-    ../XVector4DWidget \
-    ../XColourWidget \
+    ../include/XFloatWidget.h \
+    ../include/XVector2DWidget.h \
+    ../include/XVector3DWidget.h \
+    ../include/XVector4DWidget.h \
+    ../include/XColourWidget.h \
     ../src/pickerWidget/qtcolortriangle.h \
-    ../XGuiGlobal
+    ../include/XGuiGlobal.h
 
 LIBS += -lEksCore
 
 INCLUDEPATH += $$ROOT/Eks/EksCore/include \
-    ../
+    ../include
 
 
