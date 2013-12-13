@@ -1,6 +1,6 @@
 #include "XScriptObject.h"
 #include "XScriptEngine.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 #include "XInterface.h"
 
 namespace XScript

@@ -2,7 +2,7 @@
 #include "XDebugInterface.h"
 #include "XDebugController.h"
 #include "XDebugManagerImpl.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 
 namespace Eks
 {

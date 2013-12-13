@@ -2,17 +2,17 @@
 #define XSCRIPTINTERFACEBASE_H
 
 #include "XScriptGlobal.h"
-#include "XStringSimple"
-#include "XProperty"
-#include "XMacroHelpers"
+#include "Containers/XStringSimple.h"
+#include "Utilities/XProperty.h"
+#include "Utilities/XMacroHelpers.h"
 #include "XScriptFunction.h"
 #include "XInterfaceUtilities.h"
 #include "XConvertToScript.h"
 #include "XScriptObject.h"
 #include "XScriptException.h"
 #include "XFunctions.h"
-#include "XUnorderedMap"
-#include "XStringSimple"
+#include "Containers/XUnorderedMap.h"
+#include "Containers/XStringSimple.h"
 #include <array>
 
 

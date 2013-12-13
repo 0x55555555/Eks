@@ -2,7 +2,7 @@
 #define XSCRIPTSOURCE_H
 
 #include "XScriptGlobal.h"
-#include "XProperty"
+#include "Utilities/XProperty.h"
 #include "QString"
 
 class QFile;

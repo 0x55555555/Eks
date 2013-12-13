@@ -2,8 +2,8 @@
 #define XDEBUGMANAGER_H
 
 #include "XDebugGlobal.h"
-#include "XUniquePointer"
-#include "XCore"
+#include "Memory/XUniquePointer.h"
+#include "XCore.h"
 
 class QIODevice;
 

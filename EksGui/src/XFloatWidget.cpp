@@ -1,5 +1,5 @@
 #include "XFloatWidget.h"
-#include "QtHelper/XQWidgets"
+#include "QtHelper/XQWidgets.h"
 #include "math.h"
 
 #include "QDebug"

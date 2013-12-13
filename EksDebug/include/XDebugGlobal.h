@@ -1,7 +1,7 @@
 #ifndef EKSDEBUG_GLOBAL_H
 #define EKSDEBUG_GLOBAL_H
 
-#include "XGlobal"
+#include "XGlobal.h"
 
 #if defined(EKSDEBUG_BUILD)
 #  define EKSDEBUG_EXPORT Q_DECL_EXPORT

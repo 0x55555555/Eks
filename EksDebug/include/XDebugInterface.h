@@ -2,7 +2,7 @@
 #define XDEBUGINTERFACE_H
 
 #include "XDebugGlobal.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 #include "XDebugManager.h"
 
 class QAbstractItemModel;

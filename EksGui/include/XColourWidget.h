@@ -2,9 +2,9 @@
 #define COLOURWIDGET_H
 
 #include "XGuiGlobal.h"
-#include "QtHelper/XQWidget"
-#include "XColour"
-#include "XMathVector"
+#include "QtHelper/XQWidget.h"
+#include "Math/XColour.h"
+#include "Math/XMathVector.h"
 
 class QVBoxLayout;
 class QHBoxLayout;

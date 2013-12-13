@@ -2,7 +2,7 @@
 #include "XScriptValue.h"
 #include "XScriptFunction.h"
 #include "XConvertFromScript.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 #include "XConvertToScript.h"
 #include "QFile"
 

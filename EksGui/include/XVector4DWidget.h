@@ -2,8 +2,8 @@
 #define VECTOR4DWIDGET_H
 
 #include "XGuiGlobal.h"
-#include "QtHelper/XQWidget"
-#include "XMathVector"
+#include "QtHelper/XQWidget.h"
+#include "Math/XMathVector.h"
 
 class QVBoxLayout;
 class XFloatWidget;

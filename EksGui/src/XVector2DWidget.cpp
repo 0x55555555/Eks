@@ -1,6 +1,6 @@
 #include "XVector2DWidget.h"
 #include "XFloatWidget.h"
-#include "QtHelper/XQWidgets"
+#include "QtHelper/XQWidgets.h"
 #include "QtGui/QKeyEvent"
 
 #include "cmath"

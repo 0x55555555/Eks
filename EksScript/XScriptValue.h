@@ -1,10 +1,10 @@
 #ifndef XSCRIPTVALUE_H
 #define XSCRIPTVALUE_H
 
-#include "XProperty"
+#include "Utilities/XProperty.h"
 #include "XScriptGlobal.h"
 #include "XScriptEngine.h"
-#include "XStringSimple"
+#include "Containers/XStringSimple.h"
 
 class QVariant;
 

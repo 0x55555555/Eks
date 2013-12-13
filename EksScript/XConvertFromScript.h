@@ -1,7 +1,7 @@
 #ifndef XCONVERTFROMSCRIPT_H
 #define XCONVERTFROMSCRIPT_H
 
-#include "XAssert"
+#include "Utilities/XAssert.h"
 #include "XConvert.h"
 #include "XScriptTypeInfo.h"
 #include "XSignatureHelpers.h"

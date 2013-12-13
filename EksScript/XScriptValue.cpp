@@ -1,11 +1,11 @@
 #include "XScriptValue.h"
 #include "XScriptObject.h"
-#include "XUnorderedMap"
+#include "Containers/XUnorderedMap.h"
 #include "QStringList"
 #include "XConvertFromScript.h"
 #include "XConvertToScript.h"
 #include "XInterface.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 
 namespace XScript
 {

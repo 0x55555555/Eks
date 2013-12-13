@@ -56,7 +56,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 #include <QtGui/QPixmap>
-#include "QtHelper/XQWidgets"
+#include "QtHelper/XQWidgets.h"
 
 #include <math.h>
 

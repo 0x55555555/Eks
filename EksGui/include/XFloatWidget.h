@@ -2,7 +2,7 @@
 #define FLOATWIDGET_H
 
 #include "XGuiGlobal.h"
-#include "QtHelper/XQWidget"
+#include "QtHelper/XQWidget.h"
 
 class QHBoxLayout;
 class QDoubleSpinBox;

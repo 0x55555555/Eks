@@ -13,7 +13,7 @@
 #include "QtGui/QFont"
 #include "QtGui/QIcon"
 #include "QtGui/QCursor"
-#include "QtHelper/XQWidgets"
+#include "QtHelper/XQWidgets.h"
 #include "QtGui/QPalette"
 #include "QtGui/QRegion"
 #include "QtCore/QFile"

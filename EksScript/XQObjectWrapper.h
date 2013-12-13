@@ -2,12 +2,12 @@
 #define XQOBJECTWRAPPER_H
 
 #include "XScriptGlobal.h"
-#include "XUnorderedMap"
+#include "Containers/XUnorderedMap.h"
 #include "XInterface.h"
 #include "XInterfaceUtilities.h"
 #include "XScriptObject.h"
 #include "XScriptEngine.h"
-#include "QtHelper/XQWidget"
+#include "QtHelper/XQWidget.h"
 
 namespace XScript
 {

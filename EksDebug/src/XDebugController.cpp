@@ -1,5 +1,5 @@
 #include "XDebugController.h"
-#include "XCore"
+#include "XCore.h"
 #include "QDebug"
 
 

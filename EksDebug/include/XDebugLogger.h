@@ -3,11 +3,11 @@
 
 #include "QtCore/QObject"
 #include "XDebugInterface.h"
-#include "XUniquePointer"
-#include "XEventLogger"
-#include "XUnorderedMap"
-#include "XTemporaryAllocator"
-#include "XTime"
+#include "Memory/XUniquePointer.h"
+#include "Utilities/XEventLogger.h"
+#include "Containers/XUnorderedMap.h"
+#include "Memory/XTemporaryAllocator.h"
+#include "Utilities/XTime.h"
 
 class QStandardItem;
 class QStandardItemModel;

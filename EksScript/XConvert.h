@@ -3,7 +3,7 @@
 
 #include "XScriptTypeInfo.h"
 #include "XScriptValue.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 
 namespace XScript
 {

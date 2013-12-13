@@ -4,7 +4,7 @@
 #include "XScriptException.h"
 #include "XScriptEngine.h"
 #include "XScriptSource.h"
-#include "XAssert"
+#include "Utilities/XAssert.h"
 
 namespace XScript
 {

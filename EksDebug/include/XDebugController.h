@@ -1,7 +1,7 @@
 #ifndef XAPPLICATIONDEBUG_H
 #define XAPPLICATIONDEBUG_H
 
-#include "XVector"
+#include "Containers/XVector.h"
 #include "XDebugGlobal.h"
 #include "XDebugInterface.h"
 

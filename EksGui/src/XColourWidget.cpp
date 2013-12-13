@@ -2,7 +2,7 @@
 #include "pickerWidget/qtcolortriangle.h"
 #include "XVector3DWidget.h"
 #include "XFloatWidget.h"
-#include "QtHelper/XQWidgets"
+#include "QtHelper/XQWidgets.h"
 
 #include "QDebug"
 

@@ -1,7 +1,7 @@
-#include "XGlobal"
+#include "XGlobal.h"
 #include "XVector4DWidget.h"
 #include "XFloatWidget.h"
-#include "QtHelper/XQWidgets"
+#include "QtHelper/XQWidgets.h"
 #include "QKeyEvent"
 
 #include "cmath"

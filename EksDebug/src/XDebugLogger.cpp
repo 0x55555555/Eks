@@ -2,7 +2,7 @@
 #include "QDataStream"
 #include "QDebug"
 #include "QtGui/QStandardItemModel"
-#include "XVector"
+#include "Containers/XVector.h"
 #include "QtWidgets/QApplication"
 #include "QThread"
 

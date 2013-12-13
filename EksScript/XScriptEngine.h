@@ -2,7 +2,7 @@
 #define XSCRIPTENGINE_H
 
 #include "XScriptGlobal.h"
-#include "XUnorderedMap"
+#include "Containers/XUnorderedMap.h"
 
 class QVariant;
 class QFile;

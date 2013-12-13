@@ -1,7 +1,7 @@
 #ifndef XSCRIPTDEFINITIONS_H
 #define XSCRIPTDEFINITIONS_H
 
-#include "XAssert"
+#include "Utilities/XAssert.h"
 
 namespace XScript
 {

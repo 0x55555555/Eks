@@ -14,7 +14,7 @@
 #include "../XConvertFromScript.h"
 #include "../XInterface.h"
 
-#include "XAssert"
+#include "Utilities/XAssert.h"
 
 namespace XScript
 {
