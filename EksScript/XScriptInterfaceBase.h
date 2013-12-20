@@ -180,11 +180,6 @@ template <xsize FCount> struct ClassDef<0, 0, FCount>
     };
   };
 
-class InterfaceInternal
-  {
-  void* _data[2];
-  };
-
 class EKSSCRIPT_EXPORT InterfaceBase
   {
 public:
@@ -336,7 +331,7 @@ public:
     }
 
   template <typename FunctionType>
-      static void methodX(const char *name)
+      static void methodX(const char *)
     {
     return;
     }

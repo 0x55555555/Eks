@@ -50,7 +50,7 @@ public:
   void setupClient();
   void addInterfaceLookup(DebugInterface *ifc);
 
-private slots:
+private Q_SLOTS:
   void onNewConnection();
   void onDataReady();
   void onConnected();

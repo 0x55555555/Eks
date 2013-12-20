@@ -60,7 +60,7 @@ public:
   static Value newArray();
   static Value newEmpty();
 
-private:
+protected:
   void *_object;
   friend class PersistentValue;
   };
@@ -82,7 +82,7 @@ public:
 
   void dispose();
 
-private:
+protected:
   void *_object;
   };
 

@@ -92,7 +92,6 @@ template <typename ListT, typename ValueType = typename ListT::value_type> struc
     typedef ValueType VALT;
     ListT li;
     if( !jv.isValid() || !jv.isArray() ) return li;
-    uint32_t ndx = 0;
     for( xsize i = 0; i < jv.length(); ++i )
       {
       li.push_back( Convert::from<VALT>( jv.at(i)) );

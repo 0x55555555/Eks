@@ -187,7 +187,7 @@ template <typename T, typename Sig> struct XMethodForwarderHelperVoid : Sig
     ThisType *self = argv.calleeThis<ThisType>();
     if(!self)
       {
-      throw std::exception("Missing this");
+      xAssertFail();
       }
 
     T::CallNative(*self, func, argv);
@@ -215,7 +215,7 @@ template <typename T, typename Sig> struct XMethodForwarderHelper : Sig
 
   static void Call( ThisType & self, FunctionType func, internal::ReflectArguments &argv )
     {
-    internal::DartArgumentsNoThis args(argv);
+    internal::ReflectArguments args(argv);
     try { return CastToJS( T :: CallNative( self, func, args ) ); }
     HANDLE_PROPAGATE_EXCEPTION;
     }
@@ -246,7 +246,7 @@ template <typename T, typename Sig> struct XMethodForwarderHelper : Sig
     ThisType *self = argv.calleeThis<ThisType>();
     if(!self)
       {
-      throw std::exception("Missing This.");
+      xAssertFail();
       }
 
     auto result = T::CallNative(*self, func, argv);
@@ -1916,7 +1916,7 @@ public:
 
   ArgumentUnpacker(const ArgsType &v, xsize idx)
     {
-    val = v.at<Type, StoredType>(idx);
+    val = v.template at<Type, StoredType>(idx);
     }
 
   StoredType& operator()() { return val; }

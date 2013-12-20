@@ -8,6 +8,7 @@
 #include "XSignatureSpecialisations.h"
 #include "XTemplateMetaHelpers.h"
 #include "XScriptDefinitions.h"
+#include "XScriptObject.h"
 #include "Utilities/XAssert.h"
 #include "XScriptTypeInfo.h"
 

@@ -38,7 +38,7 @@ public:
 
   Value run(SourceError *error=0);
 
-private:
+protected:
   void *_impl;
   };
 

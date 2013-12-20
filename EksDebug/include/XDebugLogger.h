@@ -116,7 +116,7 @@ class EKSDEBUG_EXPORT DebugLoggerData : public QObject
   {
   Q_OBJECT
 
-signals:
+Q_SIGNALS:
   void eventCreated(
       const Eks::Time &time,
       ThreadEventLogger::EventType type,
@@ -127,8 +127,8 @@ signals:
 
   void eventEndUpdated(const xsize id, const xsize thread, const Eks::Time &endTime);
   };
-
-Q_DECLARE_METATYPE(const DebugLogger::DebugLocationWithData*)
 }
+
+Q_DECLARE_METATYPE(const Eks::DebugLogger::DebugLocationWithData*)
 
 #endif // XDEBUGLOGGER_H

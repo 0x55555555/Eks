@@ -319,6 +319,19 @@ template <typename T> const T *Object::castTo() const
   return Convert::from<T>(*this);
   }
 
+namespace internal
+{
+template <typename T, typename Ret>Ret JSArguments::at(xsize idx) const
+  {
+  return Convert::from<T>(at(idx));
+  }
+
+template <typename T, typename Ret>Ret DartArgumentsNoThis::at(xsize idx) const
+  {
+  return Convert::from<T>(at(idx));
+  }
+}
+
 }
 
 

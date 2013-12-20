@@ -55,7 +55,7 @@ struct XMethodForwarder<T, 1,Sig, UnlockV8> :
     {
     ArgumentUnpacker1<Sig, ArgsType> args(argv);
 
-    Detail::Unlocker<UnlockV8> const unlocker;
+    Detail::Unlocker<UnlockV8> unlocker;
     return (ReturnType)(self.*func)(args.arg0());
     }
   };
@@ -72,7 +72,7 @@ struct XMethodForwarderVoid<T, 1,Sig, UnlockV8>
     {
     ArgumentUnpacker1<Sig, ArgsType> args(argv);
 
-    Detail::Unlocker<UnlockV8> const unlocker;
+    Detail::Unlocker<UnlockV8> unlocker;
     return (ReturnType)(self.*func)(args.arg0());
     }
   };

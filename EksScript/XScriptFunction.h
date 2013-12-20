@@ -27,7 +27,7 @@ public:
     currentInterface()->endFunctionScope(this);
     }
 
-private:
+protected:
   void* _data[2];
   };
 
@@ -52,7 +52,7 @@ public:
 
   typedef FunctionScope Scope;
 
-private:
+protected:
   void *_func;
   };
 
@@ -83,10 +83,7 @@ public:
   xsize length() const;
   Value at(xsize i) const;
 
-  template <typename T, typename Ret>Ret at(xsize idx) const
-    {
-    return Convert::from<T>(at(idx));
-    }
+  template <typename T, typename Ret>Ret at(xsize idx) const;
 
 private:
   JSArguments();
@@ -121,10 +118,7 @@ public:
     {
     }
 
-  template <typename T, typename Ret>Ret at(xsize idx) const
-    {
-    return Convert::from<T>(at(idx));
-    }
+  template <typename T, typename Ret>Ret at(xsize idx) const;
 
   Value at(xsize idx) const;
   xsize length() const;
@@ -210,6 +204,7 @@ public:
     return static_cast<T*>(ths);
     }
   };
+
 }
 
 }

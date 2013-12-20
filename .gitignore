@@ -25,6 +25,7 @@ qrc_*.cpp
 *.pro.user*
 *.Debug
 *.Release
+*.qmake.stash
 ipch/
 Win32/
 debug/

@@ -8,15 +8,15 @@ namespace Eks
 {
 
 DebugManagerImpl::DebugManagerImpl(DebugManager *m, bool client)
-  : _clientStream(&_preConnectClientData, QIODevice::WriteOnly),
+  : _controller(0),
+    _watcher(0),
+    _clientStream(&_preConnectClientData, QIODevice::WriteOnly),
     _scratchBuffer(&_scratchImpl),
-    _client(0),
-    _server(0),
     _outputLocked(0),
-    _controller(0),
+    _server(0),
+    _client(0),
     _readingID(X_UINT32_SENTINEL),
     _bytesNeeded(0),
-    _watcher(0),
     _manager(m)
   {
   _scratchImpl.open(QIODevice::WriteOnly);

@@ -202,7 +202,7 @@ void DebugLogger::onEvents(const QThread *thread, const ThreadEventLogger::Event
 
 void DebugLogger::onLocations(const EventLogger::EventLocationVector &locations)
   {
-  LocationList l = { &locations };
+  LocationList l = { &locations, Eks::Vector<DebugLocationWithData, 1024>() };
   sendData(l);
   }
 
@@ -219,7 +219,7 @@ void DebugLogger::onLogMessage(const LogEntry &e)
       "System"
       };
 
-    emit _server->model->eventCreated(
+    Q_EMIT _server->model->eventCreated(
           e.time,
           ThreadEventLogger::EventType::Moment,
           (xuint64)e.thread,
@@ -253,7 +253,7 @@ void DebugLogger::onEventList(const EventList &list)
             }
           }
 
-        emit _server->model->eventCreated(
+        Q_EMIT _server->model->eventCreated(
               evt.time,
               evt.type,
               (xuint64)list.thread,
@@ -263,7 +263,7 @@ void DebugLogger::onEventList(const EventList &list)
         }
       else if(evt.type == ThreadEventLogger::EventType::End)
         {
-        emit _server->model->eventEndUpdated(evt.id, (xuint64)list.thread, evt.time);
+        Q_EMIT _server->model->eventEndUpdated(evt.id, (xuint64)list.thread, evt.time);
         }
       }
     }

@@ -7,7 +7,7 @@
 TARGET = EksScript
 TEMPLATE = lib
 
-QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 include("../EksCore/GeneralOptions.pri")
 

@@ -43,7 +43,6 @@ public:
 
 private:
   typedef DebugManagerImpl Impl;
-  Impl *_impl;
   };
 
 #endif

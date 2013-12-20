@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
-CONFIG += ordered minimal_eks
+CONFIG += ordered
 
 SUBDIRS = EksCore/QtProject/EksCore.pro \
           Eks3D/QtProject/Eks3D.pro \

@@ -176,7 +176,7 @@ public:
      (which _might_ have been re-allocated to a different
      object, even of a different type, in the mean time).
   */
-  static bool destroyObject( Object const & jo )
+  static bool destroyObject( Object const & )
     {
     xAssertFail();
     /*

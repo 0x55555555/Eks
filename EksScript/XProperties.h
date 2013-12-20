@@ -96,7 +96,7 @@ template <typename PropertyType, PropertyType * const SharedVar>
 struct VarToGetter : XAccessorGetterType
   {
   /** Implements the v8::AccessorGetter() interface. */
-  inline static Value Get(Value property, const internal::JSAccessorInfo &info)
+  inline static Value Get(Value, const internal::JSAccessorInfo &)
     {
     return CastToJS( *SharedVar );
     }
@@ -120,7 +120,7 @@ template <typename PropertyType, PropertyType * const SharedVar>
 struct VarToSetter : XAccessorSetterType
   {
   /** Implements the v8::AccessorSetter() interface. */
-  inline static void Set(Value property, Value value, const internal::JSAccessorInfo& info)
+  inline static void Set(Value, Value value, const internal::JSAccessorInfo&)
     {
     *SharedVar = Convert::from<PropertyType>( value );
     }
@@ -153,7 +153,7 @@ template <typename T, typename PropertyType, PropertyType T::*MemVar>
 struct MemberToGetter : XAccessorGetterType
   {
   /** Implements the v8::AccessorGetter() interface. */
-  inline static Value Get(Value property, const internal::JSAccessorInfo &info)
+  inline static Value Get(Value, const internal::JSAccessorInfo &info)
     {
     typedef typename TypeInfo<T>::Type Type;
     typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
@@ -180,7 +180,7 @@ template <typename T, typename PropertyType, PropertyType T::*MemVar>
 struct MemberToSetter : XAccessorSetterType
   {
   /** Implements the v8::AccessorSetter() interface. */
-  inline static void Set(Value property, Value value, const internal::JSAccessorInfo& info)
+  inline static void Set(Value, Value value, const internal::JSAccessorInfo& info)
     {
     typedef typename TypeInfo<T>::Type Type;
     typedef typename Convert::internal::JSToNative<T>::ResultType NativeHandle;
@@ -233,7 +233,7 @@ struct ThrowingSetter : XAccessorSetterType
 template <typename Sig, typename XFunctionSignature<Sig>::FunctionType Getter>
 struct FunctionToGetter : XAccessorGetterType
   {
-  inline static Value Get( Value property, const internal::JSAccessorInfo & info )
+  inline static Value Get( Value, const internal::JSAccessorInfo & )
     {
     return CastToJS( (*Getter)() );
     }
@@ -266,7 +266,7 @@ struct FunctionToGetter : XAccessorGetterType
 template <typename Sig, typename XFunctionSignature<Sig>::FunctionType Func>
 struct FunctionToSetter : XAccessorSetterType
   {
-  inline static void Set( Value property, Value value, const internal::JSAccessorInfo &info)
+  inline static void Set( Value, Value value, const internal::JSAccessorInfo &)
     {
     typedef XFunctionSignature<Sig> FT;
     (*Func)( Convert::from<typename sl::At<0,FT>::Type>( value ) );
@@ -407,7 +407,7 @@ struct XMethodToSetter : XAccessorSetterType
 template <typename Ftor, typename Sig>
 struct XFunctorToGetter
   {
-  inline static Value Get( Value property, const internal::JSAccessorInfo & info )
+  inline static Value Get( Value, const internal::JSAccessorInfo & )
     {
     //const static Ftor f();
     return CastToJS(Ftor()());
@@ -417,7 +417,7 @@ struct XFunctorToGetter
 template <typename Ftor, typename Sig>
 struct XFunctorToSetter
   {
-  inline static void Set(Value property, Value value, const internal::JSAccessorInfo &info)
+  inline static void Set(Value, Value value, const internal::JSAccessorInfo &)
     {
     typedef typename sl::At< 0, XSignature<Sig> >::Type ArgT;
     Ftor()( Convert::from<ArgT>( value ) );
