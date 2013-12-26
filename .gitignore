@@ -5,6 +5,8 @@
 # *.[oa]
 # *~
 
+.qmake.stash
+.DS_Store
 *Makefile*
 *.dll
 *.exp
@@ -15,17 +17,19 @@
 *.ncb
 *.suo
 *.sdf
-*.obj
 *.opensdf
 *.user
 *.a
 *.o
+*.autosave
+*.dylib
+*/bin/*
+*.orig
 moc_*.cpp
 qrc_*.cpp
 *.pro.user*
 *.Debug
 *.Release
-*.qmake.stash
 ipch/
 Win32/
 debug/
