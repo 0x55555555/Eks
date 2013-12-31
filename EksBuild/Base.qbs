@@ -2,18 +2,18 @@ import qbs
 
 Product {
   Depends { name: "cpp" }
-  Depends { name: "qbs" }
 
+  property bool clang: true
   property bool debug: true
 
   property string toRoot: ""
 
   files: [ "include/**/*", "src/**/*" ]
-  cpp.includePaths: base.concat( [ "include" ] )
+  cpp.includePaths: base.concat([ "include" ])
 
   cpp.treatWarningsAsErrors: true
 
-  property var commonDefines: [ name.toUpperCase() + "_BUILD" ]
+  property var commonDefines: [ "X_CPPOX_SUPPORT", name.toUpperCase() + "_BUILD" ]
   Properties {
     condition: debug
     cpp.defines: commonDefines.concat( [ "X_DEBUG" ] )
@@ -22,9 +22,16 @@ Product {
     condition: !debug
     cpp.defines: commonDefines
   }
-  
+
+  Properties {
+    condition: clang
+    cpp.cxxFlags: base.concat( [ "-std=c++11", "-stdlib=libc++" ] )
+    cpp.minimumOsxVersion: "10.9"
+  }
+
   /*Properties {
     condition: true //qbs.toolchain == "msvc"
 	cpp.cxxFlags: base.concat( [ "/FS" ] )
   }*/
+
 }
