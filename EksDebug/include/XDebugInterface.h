@@ -4,7 +4,9 @@
 #include "XDebugGlobal.h"
 #include "Utilities/XAssert.h"
 #include "XDebugManager.h"
+#include "QString"
 
+class QObject;
 class QAbstractItemModel;
 
 #define X_DEBUG_INTERFACE(cls) public: cls(DebugManager *m, bool client=true); \
