@@ -4,6 +4,8 @@ Eks.SubModule {
     name: "Eks"
     toRoot: "../"
 
+    qbsSearchPaths: "EksCore/BuildModules"
+
     references: [
         "EksCore/EksCore.qbs",
         "EksGui/EksGui.qbs",
