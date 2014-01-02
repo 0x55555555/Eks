@@ -2,7 +2,7 @@ import qbs 1.0
 import "Utils.js" as Utils;
 
 Product {
-  moduleSearchPaths: "../EksBuild"
+  qbsSearchPaths: "../EksBuild"
   Depends { name: "buildtools" }
 
   property string toRoot: ""
