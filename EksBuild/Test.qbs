@@ -5,4 +5,6 @@ Base {
   type: "application"
 
   Depends { name: "Qt.test" }
+
+  files: [ "*.h", "*.cpp", "*.qrc" ]
 }

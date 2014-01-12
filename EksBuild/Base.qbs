@@ -5,7 +5,7 @@ Product {
   qbsSearchPaths: "../EksBuild"
   Depends { name: "buildtools" }
 
-  property string toRoot: ""
+  property path toRoot: ""
 
   files: [ "include/**/*", "src/**/*" ]
 
