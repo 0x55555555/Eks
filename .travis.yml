@@ -3,7 +3,7 @@ env:
   - EKS_BUILD_TYPE=release
 
 install:
-  - sudo add-apt-repository --yes ppa:alexey-ivanov/qtcreator
+  - sudo add-apt-repository --yes ppa:arigy/xfce
   - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
   - sudo apt-get update
   - sudo apt-get install qbs qt5-default clang libstdc++5
