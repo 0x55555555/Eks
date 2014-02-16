@@ -12,5 +12,4 @@ install:
   - qbs config profiles.qt.baseProfile clang
 
 script:
-  - cd EksCore
   - qbs profile:qt ${EKS_BUILD_VARIANT}
