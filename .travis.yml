@@ -1,6 +1,7 @@
 install:
+  - deb http://http.debian.net/debian jessie main
   - sudo apt-get update
   - sudo apt-get install qt5-default
 
 script:
-  - ./EksBuild/BuildAndTestDebian.sh
+  - "./EksBuild/BuildAndTestDebian.sh"
