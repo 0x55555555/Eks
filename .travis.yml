@@ -1,7 +1,8 @@
 install:
-  - deb http://http.debian.net/debian jessie main
+  - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa
   - sudo apt-get update
-  - sudo apt-get install qt5-default
+  - sudo apt-get dist-upgrade
+  - sudo apt-get install ubuntu-sdk
 
 script:
   - "./EksBuild/BuildAndTestDebian.sh"
