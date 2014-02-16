@@ -1,8 +1,6 @@
 install:
   - sudo apt-get update
-  - sudo apt-get install libqtbase5-dev libqt5opengl5-dev
+  - sudo apt-get install qt5-default
 
 script:
-  - qmake -project
-  - qmake hello.pro
-  - make
+  - ./EksBuild/BuildAndTestDebian.sh
