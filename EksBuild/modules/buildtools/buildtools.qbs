@@ -21,10 +21,15 @@ Module {
   }
 
   Properties {
-    condition: osx
+    condition: osx || linux
     cpp.cxxFlags: base.concat( [ "-std=c++11", "-stdlib=libc++" ] )
+  }
+
+  Properties {
+    condition: osx
     cpp.minimumOsxVersion: "10.9"
   }
+
 
   validate: {
   }
