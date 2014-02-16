@@ -1,3 +1,7 @@
+env:
+  - EKS_BUILD_TYPE=debug
+  - EKS_BUILD_TYPE=release
+
 install:
   - sudo add-apt-repository --yes ppa:alexey-ivanov/qtcreator
   - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
