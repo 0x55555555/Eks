@@ -10,6 +10,7 @@ install:
   - qbs detect-toolchains
   - qbs setup-qt /usr/bin/qmake qt
   - qbs config profiles.qt.baseProfile clang
+  - sudo find / -name 'cstddef'
 
 script:
   - qbs profile:qt ${EKS_BUILD_VARIANT}
