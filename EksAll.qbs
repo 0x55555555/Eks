@@ -4,6 +4,7 @@ Eks.SubModule {
     name: "Eks"
     toRoot: "../"
 
+    moduleSearchPaths: "EksCore/BuildModules/modules"
     qbsSearchPaths: "EksCore/BuildModules"
     moduleSearchPaths: "EksCore/BuildModules/modules"
 
