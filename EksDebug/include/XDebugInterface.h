@@ -81,7 +81,7 @@ protected:
 
   template <typename T> void sendData(const T &data)
     {
-    xAssert(T::DebugMessageType < X_UINT8_SENTINEL);
+    xAssert(T::DebugMessageType < std::numeric_limits<xuint8>::max());
     OutputTunnel t(this);
     t.stream() << (xuint8)T::DebugMessageType << data;
     }

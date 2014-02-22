@@ -224,7 +224,7 @@ void DebugLogger::onLogMessage(const LogEntry &e)
           ThreadEventLogger::EventType::Moment,
           (xuint64)e.thread,
           statuses[e.level] + ":\n" + e.entry,
-          X_SIZE_SENTINEL,
+          std::numeric_limits<xsize>::max(),
           nullptr);
     }
   }

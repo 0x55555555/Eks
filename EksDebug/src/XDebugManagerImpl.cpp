@@ -1,5 +1,6 @@
 #include "XDebugManagerImpl.h"
 #include "XDebugInterface.h"
+#include "Utilities/XTemplateHelpers.h"
 #include "QBuffer"
 #include "QTcpServer"
 #include "QTcpSocket"
@@ -15,7 +16,7 @@ DebugManagerImpl::DebugManagerImpl(DebugManager *m, bool client)
     _outputLocked(0),
     _server(0),
     _client(0),
-    _readingID(X_UINT32_SENTINEL),
+    _readingID(Eks::maxFor(_readingID)),
     _bytesNeeded(0),
     _manager(m)
   {
@@ -59,7 +60,7 @@ void DebugManagerImpl::setupClient()
 void DebugManagerImpl::addInterfaceLookup(DebugInterface *ifc)
   {
   xAssert(!_interfaceMap.contains(ifc->interfaceID()));
-  xAssert(ifc->interfaceID() != X_UINT32_SENTINEL);
+  xAssert(ifc->interfaceID() != std::numeric_limits<xuint32>::max());
   _interfaceMap[ifc->interfaceID()] = ifc;
 
   if(_watcher)
@@ -82,7 +83,7 @@ void DebugManagerImpl::clear()
   xAssert(!_outputLocked);
   _client = 0;
 
-  _readingID = X_UINT32_SENTINEL;
+  _readingID = Eks::maxFor(_readingID);
   _bytesNeeded = 0;
   _preConnectClientData.clear();
 
@@ -121,7 +122,7 @@ void DebugManagerImpl::onDataReady()
   xuint32 av = _client->bytesAvailable();
   while(av > HeaderSize)
     {
-    if(_readingID == X_UINT32_SENTINEL)
+    if(_readingID == Eks::maxFor(_readingID))
       {
       _clientStream >> _readingID >> _bytesNeeded;
       av -= HeaderSize;
@@ -137,7 +138,7 @@ void DebugManagerImpl::onDataReady()
     xAssert(ifc);
 
     ifc->onDataRecieved(_clientStream);
-    _readingID = X_UINT32_SENTINEL;
+    _readingID = Eks::maxFor(_readingID);
 
     av = _client->bytesAvailable();
     }

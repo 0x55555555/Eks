@@ -89,7 +89,7 @@ void DebugController::onDebuggerConnected(bool client)
 
 void DebugController::setupInterface(DebugInterface *ifc)
   {
-  xAssert(ifc->interfaceID() == X_UINT32_SENTINEL);
+  xAssert(ifc->interfaceID() == std::numeric_limits<xuint32>::max());
   ifc->setInterfaceID(++_maxInteface);
 
   SetupInterface setup;

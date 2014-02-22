@@ -1,4 +1,5 @@
 #include "XDebugInterface.h"
+#include "Utilities/XTemplateHelpers.h"
 #include "QDataStream"
 #include "QDebug"
 
@@ -16,7 +17,7 @@ DebugInterface::OutputTunnel::~OutputTunnel()
   }
 
 DebugInterface::DebugInterface()
-    : _interfaceID(X_UINT32_SENTINEL),
+    : _interfaceID(Eks::maxFor(_interfaceID)),
       _dataModel(0)
   {
   DebugManager::registerInterface(this);

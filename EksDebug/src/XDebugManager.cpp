@@ -84,7 +84,7 @@ QDataStream &DebugManager::lockOutputStream(DebugInterface *ifc)
   {
   xAssert(!g_manager->_outputLocked);
 
-  if(ifc->interfaceID() == X_UINT32_SENTINEL)
+  if(ifc->interfaceID() == std::numeric_limits<xuint32>::max())
     {
     g_manager->_controller->setupInterface(ifc);
 

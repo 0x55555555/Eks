@@ -150,7 +150,7 @@ xsize Engine::getIndex(EngineInterface *in)
     }
 
   xAssertFail();
-  return X_SIZE_SENTINEL;
+  return std::numeric_limits<xsize>::max();
   }
 
 void Engine::adjustAmountOfExternalAllocatedMemory(int in)
