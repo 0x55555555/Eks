@@ -64,7 +64,7 @@ void DebugManager::unregisterInterface(DebugInterface *ifc)
 
   for(auto it = g_manager->_interfaceMap.begin(); it != g_manager->_interfaceMap.end();)
     {
-    if (it.value() == ifc)
+    if (it->second == ifc)
       {
       it = g_manager->_interfaceMap.erase(it);
       }

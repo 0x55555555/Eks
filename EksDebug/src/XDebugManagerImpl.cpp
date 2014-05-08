@@ -11,6 +11,7 @@ namespace Eks
 DebugManagerImpl::DebugManagerImpl(DebugManager *m, bool client)
   : _controller(0),
     _watcher(0),
+    _interfaceMap(Eks::Core::defaultAllocator()),
     _clientStream(&_preConnectClientData, QIODevice::WriteOnly),
     _scratchBuffer(&_scratchImpl),
     _outputLocked(0),
@@ -68,7 +69,7 @@ void DebugManagerImpl::addInterfaceLookup(DebugInterface *ifc)
     _watcher->onInterfaceRegistered(ifc);
     }
 
-  xAssert(_interfaces.size() == _interfaceMap.size());
+  xAssert(_interfaces.size() == (int)_interfaceMap.size());
   }
 
 void DebugManagerImpl::setupController()
@@ -116,7 +117,7 @@ void DebugManagerImpl::onDataReady()
 
   static const xsize HeaderSize = 8;
 
-  xAssert(_interfaces.size() == _interfaceMap.size());
+  xAssert(_interfaces.size() == (int)_interfaceMap.size());
 
   // while headers are available
   xuint32 av = _client->bytesAvailable();

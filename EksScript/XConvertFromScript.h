@@ -241,7 +241,7 @@ template <> struct JSToNative<QString>
 
   ResultType operator()(Value const &h) const
     {
-    return h.toString().toQString();
+    return QString::fromUtf8(h.toString().data());
     }
   };
 

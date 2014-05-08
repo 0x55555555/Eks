@@ -22,6 +22,7 @@ EngineInterface *createDartInterface(bool debugging);
 struct StaticEngine
   {
   StaticEngine(bool debugging)
+      : interfaces(Eks::Core::defaultAllocator())
     {
     currentInterface = 0;
     
@@ -42,7 +43,7 @@ struct StaticEngine
 
   ~StaticEngine()
   {
-    xForeach(auto &a, interfaces)
+    xForeach(auto &a, interfaces.values())
       {
       a->clear();
       }

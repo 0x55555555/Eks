@@ -63,7 +63,7 @@ QObjectConnectionList::~QObjectConnectionList()
 
 void QObjectConnectionList::objectDestroyed(QObject *object)
   {
-  QObjectWrapper::instance()->_connections.remove(object);
+  QObjectWrapper::instance()->_connections.erase(object);
 
   if(inUse)
     {
@@ -183,14 +183,16 @@ int QObjectConnectionList::qt_metacall(QMetaObject::Call method, int index, void
   }
 
 QObjectWrapper::QObjectWrapper()
+    : _objects(Eks::Core::defaultAllocator()),
+    _connections(Eks::Core::defaultAllocator())
   {
   }
 
 QObjectWrapper::~QObjectWrapper()
 {
-  _objects.remove(&QObject::staticMetaObject);
-  _objects.remove(&QWidget::staticMetaObject);
-  Q_FOREACH(InterfaceBase *b, _objects)
+  _objects.erase(&QObject::staticMetaObject);
+  _objects.erase(&QWidget::staticMetaObject);
+  xForeach(InterfaceBase *b, _objects.values())
     {
     if(b != Interface<QObject>::lookup())
       {
@@ -222,7 +224,7 @@ void QObjectWrapper::initiate()
   ifc->seal();
 
   Engine::addInterface(ifc);
-  instance()->_objects.insert(&QObject::staticMetaObject, ifc);
+  instance()->_objects[&QObject::staticMetaObject] = ifc;
 
 
   // build up custom QWidget wrapper
@@ -245,7 +247,7 @@ void QObjectWrapper::initiate()
     widget->seal();
     }
 
-  instance()->_objects.insert(&QWidget::staticMetaObject, widget);
+  instance()->_objects[&QWidget::staticMetaObject] = widget;
   }
 
 QObjectWrapper *QObjectWrapper::instance()
@@ -282,9 +284,15 @@ InterfaceBase *QObjectWrapper::findInterface(const QMetaObject *object)
 
 
   InterfaceBase* qobject = XScript::findInterface(qMetaTypeId<QObject*>());
-  base = new Interface<QObject>(qobject->typeId(), 0, qobject->typeId(), qobject->nonPointerTypeId(), formatClassName(object->className()), parentInterface);
+  base = new Interface<QObject>(
+           qobject->typeId(),
+           0,
+           qobject->typeId(),
+           qobject->nonPointerTypeId(),
+           formatClassName(object->className()).toUtf8().data(),
+           parentInterface);
 
-  _objects.insert(object, base);
+  _objects[object] = base;
 
   buildInterface(base, object);
 
@@ -412,7 +420,7 @@ struct CallArgument
       }
     else if (callType == QMetaType::QString)
       {
-      qstringPtr = new (&allocData) QString(Convert::from<Eks::String>(value).toQString());
+      qstringPtr = new (&allocData) QString(Convert::from<Eks::String>(value).data());
       type = callType;
     }
     else if (callType == QMetaType::QObjectStar)

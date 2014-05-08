@@ -2,7 +2,8 @@
 #define XDEBUGMANAGER_H
 
 #include "XDebugGlobal.h"
-#include "Memory/XUniquePointer.h"
+#include "QString"
+#include "QDataStream"
 #include "XCore.h"
 
 class QIODevice;

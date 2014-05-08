@@ -1,3 +1,4 @@
+#if 0
 #include "XDebugLogger.h"
 #include "QDataStream"
 #include "QDebug"
@@ -297,3 +298,5 @@ const DebugLogger::DebugLocationWithData *DebugLogger::findLocation(Eks::EventLo
   }
 
 }
+
+#endif

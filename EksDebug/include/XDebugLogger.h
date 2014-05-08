@@ -1,9 +1,10 @@
 #ifndef XDEBUGLOGGER_H
 #define XDEBUGLOGGER_H
 
+#if 0
+
 #include "QtCore/QObject"
 #include "XDebugInterface.h"
-#include "Memory/XUniquePointer.h"
 #include "Utilities/XEventLogger.h"
 #include "Containers/XUnorderedMap.h"
 #include "Memory/XTemporaryAllocator.h"
@@ -19,8 +20,8 @@ class DebugLoggerData;
 
 class EKSDEBUG_EXPORT DebugLogger
     : public QObject,
-      public DebugInterface,
-      private EventLogger::Watcher
+      public DebugInterface//,
+      //private EventLogger::Watcher
   {
   Q_OBJECT
 
@@ -56,10 +57,10 @@ public:
       }
 
     const void *thread;
-    const ThreadEventLogger::EventVector *events;
+    //const ThreadEventLogger::EventVector *events;
 
     Eks::TemporaryAllocator alloc;
-    ThreadEventLogger::EventVector inPlaceEvents;
+    //ThreadEventLogger::EventVector inPlaceEvents;
     };
 
 
@@ -132,3 +133,5 @@ Q_SIGNALS:
 Q_DECLARE_METATYPE(const Eks::DebugLogger::DebugLocationWithData*)
 
 #endif // XDEBUGLOGGER_H
+
+#endif

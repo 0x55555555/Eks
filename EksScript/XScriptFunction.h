@@ -4,6 +4,7 @@
 #include "XScriptGlobal.h"
 #include "XScriptEngine.h"
 #include "QtCore/QMetaType"
+#include "QtCore/QVariant"
 
 namespace XScript
 {

@@ -70,7 +70,7 @@ Value::Value(const QVariant& val)
   switch(val.type())
     {
     case QVariant::String:
-      currentInterface()->newValue(this, val.toString());
+      currentInterface()->newValue(this, val.toString().toUtf8().data());
       break;
     case QVariant::Bool:
       currentInterface()->newValue(this, val.toBool());
@@ -250,7 +250,7 @@ QVariant Value::toVariant(int typeHint) const
     }
   else if(typeHint == QVariant::String || isString())
     {
-    return toString().toQString();
+    return QString::fromUtf8(toString().data());
     }
   else if (typeHint == qMetaTypeId<Object>())
     {

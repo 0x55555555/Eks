@@ -16,6 +16,7 @@ InterfaceBase::InterfaceBase(int typeID,
     _toScript(parent->_toScript),
     _fromScript(parent->_fromScript),
     _parent(parent),
+    _upcasts(Eks::Core::defaultAllocator()),
     _isSealed(true)
   {
   xAssert(_typeName.length());
@@ -40,6 +41,7 @@ InterfaceBase::InterfaceBase(int typeId,
     _toScript(tScr),
     _fromScript(fScr),
     _parent(parent),
+    _upcasts(Eks::Core::defaultAllocator()),
     _constructorCount(0),
     _propertyCount(0),
     _functionCount(0),
@@ -64,8 +66,8 @@ void InterfaceBase::clear()
   _typeName.Vector::clear();
   _typeName.Vector::squeeze();
 
-  _upcasts.~UpCastMap();
-  new(&_upcasts) UpCastMap();
+  UpCastMap sw(Eks::Core::defaultAllocator());
+  _upcasts.swap(sw);
   }
 
 QVariant InterfaceBase::toVariant(const Value &inp, int typeHint)
@@ -343,7 +345,7 @@ void InterfaceBase::addClassTo(const QString &thisClassName, const Object &dest)
 void InterfaceBase::addChildInterface(int typeId, UpCastFn fn)
   {
   xAssert(!_upcasts.contains(typeId));
-  _upcasts.insert(typeId, fn);
+  _upcasts[typeId] = fn;
   }
 /*
 void *InterfaceBase::prototype()
@@ -363,10 +365,10 @@ void registerInterface(int id, int nonPtrId, InterfaceBase *interface)
   xAssert(!_interfaces().contains(nonPtrId));
   xAssert(id != QVariant::Invalid);
 
-  _interfaces().insert(id, interface);
+  _interfaces()[id] = interface;
   if(nonPtrId != QVariant::Invalid)
     {
-    _interfaces().insert(nonPtrId, interface);
+    _interfaces()[nonPtrId] = interface;
     }
   }
 
