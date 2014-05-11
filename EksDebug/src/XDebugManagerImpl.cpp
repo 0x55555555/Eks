@@ -1,6 +1,6 @@
 #include "XDebugManagerImpl.h"
 #include "XDebugInterface.h"
-#include "Utilities/XTemplateHelpers.h"
+#include "Math/XMathHelpers.h"
 #include "QBuffer"
 #include "QTcpServer"
 #include "QTcpSocket"

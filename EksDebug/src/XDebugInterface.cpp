@@ -1,5 +1,5 @@
 #include "XDebugInterface.h"
-#include "Utilities/XTemplateHelpers.h"
+#include "Math/XMathHelpers.h"
 #include "QDataStream"
 #include "QDebug"
 
