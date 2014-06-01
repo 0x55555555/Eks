@@ -1,0 +1,6 @@
+[submodule "EksCore"]
+	path = EksCore
+	url = https://github.com/jorj1988/eks-core.git
+[submodule "EksBuild"]
+	path = EksBuild
+	url = https://github.com/jorj1988/eks-build.git
