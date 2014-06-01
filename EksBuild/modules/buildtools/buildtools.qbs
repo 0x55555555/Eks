@@ -7,30 +7,6 @@ Module {
   property bool linux: qbs.targetOS == "linux"
   property bool osx: !windows && !linux
 
-  Depends { name: "cpp" }
-  cpp.treatWarningsAsErrors: true
-
-  property var commonDefines: [ "X_CPPOX_SUPPORT" ]
-  Properties {
-    condition: debug
-    cpp.defines: commonDefines.concat( [ "X_DEBUG" ] )
-  }
-  Properties {
-    condition: !debug
-    cpp.defines: commonDefines
-  }
-
-  Properties {
-    condition: osx || linux
-    cpp.cxxFlags: base.concat( [ "-std=c++11", "-stdlib=libc++" ] )
-  }
-
-  Properties {
-    condition: osx
-    cpp.minimumOsxVersion: "10.9"
-  }
-
-
   validate: {
   }
 }
