@@ -4,25 +4,30 @@ Eks.Library {
   name: "EksGui"
   toRoot: "../../"
 
-  files: [ "include/**/*", "src/**/*" ]
-
   Depends {
     name: "EksCore"
   }
 
   Depends {
+    name: "Eks3D"
+  }
+
+  cpp.defines: base.concat( [ "X_ENABLE_GL_RENDERER" ] )
+
+  Depends {
     name: "Qt"
-    submodules: [ "gui", "widgets" ]
+    submodules: [ "gui", "widgets", "opengl" ]
   }
 
   Export {
+    Depends { name: "cpp" }
     cpp.includePaths: ["include"]
 
-    Depends { name: "cpp" }
-    Depends { name: "EksCore" }	
+    Depends { name: "EksCore" }
+    Depends { name: "Eks3D" }
     Depends {
       name: "Qt"
-      submodules: [ "gui", "widgets" ]
+      submodules: [ "gui", "widgets", "opengl" ]
     }
-}
+  }
 }
