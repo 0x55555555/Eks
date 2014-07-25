@@ -13,6 +13,7 @@ Eks.Library {
   Depends { name: "Qt.gui" }
 
   Depends { name: "EksCore" }
+  Depends { name: "EksGui" }
 
   Group {
     name: "Dart"
