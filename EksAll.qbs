@@ -11,6 +11,8 @@ Eks.SubModule {
     "Eks3D/test/test.qbs",
     "Eks3D/examples/example.qbs",
     "EksDebug/EksDebug.qbs",
+    "EksConcept/EksConcept.qbs",
+    "EksConcept/test/test.qbs",
   ]
 
   //"EksScript/EksScript.qbs",
