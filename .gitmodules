@@ -9,7 +9,7 @@
 	url = https://github.com/jorj1988/eks-3d.git
 [submodule "EksConcept"]
 	path = EksConcept
-	url = git@github.com:jorj1988/eks-concept.git
+	url = https://github.com/jorj1988/eks-concept.git
 [submodule "EksGui"]
 	path = EksGui
-	url = git@github.com:jorj1988/eks-gui.git
+	url = https://github.com/jorj1988/eks-gui.git
