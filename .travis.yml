@@ -1,8 +1,16 @@
 language: cpp
 
+os:
+  - linux
+  - osx
+
 compiler:
   - clang
   - gcc
+
+env:
+  - BUILD_VARIANT=debug
+  - BUILD_VARIANT=release
 
 before_install:
   # g++4.8.1
@@ -28,5 +36,5 @@ install:
 script:
   - mkdir build
   - cd build
-  - ~/rbmake/rbmake.rb build ..
+  - ~/rbmake/rbmake.rb build .. ${BUILD_VARIANT}
   - ~/rbmake/rbmake.rb test ..
