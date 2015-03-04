@@ -3,14 +3,10 @@ env:
   - EKS_BUILD_TYPE=release
 
 install:
-  - sudo add-apt-repository --yes ppa:arigy/xfce
-  - sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
-  - sudo apt-get update
-  - sudo apt-get install qbs qt5-default clang
-  - qbs detect-toolchains
-  - qbs setup-qt /usr/bin/qmake qt
-  - qbs config profiles.qt.baseProfile clang
-  - sudo find / -name 'cstddef'
+  - git clone https://github.com/jorj1988/rbmake.git ~/rbmake
 
 script:
-  - qbs profile:qt ${EKS_BUILD_VARIANT}
+  - mkdir build
+  - cd build
+  - ~/rbmake/rbmake.rb build ..
+  - ~/rbmake/rbmake.rb test ..
