@@ -9,8 +9,6 @@ RbMake.module(:Eks, :global) do |l, p|
     l.cpp.defines << :X_DEBUG
   end
 
-  l.dependencies << :eigen
-
   l.when(l.config.platform(:osx)) do |l|
     l.cpp.minimum_osx_version = "10.9"
   end
@@ -18,6 +16,11 @@ RbMake.module(:Eks, :global) do |l, p|
   l.export do |l|
     l.include_paths << 'include'
   end
+end
+
+RbMake.module(:EksTest, :Eks) do |l, p|
+  l.dependencies = [ :gtest ]
+  l.sources = [ '**/*' ]
 end
 
 RbMake.import_modules('Eks*')
