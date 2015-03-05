@@ -13,16 +13,6 @@ env:
   - BUILD_VARIANT=release
 
 before_install:
-  - |
-    cd ..
-    mkdir cmake
-    cd cmake
-    wget http://www.cmake.org/files/v3.2/cmake-3.2.0-rc2-Linux-x86_64.sh -O cmake.sh
-    chmod +x cmake.sh
-    ./cmake.sh --skip-license
-    PATH=`pwd`/bin:$PATH
-    cd ../Eks
-
   # g++4.8.1
   - if [ "$CXX" == "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
 
@@ -39,6 +29,20 @@ install:
   # clang 3.4
   - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.4; fi
   - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
+
+  # cmake
+  - |
+    cd ..
+    mkdir cmake
+    cd cmake
+    wget http://www.cmake.org/files/v3.2/cmake-3.2.0-rc2-Linux-x86_64.sh -O cmake.sh
+    chmod +x cmake.sh
+    ./cmake.sh --skip-license
+    PATH=`pwd`/bin:$PATH
+    cd ../Eks
+
+  # eigen
+  - sudo apt-get install eigen3
 
 install:
   - git clone https://github.com/jorj1988/rbmake.git ~/rbmake
