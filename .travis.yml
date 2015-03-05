@@ -33,7 +33,7 @@ before_install:
     cd ../Eks
 
   # eigen
-  - sudo apt-get install eigen3
+  - sudo apt-get install libeigen3-dev
 
 install:
   # g++4.8.1
