@@ -39,6 +39,8 @@ before_install:
   - sudo apt-get install libgtest-dev
   - "cd /usr/src/gtest && sudo cmake . && sudo cmake --build . && sudo mv libg* /usr/local/lib/ ; cd -"
 
+  - export RBMAKE_DISABLE_QT=1
+
 install:
   # g++4.8.1
   - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
